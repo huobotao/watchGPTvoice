@@ -1,0 +1,152 @@
+[
+  {
+    "id": "dom-001",
+    "address": "12/45 Bayswater Rd, Potts Point NSW 2011",
+    "suburb": "Potts Point",
+    "postcode": "2011",
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "carSpaces": 0,
+    "weeklyRent": 650,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-08",
+    "url": "https://www.domain.com.au/12-45-bayswater-rd-potts-point-nsw-2011-dom-001",
+    "images": [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1400",
+      "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1400",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1400"
+    ],
+    "description": "Recently renovated 1BR with district views, walking distance to Kings Cross station."
+  },
+  {
+    "id": "dom-002",
+    "address": "1502/88 Kent St, Sydney NSW 2000",
+    "suburb": "Sydney",
+    "postcode": "2000",
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "carSpaces": 1,
+    "weeklyRent": 1100,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-07",
+    "url": "https://www.domain.com.au/1502-88-kent-st-sydney-nsw-2000-dom-002",
+    "images": [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1400",
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1400",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400"
+    ],
+    "description": "Stunning 2BR + study with floor-to-ceiling windows and unobstructed harbour views from level 15."
+  },
+  {
+    "id": "dom-003",
+    "address": "7/210 Bondi Rd, Bondi NSW 2026",
+    "suburb": "Bondi",
+    "postcode": "2026",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "carSpaces": 0,
+    "weeklyRent": 850,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-09",
+    "url": "https://www.domain.com.au/7-210-bondi-rd-bondi-nsw-2026-dom-003",
+    "images": [
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1400",
+      "https://images.unsplash.com/photo-1558211583-d26f610c1eb1?w=1400"
+    ],
+    "description": "Bright 2BR top floor unit, 800m to Bondi Beach. Original 1970s interior, recently painted."
+  },
+  {
+    "id": "dom-004",
+    "address": "302/15 Hunter St, Sydney NSW 2000",
+    "suburb": "Sydney",
+    "postcode": "2000",
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "carSpaces": 0,
+    "weeklyRent": 720,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-09",
+    "url": "https://www.domain.com.au/302-15-hunter-st-sydney-nsw-2000-dom-004",
+    "images": [
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1400",
+      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1400",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1400"
+    ],
+    "description": "Compact 1BR studio-style apartment in heart of CBD. Internal-facing, no balcony."
+  },
+  {
+    "id": "dom-005",
+    "address": "5/12 Mosman St, Mosman NSW 2088",
+    "suburb": "Mosman",
+    "postcode": "2088",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "carSpaces": 1,
+    "weeklyRent": 950,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-06",
+    "url": "https://www.domain.com.au/5-12-mosman-st-mosman-nsw-2088-dom-005",
+    "images": [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400",
+      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1400",
+      "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=1400"
+    ],
+    "description": "Quiet leafy 2BR with sunroom, 5min walk to Mosman Junction. Tree-lined street, lots of natural light."
+  },
+  {
+    "id": "dom-006",
+    "address": "1801/161 Clarence St, Sydney NSW 2000",
+    "suburb": "Sydney",
+    "postcode": "2000",
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "carSpaces": 1,
+    "weeklyRent": 1250,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-08",
+    "url": "https://www.domain.com.au/1801-161-clarence-st-sydney-nsw-2000-dom-006",
+    "images": [
+      "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1400",
+      "https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=1400",
+      "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=1400"
+    ],
+    "description": "Penthouse-level 2BR with expansive city skyline views, full kitchen renovation 2024."
+  },
+  {
+    "id": "dom-007",
+    "address": "3/88 Marine Pde, Maroubra NSW 2035",
+    "suburb": "Maroubra",
+    "postcode": "2035",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "carSpaces": 1,
+    "weeklyRent": 780,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-09",
+    "url": "https://www.domain.com.au/3-88-marine-pde-maroubra-nsw-2035-dom-007",
+    "images": [
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400",
+      "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1400",
+      "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1400"
+    ],
+    "description": "Beachside 2BR, partial ocean view from balcony. Walk to Maroubra Beach."
+  },
+  {
+    "id": "dom-008",
+    "address": "11/220 Oxford St, Paddington NSW 2021",
+    "suburb": "Paddington",
+    "postcode": "2021",
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "carSpaces": 0,
+    "weeklyRent": 580,
+    "propertyType": "Apartment",
+    "listedDate": "2026-05-08",
+    "url": "https://www.domain.com.au/11-220-oxford-st-paddington-nsw-2021-dom-008",
+    "images": [
+      "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1400",
+      "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=1400"
+    ],
+    "description": "Heritage terrace conversion, 1BR with original timber floors. North-facing courtyard."
+  }
+]

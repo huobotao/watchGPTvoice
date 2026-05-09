@@ -1,0 +1,23 @@
+{
+  "name": "watchgptvoice-rental-finder",
+  "version": "0.1.0",
+  "description": "Sydney rental property finder with Claude Vision scoring",
+  "private": true,
+  "type": "commonjs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "scrape": "node server/cli.js scrape",
+    "analyze": "node server/cli.js analyze"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

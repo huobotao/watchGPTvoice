@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sydney Rental Finder · AI 评分</title>
+<link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+<header class="topbar">
+  <h1>Sydney Rental Finder</h1>
+  <div class="status" id="status">loading…</div>
+</header>
+
+<section class="controls">
+  <fieldset>
+    <legend>Search</legend>
+    <label>Suburbs <input id="suburbs" placeholder="Sydney,Bondi,Mosman" /></label>
+    <label>Min beds <input id="minBeds" type="number" min="0" max="6" value="1" /></label>
+    <label>Max beds <input id="maxBeds" type="number" min="0" max="6" value="3" /></label>
+    <label>Max rent/wk <input id="maxRent" type="number" min="0" value="1500" /></label>
+  </fieldset>
+  <div class="buttons">
+    <button id="scrapeBtn">1. Scrape</button>
+    <button id="analyzeBtn">2. Analyze with AI</button>
+    <button id="runBtn" class="primary">Run end-to-end</button>
+    <button id="refreshBtn">Refresh</button>
+  </div>
+</section>
+
+<main id="grid" class="grid"></main>
+
+<template id="cardTpl">
+  <article class="card">
+    <div class="badge"></div>
+    <div class="thumb"></div>
+    <div class="body">
+      <h3 class="addr"></h3>
+      <div class="meta"></div>
+      <div class="rent"></div>
+      <div class="scores">
+        <div class="bar"><span class="lbl">Composite</span><span class="val composite"></span></div>
+        <div class="bar"><span class="lbl">Vision</span><span class="val vision"></span></div>
+        <div class="bar"><span class="lbl">Price</span><span class="val price"></span></div>
+      </div>
+      <p class="summary"></p>
+      <div class="features"></div>
+      <div class="flags"></div>
+      <a class="link" target="_blank" rel="noopener">View on Domain →</a>
+    </div>
+  </article>
+</template>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
