@@ -1,0 +1,24 @@
+<!--
+  这不是一个完整的 Info.plist,只是要在 Xcode 工程的
+  Target → Info → Custom iOS Target Properties 里加的几条键。
+
+  如果 Anthropic API 的 https 直连一切正常,理论上什么都不用加。
+  但如果未来想换成自建 http 代理,就需要 ATS 例外:
+-->
+
+<!-- 仅当你后端是 http(没有 https)时才需要,默认不要加 -->
+<key>NSAppTransportSecurity</key>
+<dict>
+  <key>NSAllowsArbitraryLoads</key>
+  <false/>
+  <key>NSExceptionDomains</key>
+  <dict>
+    <key>your-proxy.example.com</key>
+    <dict>
+      <key>NSIncludesSubdomains</key>
+      <true/>
+      <key>NSExceptionAllowsInsecureHTTPLoads</key>
+      <true/>
+    </dict>
+  </dict>
+</dict>
