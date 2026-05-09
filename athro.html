@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Athro · SYD → NZ 机票特价监视器</title>
+<link rel="stylesheet" href="athro.css" />
+</head>
+<body>
+  <main class="stage">
+    <div class="phone" role="application" aria-label="Athro iPhone widget 原型">
+      <div class="phone-frame">
+        <div class="notch" aria-hidden="true"></div>
+        <div class="phone-screen" id="screen">
+
+          <!-- iOS status bar -->
+          <header class="ios-status">
+            <span class="ios-time">9:41</span>
+            <span class="ios-icons" aria-hidden="true">
+              <svg class="i-signal" viewBox="0 0 18 12"><rect x="0"  y="8" width="3" height="4" rx="0.6"/><rect x="5"  y="6" width="3" height="6" rx="0.6"/><rect x="10" y="3" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="12" rx="0.6"/></svg>
+              <svg class="i-wifi" viewBox="0 0 16 12"><path d="M8 11.2a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Zm0-4.4c1.6 0 3 .6 4.1 1.5l1.4-1.4A8 8 0 0 0 8 5a8 8 0 0 0-5.5 1.9L3.9 8.3A6 6 0 0 1 8 6.8Zm0-4.4c2.7 0 5.2 1 7 2.7l1.4-1.4A11 11 0 0 0 8 1a11 11 0 0 0-8.4 3.7l1.4 1.4A9 9 0 0 1 8 2.4Z"/></svg>
+              <span class="i-battery"><i></i></span>
+            </span>
+          </header>
+
+          <!-- Today / 负一屏 view -->
+          <div class="today">
+            <div class="today-head">
+              <h1 class="today-greet">今天</h1>
+              <p class="today-sub">悉尼 · 周六 5月9日</p>
+            </div>
+
+            <!-- Athro 大号 widget -->
+            <article class="widget widget-athro" id="widgetAthro">
+              <header class="w-head">
+                <div class="brand">
+                  <span class="brand-logo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="currentColor" d="M2.5 16.5 21 9 14 18l-2.4-3.1-1.6 4-1.5-2.4-6 1Z"/>
+                    </svg>
+                  </span>
+                  <span class="brand-name">Athro</span>
+                  <span class="brand-tag">监视中</span>
+                </div>
+                <div class="route">
+                  <span class="route-from">SYD</span>
+                  <span class="route-arrow" aria-hidden="true">→</span>
+                  <div class="city-tabs" role="tablist">
+                    <button class="city-tab is-active" data-city="AKL" role="tab">AKL</button>
+                    <button class="city-tab" data-city="CHC" role="tab">CHC</button>
+                    <button class="city-tab city-tab-add" title="切换/添加目的地" aria-label="切换或添加目的地">+</button>
+                  </div>
+                </div>
+              </header>
+
+              <section class="w-summary">
+                <div class="summary-best">
+                  <span class="best-label">7 日最低 · 含合适酒店</span>
+                  <div class="best-price">
+                    <span class="cur">A$</span>
+                    <span class="num" id="bestPrice">—</span>
+                    <span class="deal-pill" id="dealPill">特价</span>
+                  </div>
+                  <span class="best-meta" id="bestMeta">—</span>
+                </div>
+                <div class="summary-trend">
+                  <span class="trend-arrow" id="trendArrow">↘</span>
+                  <span class="trend-text" id="trendText">较 30 日均价 −28%</span>
+                </div>
+              </section>
+
+              <section class="w-grid" id="dayGrid" aria-label="未来 7 天票价"></section>
+
+              <footer class="w-foot">
+                <span class="foot-item">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2 13V6h12v7H2Zm1-1h10V7H3v5Zm2-7V3a3 3 0 0 1 6 0v2H9V3a1 1 0 0 0-2 0v2H5Z"/></svg>
+                  酒店 <b id="hotelPrice">—</b>/晚
+                </span>
+                <span class="foot-item">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="m8 1 2.2 4.5L15 6.2l-3.6 3.5.9 5L8 12.3 3.7 14.7l.9-5L1 6.2l4.8-.7L8 1Z"/></svg>
+                  4★ 评分 <b id="hotelRating">8.6</b>
+                </span>
+                <span class="foot-item foot-stale">
+                  最近更新 <b id="updatedAt">2 分钟前</b>
+                </span>
+              </footer>
+            </article>
+
+            <!-- 推送通知样例 -->
+            <article class="notif" id="notif">
+              <div class="notif-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.5 16.5 21 9 14 18l-2.4-3.1-1.6 4-1.5-2.4-6 1Z"/></svg>
+              </div>
+              <div class="notif-body">
+                <div class="notif-meta">
+                  <span class="notif-app">Athro</span>
+                  <span class="notif-time">现在</span>
+                </div>
+                <div class="notif-title" id="notifTitle">悉尼 → 奥克兰 命中特价!</div>
+                <div class="notif-text" id="notifText">5 月 12 日往返 A$399 · 同期 4★ 酒店 A$148/晚 · 比近 30 日均价低 28%</div>
+              </div>
+            </article>
+
+            <p class="legend">
+              <span class="lg-dot lg-deal"></span>特价命中
+              <span class="lg-dot lg-low"></span>偏低
+              <span class="lg-dot lg-mid"></span>正常
+              <span class="lg-dot lg-high"></span>偏高
+            </p>
+          </div>
+
+          <div class="home-indicator" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <span class="side-btn side-btn-power" aria-hidden="true"></span>
+      <span class="side-btn side-btn-vol-up" aria-hidden="true"></span>
+      <span class="side-btn side-btn-vol-dn" aria-hidden="true"></span>
+    </div>
+
+    <p class="caption">从主屏向右滑到「今天」视图,Athro 一直在替你盯价。点 AKL / CHC 切换目的地。</p>
+  </main>
+
+  <script src="athro.js"></script>
+</body>
+</html>
