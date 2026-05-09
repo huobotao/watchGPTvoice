@@ -45,6 +45,26 @@ const MOCK = {
       text:  '5 月 13 日往返 A$498 · 同期 4★ 酒店 A$135/晚 · 比近 30 日均价低 22%',
     },
   },
+  ZQN: {
+    name: '皇后镇',
+    iata: 'ZQN',
+    bestIdx: 5,
+    avgDeltaPct: -11,        // 皇后镇近期偏旺,折扣不深
+    weekAvgDeltaPct: -3,
+    days: [
+      { md:'5/9',  dow:'六', price:892, hotel:215, rating:8.9, band:'high' },
+      { md:'5/10', dow:'日', price:858, hotel:208, rating:8.9, band:'high' },
+      { md:'5/11', dow:'一', price:784, hotel:189, rating:8.8, band:'mid'  },
+      { md:'5/12', dow:'二', price:739, hotel:182, rating:8.8, band:'mid'  },
+      { md:'5/13', dow:'三', price:712, hotel:178, rating:8.8, band:'mid'  },
+      { md:'5/14', dow:'四', price:679, hotel:172, rating:8.9, band:'deal' },
+      { md:'5/15', dow:'五', price:768, hotel:195, rating:8.7, band:'high' },
+    ],
+    notif: {
+      title: '悉尼 → 皇后镇 价位下探',
+      text:  '5 月 14 日往返 A$679 · 同期 4★ 酒店 A$172/晚 · 比近 30 日均价低 11%',
+    },
+  },
 };
 
 // 占位:将来对接真实 API
