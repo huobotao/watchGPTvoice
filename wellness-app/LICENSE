@@ -1,0 +1,22 @@
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies of this
+ license document, but changing it is not allowed.
+
+This project is licensed under the GNU Affero General Public License v3.0
+or later. The full text is available at:
+
+    https://www.gnu.org/licenses/agpl-3.0.txt
+
+A short summary of what AGPL-3.0 requires:
+
+  - You may use, study, modify, and redistribute this software.
+  - If you distribute modified versions, they must also be released under
+    AGPL-3.0.
+  - If you run a modified version on a network server and let users
+    interact with it, you must offer those users the source code of
+    your modified version.
+
+For commercial relicensing inquiries, contact the maintainer.
