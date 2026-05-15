@@ -3,10 +3,13 @@
     home: document.getElementById('viewHome'),
     record: document.getElementById('viewRecord'),
     reply: document.getElementById('viewReply'),
+    timeline: document.getElementById('viewTimeline'),
   };
 
   const openApp = document.getElementById('openApp');
+  const openTimeline = document.getElementById('openTimeline');
   const backHome = document.getElementById('backHome');
+  const backHomeFromTimeline = document.getElementById('backHomeFromTimeline');
   const backRecord = document.getElementById('backRecord');
   const micBtn = document.getElementById('micBtn');
   const recordTitle = document.getElementById('recordTitle');
@@ -116,5 +119,15 @@
   askAgain.addEventListener('click', () => {
     resetRecordView();
     switchTo('record');
+  });
+
+  openTimeline.addEventListener('click', () => {
+    switchTo('timeline');
+    if (window.TL && window.TL.enter) window.TL.enter();
+  });
+
+  backHomeFromTimeline.addEventListener('click', () => {
+    if (window.TL && window.TL.leave) window.TL.leave();
+    switchTo('home');
   });
 })();

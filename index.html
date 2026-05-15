@@ -21,21 +21,38 @@
             <span class="status-dot" aria-hidden="true"></span>
           </header>
 
-          <!-- Home screen: ChatGPT app icon -->
+          <!-- Home screen: app icons -->
           <section class="view view-home is-active" id="viewHome" aria-label="主屏幕">
-            <button class="app-icon" id="openApp" aria-label="打开 ChatGPT">
-              <svg viewBox="0 0 64 64" class="logo" aria-hidden="true">
-                <defs>
-                  <radialGradient id="g" cx="50%" cy="50%" r="60%">
-                    <stop offset="0%" stop-color="#10a37f"/>
-                    <stop offset="100%" stop-color="#0b6f57"/>
-                  </radialGradient>
-                </defs>
-                <rect width="64" height="64" rx="14" fill="url(#g)"/>
-                <path fill="#fff" d="M44.6 27.2a8.6 8.6 0 0 0-.74-7.06 8.7 8.7 0 0 0-9.37-4.17 8.62 8.62 0 0 0-6.5-2.9 8.7 8.7 0 0 0-8.3 6.02 8.62 8.62 0 0 0-5.76 4.17 8.7 8.7 0 0 0 1.07 10.2 8.62 8.62 0 0 0 .74 7.07 8.7 8.7 0 0 0 9.37 4.17 8.62 8.62 0 0 0 6.5 2.9 8.7 8.7 0 0 0 8.3-6.02 8.62 8.62 0 0 0 5.76-4.17 8.7 8.7 0 0 0-1.07-10.2zM34.5 47.2a6.45 6.45 0 0 1-4.13-1.5l.2-.12 6.86-3.96a1.13 1.13 0 0 0 .57-.98v-9.66l2.9 1.68a.1.1 0 0 1 .06.08v8.01a6.47 6.47 0 0 1-6.46 6.45zM20.6 41.3a6.43 6.43 0 0 1-.77-4.32l.2.12 6.87 3.96a1.12 1.12 0 0 0 1.13 0l8.39-4.84v3.35a.11.11 0 0 1-.04.09l-6.94 4a6.46 6.46 0 0 1-8.84-2.36zM18.8 26.27a6.44 6.44 0 0 1 3.36-2.83v8.16a1.11 1.11 0 0 0 .56.98l8.36 4.82-2.9 1.68a.11.11 0 0 1-.1 0l-6.95-4a6.47 6.47 0 0 1-2.36-8.81zm23.83 5.55-8.39-4.86 2.9-1.67a.11.11 0 0 1 .1 0l6.95 4a6.46 6.46 0 0 1-1 11.65v-8.16a1.13 1.13 0 0 0-.56-.97zM45.5 26.5l-.2-.12-6.86-3.99a1.12 1.12 0 0 0-1.13 0l-8.39 4.84v-3.35a.1.1 0 0 1 .04-.09l6.95-4a6.46 6.46 0 0 1 9.6 6.7zm-18.2 5.49-2.9-1.68a.11.11 0 0 1-.06-.08v-8.01a6.46 6.46 0 0 1 10.6-4.96l-.2.11-6.87 3.97a1.12 1.12 0 0 0-.57.97zm1.58-3.4 3.74-2.16 3.74 2.15v4.32l-3.73 2.16-3.74-2.16z"/>
-              </svg>
-              <span class="app-label">ChatGPT</span>
-            </button>
+            <div class="home-grid">
+              <button class="app-icon" id="openApp" aria-label="打开 ChatGPT">
+                <svg viewBox="0 0 64 64" class="logo" aria-hidden="true">
+                  <defs>
+                    <radialGradient id="g" cx="50%" cy="50%" r="60%">
+                      <stop offset="0%" stop-color="#10a37f"/>
+                      <stop offset="100%" stop-color="#0b6f57"/>
+                    </radialGradient>
+                  </defs>
+                  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+                  <path fill="#fff" d="M44.6 27.2a8.6 8.6 0 0 0-.74-7.06 8.7 8.7 0 0 0-9.37-4.17 8.62 8.62 0 0 0-6.5-2.9 8.7 8.7 0 0 0-8.3 6.02 8.62 8.62 0 0 0-5.76 4.17 8.7 8.7 0 0 0 1.07 10.2 8.62 8.62 0 0 0 .74 7.07 8.7 8.7 0 0 0 9.37 4.17 8.62 8.62 0 0 0 6.5 2.9 8.7 8.7 0 0 0 8.3-6.02 8.62 8.62 0 0 0 5.76-4.17 8.7 8.7 0 0 0-1.07-10.2zM34.5 47.2a6.45 6.45 0 0 1-4.13-1.5l.2-.12 6.86-3.96a1.13 1.13 0 0 0 .57-.98v-9.66l2.9 1.68a.1.1 0 0 1 .06.08v8.01a6.47 6.47 0 0 1-6.46 6.45zM20.6 41.3a6.43 6.43 0 0 1-.77-4.32l.2.12 6.87 3.96a1.12 1.12 0 0 0 1.13 0l8.39-4.84v3.35a.11.11 0 0 1-.04.09l-6.94 4a6.46 6.46 0 0 1-8.84-2.36zM18.8 26.27a6.44 6.44 0 0 1 3.36-2.83v8.16a1.11 1.11 0 0 0 .56.98l8.36 4.82-2.9 1.68a.11.11 0 0 1-.1 0l-6.95-4a6.47 6.47 0 0 1-2.36-8.81zm23.83 5.55-8.39-4.86 2.9-1.67a.11.11 0 0 1 .1 0l6.95 4a6.46 6.46 0 0 1-1 11.65v-8.16a1.13 1.13 0 0 0-.56-.97zM45.5 26.5l-.2-.12-6.86-3.99a1.12 1.12 0 0 0-1.13 0l-8.39 4.84v-3.35a.1.1 0 0 1 .04-.09l6.95-4a6.46 6.46 0 0 1 9.6 6.7zm-18.2 5.49-2.9-1.68a.11.11 0 0 1-.06-.08v-8.01a6.46 6.46 0 0 1 10.6-4.96l-.2.11-6.87 3.97a1.12 1.12 0 0 0-.57.97zm1.58-3.4 3.74-2.16 3.74 2.15v4.32l-3.73 2.16-3.74-2.16z"/>
+                </svg>
+                <span class="app-label">ChatGPT</span>
+              </button>
+              <button class="app-icon" id="openTimeline" aria-label="打开 Timeline">
+                <svg viewBox="0 0 64 64" class="logo timeline-icon" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#0a84ff"/>
+                      <stop offset="100%" stop-color="#0040a0"/>
+                    </linearGradient>
+                  </defs>
+                  <rect width="64" height="64" rx="14" fill="url(#g2)"/>
+                  <rect x="12" y="20" width="34" height="6" rx="3" fill="#fff" opacity=".95"/>
+                  <rect x="20" y="30" width="28" height="6" rx="3" fill="#fff" opacity=".85"/>
+                  <rect x="16" y="40" width="24" height="6" rx="3" fill="#fff" opacity=".75"/>
+                </svg>
+                <span class="app-label">Timeline</span>
+              </button>
+            </div>
           </section>
 
           <!-- Recording screen -->
@@ -74,13 +91,65 @@
             <button class="again-btn" id="askAgain">再问一次</button>
           </section>
 
+          <!-- Timeline screen -->
+          <section class="view view-timeline" id="viewTimeline" aria-label="音频时间线">
+            <button class="back-btn" id="backHomeFromTimeline" aria-label="返回">‹</button>
+            <div class="tl-header">
+              <span>Timeline</span>
+              <button id="tlKeyBtn" class="tl-key-btn" aria-label="API key">⚙</button>
+            </div>
+
+            <label class="tl-drop" id="tlDrop">
+              <input type="file" id="tlFile" accept="audio/mpeg,audio/mp3,.mp3" hidden />
+              <span>Drop MP3 or tap</span>
+            </label>
+
+            <div class="tl-status" id="tlStatus" hidden>
+              <div class="tl-stage" id="tlStage"></div>
+              <progress id="tlProgress" max="1" value="0"></progress>
+              <div class="tl-cost" id="tlCost"></div>
+              <div class="tl-buttons">
+                <button id="tlGo" disabled>Start</button>
+                <button id="tlCancel" disabled>Cancel</button>
+              </div>
+            </div>
+
+            <div class="tl-canvas-wrap" id="tlCanvasWrap" hidden>
+              <canvas id="tlCanvas"></canvas>
+              <div class="tl-tooltip" id="tlTooltip" hidden></div>
+            </div>
+
+            <input type="text" class="tl-search" id="tlSearch" placeholder="search transcript…" hidden />
+
+            <div class="tl-snippet" id="tlSnippet" hidden></div>
+          </section>
+
         </div>
       </div>
     </div>
 
-    <p class="caption">轻点图标 → 轻点话筒开始录音 → 再轻点发送</p>
+    <p class="caption">ChatGPT mockup · Timeline 长音频时间线</p>
   </main>
 
+  <!-- API key modal (overlays the whole page) -->
+  <div class="key-modal" id="keyModal" hidden>
+    <div class="key-modal-card">
+      <div class="key-modal-title">OpenAI API key</div>
+      <div class="key-modal-reason">Paste your OpenAI API key</div>
+      <input type="password" id="keyInput" placeholder="sk-…" autocomplete="off" />
+      <div class="key-modal-buttons">
+        <button id="keyCancel">Cancel</button>
+        <button id="keySave">Save</button>
+      </div>
+      <div class="key-modal-note">Stored only in this browser's localStorage. Personal use only.</div>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
+  <script src="mp3.js"></script>
+  <script src="whisper.js"></script>
+  <script src="activity.js"></script>
+  <script src="timeline.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
