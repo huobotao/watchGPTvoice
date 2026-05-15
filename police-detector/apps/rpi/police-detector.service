@@ -1,0 +1,19 @@
+# Sample systemd user unit for the Raspberry Pi service.
+# Install (per user):
+#   mkdir -p ~/.config/systemd/user
+#   cp apps/rpi/police-detector.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now police-detector.service
+[Unit]
+Description=Police detector (Raspberry Pi)
+After=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/watchGPTvoice/police-detector
+ExecStart=/usr/bin/python3 apps/rpi/service.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,9 @@
+# Ultralytics dataset config for the PEO fine-tune.
+# Paths are relative to this file once `yolo train` resolves it.
+path: .
+train: images/train
+val: images/val
+
+names:
+  0: peo_vehicle
+  # 1: peo_officer   # uncomment when you start labeling officers
