@@ -8,8 +8,9 @@ struct ContentView: View {
             HomeView()
                 .navigationDestination(for: AppState.Route.self) { route in
                     switch route {
-                    case .record: RecordView()
-                    case .reply:  ReplyView()
+                    case .record:   RecordView()
+                    case .reply:    ReplyView()
+                    case .settings: SettingsView()
                     }
                 }
         }

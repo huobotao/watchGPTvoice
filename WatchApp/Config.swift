@@ -1,11 +1,19 @@
 import Foundation
 
-// ⚠️ GitHub Secret Scanning 拒绝把 OpenAI Key 推到远端,所以此处改为占位符。
-// 在你本地 Xcode 里把下面这一行替换为你那把 sk-proj-... 的完整 Key 即可。
-// 注意:不要把替换后的文件再 commit & push,否则 GitHub 仍会拦截 / OpenAI 会自动 revoke。
-// 长期方案:做个轻量代理(Cloudflare Worker / Vercel Edge),Key 留服务端。
 enum Config {
-    static let openAIKey = "PASTE_YOUR_OPENAI_KEY_HERE"
+    // 运行时存储的 Key(从手表的设置页输入)
+    static let keyDefaultsKey = "openai_api_key"
+
+    // 编译期默认值。在 Xcode 里把下面这行换成你自己的 sk-... 也可以,
+    // 但更推荐的方式:运行 App 后从设置页粘贴,避免 Key 进 git。
+    static let compiledInDefaultKey = ""
+
+    static var openAIKey: String {
+        let saved = UserDefaults.standard.string(forKey: keyDefaultsKey) ?? ""
+        return saved.isEmpty ? compiledInDefaultKey : saved
+    }
+
+    static var hasKey: Bool { !openAIKey.isEmpty }
 
     static let chatModel = "gpt-4o-mini"
     static let whisperModel = "whisper-1"

@@ -16,7 +16,8 @@
     ├── ReplyView.swift                  # 回复展示
     ├── AudioRecorder.swift              # AVAudioRecorder 封装
     ├── OpenAIClient.swift               # Whisper + Chat 调用
-    ├── Config.swift                     # API Key + 模型名
+    ├── Config.swift                     # 读 UserDefaults / 编译期默认 Key
+    ├── SettingsView.swift               # 设置页:运行时输入 API Key
     └── Info.plist.snippet               # 麦克风权限说明
 ```
 
@@ -56,13 +57,23 @@
   4. ⌘R 运行
   5. 抬腕看到 ChatGPT 图标 → 点开 → 点话筒 → 说话 → 再点一次 → 等待回复
 
-## 安全提醒 ⚠️
+## API Key 怎么填
 
-`WatchApp/Config.swift` 里硬编码了 OpenAI API Key。这不是生产做法:
+有两种方式,推荐第一种:
 
-- Key 已进入 git 历史,GitHub 的 secret scanning 大概率会检测到并通知 OpenAI **自动 revoke**
-- 建议测完立即去 [platform.openai.com/api-keys](https://platform.openai.com/api-keys) 主动 revoke
-- 长期方案:做一个轻量代理服务(Cloudflare Worker / Vercel Edge),Key 留在服务端,手表只调你自己的代理
+**方式 A:运行时从手表设置页输入(推荐,Key 不进 git)**
+- App 启动后,主屏右上角点齿轮 ⚙
+- 用听写 / Scribble 粘贴或输入完整 sk-... Key
+- 点保存,Key 存在手表的 UserDefaults 里
+
+**方式 B:在 Xcode 里硬编码(最快但不安全)**
+- 打开 `WatchApp/Config.swift`,把 `compiledInDefaultKey` 改成你的 Key
+- **不要 commit 这个修改**,可以 `git update-index --skip-worktree WatchApp/Config.swift`
+
+不管哪种,**别把真实 Key 推到 GitHub**:
+- GitHub Secret Scanning 会拦截 push
+- 即便绕过,OpenAI 检测到后会**自动 revoke** 这把 Key
+- 长期方案:做轻量代理(Cloudflare Worker / Vercel Edge),Key 留服务端,手表只调你自己的代理
 
 ## 浏览器预览
 

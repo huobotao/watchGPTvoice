@@ -2,7 +2,7 @@ import Foundation
 
 @MainActor
 final class AppState: ObservableObject {
-    enum Route: Hashable { case record, reply }
+    enum Route: Hashable { case record, reply, settings }
 
     @Published var path: [Route] = []
     @Published var isRecording = false
