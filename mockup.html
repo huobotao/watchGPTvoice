@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BlackBox · Audio Life Logger — Mockup</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #14171f;
+    --panel-2: #1c2029;
+    --border: #262a36;
+    --text: #ffffff;
+    --muted: #8a90a0;
+    --accent: #10a37f;
+    --c-sleep: #5e5ce6;
+    --c-work: #30d158;
+    --c-meeting: #0a84ff;
+    --c-oneonone: #10a37f;
+    --c-cooking: #ff9f0a;
+    --c-commute: #64d2ff;
+    --c-call: #ff375f;
+    --c-tv: #bf5af2;
+    --c-silence: #3a3a3c;
+    --c-uncertain: #8e8e93;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+    font-size: 13px; -webkit-font-smoothing: antialiased; }
+  body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* ───── Top bar ───── */
+  .topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+  .brand-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff453a;
+    box-shadow: 0 0 8px rgba(255,69,58,.6); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+  .date-nav { display: flex; align-items: center; gap: 8px; margin-left: 12px; }
+  .date-nav button { background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+  .date-nav .today { font-weight: 600; padding: 6px 14px; }
+  .search-wrap { flex: 1; max-width: 420px; margin-left: auto; position: relative; }
+  .search { width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 8px 12px 8px 32px; font-size: 13px; outline: none; }
+  .search:focus { border-color: var(--accent); }
+  .search-wrap::before { content: "⌕"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 14px; }
+  .icon-btn { background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 7px 10px; cursor: pointer; font-size: 14px; }
+
+  /* ───── Main split ───── */
+  .main { flex: 1; display: grid; grid-template-columns: 240px 1fr 320px; overflow: hidden; }
+  .sidebar { border-right: 1px solid var(--border); background: var(--panel); padding: 18px 16px;
+    overflow-y: auto; }
+  .center { padding: 24px; overflow-y: auto; }
+  .right { border-left: 1px solid var(--border); background: var(--panel); padding: 18px 16px;
+    overflow-y: auto; }
+
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted);
+    margin: 0 0 10px; font-weight: 600; }
+
+  /* ───── Sidebar: activity legend ───── */
+  .legend-item { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 6px;
+    cursor: pointer; margin-bottom: 2px; transition: background .15s; }
+  .legend-item:hover { background: var(--panel-2); }
+  .legend-item.is-active { background: var(--panel-2); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .legend-label { flex: 1; font-size: 13px; }
+  .legend-time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .day-stats { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .stat-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: var(--muted); }
+  .stat-row strong { color: var(--text); font-weight: 600; }
+
+  /* ───── Center: hero day ───── */
+  .day-header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .day-title { font-size: 24px; font-weight: 700; margin: 0; }
+  .day-sub { color: var(--muted); font-size: 13px; }
+
+  .timeline-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 18px; }
+  .timeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .timeline-header h3 { margin: 0; font-size: 14px; font-weight: 600; }
+  .timeline-zoom { display: flex; gap: 4px; }
+  .timeline-zoom button { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 5px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .timeline-zoom button.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .timeline-canvas { position: relative; height: 64px; background: #0a0c11; border-radius: 8px;
+    overflow: visible; cursor: pointer; }
+  .seg { position: absolute; top: 0; height: 100%; transition: filter .15s; }
+  .seg:hover { filter: brightness(1.25); }
+  .seg.is-selected { box-shadow: inset 0 0 0 2px #fff; }
+  .seg.is-search-hit::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 3px;
+    background: #ffd60a; border-radius: 2px; }
+
+  .hours { display: flex; justify-content: space-between; margin-top: 6px;
+    font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ───── Story / weekly ───── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .mini-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .mini-card h4 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+
+  .week-grid { display: flex; gap: 6px; align-items: flex-end; height: 80px; }
+  .week-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .week-bar { width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), #0b6f57); }
+  .week-label { font-size: 10px; color: var(--muted); }
+  .week-day.is-today .week-label { color: var(--accent); font-weight: 700; }
+
+  .people-list { display: flex; flex-direction: column; gap: 8px; }
+  .person { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .person-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+  .person-meta { flex: 1; }
+  .person-name { font-weight: 600; }
+  .person-time { color: var(--muted); font-size: 11px; }
+
+  /* ───── Right: detail / AI ───── */
+  .detail-card { background: var(--panel-2); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .detail-label { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px;
+    font-weight: 600; color: #fff; margin-bottom: 8px; }
+  .detail-time { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+  .detail-conf { display: inline-block; background: var(--border); color: var(--muted); padding: 2px 6px;
+    border-radius: 4px; font-size: 11px; margin-left: 6px; }
+  .detail-transcript { font-size: 12.5px; line-height: 1.55; color: var(--text);
+    max-height: 180px; overflow-y: auto; padding-right: 4px; }
+  .detail-transcript p { margin: 0 0 8px; }
+
+  .entities { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .entity { background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    padding: 3px 8px; border-radius: 12px; font-size: 11px; }
+  .entity.person { color: #10a37f; border-color: rgba(16,163,127,.35); }
+  .entity.place { color: #64d2ff; border-color: rgba(100,210,255,.35); }
+  .entity.topic { color: #ff9f0a; border-color: rgba(255,159,10,.35); }
+
+  .insight { background: linear-gradient(135deg, rgba(16,163,127,.12), rgba(10,132,255,.08));
+    border: 1px solid rgba(16,163,127,.25); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .insight-title { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: .5px; }
+  .insight-body { font-size: 12.5px; line-height: 1.5; }
+
+  .action-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px;
+    background: var(--panel-2); border-radius: 6px; margin-bottom: 6px; font-size: 12px; }
+  .action-check { width: 14px; height: 14px; border: 1.5px solid var(--muted); border-radius: 3px; flex-shrink: 0;
+    margin-top: 2px; cursor: pointer; }
+  .action-time { color: var(--muted); font-size: 11px; margin-top: 3px; }
+
+  .tooltip { position: absolute; pointer-events: none; background: #000; border: 1px solid var(--border);
+    color: #fff; font-size: 11px; padding: 5px 8px; border-radius: 4px; white-space: nowrap; z-index: 10;
+    opacity: 0; transition: opacity .1s; }
+  .tooltip.is-visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-dot"></span>BlackBox</div>
+  <div class="date-nav">
+    <button>‹</button>
+    <button class="today">Tue · May 12</button>
+    <button>›</button>
+    <button>Today</button>
+  </div>
+  <div class="search-wrap">
+    <input class="search" id="search" placeholder="search transcripts · 'when did I mention Q3 launch?'" />
+  </div>
+  <button class="icon-btn">⚙</button>
+</div>
+
+<div class="main">
+
+  <!-- ─── Sidebar: activity legend ─── -->
+  <aside class="sidebar">
+    <div class="section-title">Today's activities</div>
+    <div id="legend"></div>
+    <div class="day-stats">
+      <div class="section-title">Day stats</div>
+      <div class="stat-row"><span>Total captured</span><strong>15h 47m</strong></div>
+      <div class="stat-row"><span>Speech detected</span><strong>8h 12m</strong></div>
+      <div class="stat-row"><span>Distinct voices</span><strong>9</strong></div>
+      <div class="stat-row"><span>Action items</span><strong>4</strong></div>
+      <div class="stat-row"><span>Cost (Whisper + LLM)</span><strong>$1.23</strong></div>
+    </div>
+  </aside>
+
+  <!-- ─── Center ─── -->
+  <main class="center">
+    <div class="day-header">
+      <h1 class="day-title">Tuesday, May 12</h1>
+      <span class="day-sub">·  recorded 06:13 → 22:00</span>
+    </div>
+
+    <!-- Main timeline -->
+    <div class="timeline-card">
+      <div class="timeline-header">
+        <h3>24-hour timeline</h3>
+        <div class="timeline-zoom">
+          <button class="is-active">Day</button>
+          <button>Week</button>
+          <button>Month</button>
+        </div>
+      </div>
+      <div class="timeline-canvas" id="timeline">
+        <div class="tooltip" id="tooltip"></div>
+      </div>
+      <div class="hours" id="hours"></div>
+    </div>
+
+    <!-- Secondary cards -->
+    <div class="grid-2">
+      <div class="mini-card">
+        <h4>This week — speech minutes</h4>
+        <div class="week-grid">
+          <div class="week-day"><div class="week-bar" style="height:42%"></div><div class="week-label">Mon</div></div>
+          <div class="week-day is-today"><div class="week-bar" style="height:78%"></div><div class="week-label">Tue</div></div>
+          <div class="week-day"><div class="week-bar" style="height:0;background:#262a36"></div><div class="week-label">Wed</div></div>
+          <div class="week-day"><div class="week-bar" style="height:0;background:#262a36"></div><div class="week-label">Thu</div></div>
+          <div class="week-day"><div class="week-bar" style="height:0;background:#262a36"></div><div class="week-label">Fri</div></div>
+          <div class="week-day"><div class="week-bar" style="height:0;background:#262a36"></div><div class="week-label">Sat</div></div>
+          <div class="week-day"><div class="week-bar" style="height:0;background:#262a36"></div><div class="week-label">Sun</div></div>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <h4>Who you talked with today</h4>
+        <div class="people-list">
+          <div class="person">
+            <div class="person-avatar" style="background:#10a37f">S</div>
+            <div class="person-meta"><div class="person-name">Sarah (manager)</div><div class="person-time">1h 12m · 3 conversations</div></div>
+          </div>
+          <div class="person">
+            <div class="person-avatar" style="background:#0a84ff">M</div>
+            <div class="person-meta"><div class="person-name">Mike (eng)</div><div class="person-time">42m · standup + DM</div></div>
+          </div>
+          <div class="person">
+            <div class="person-avatar" style="background:#ff9f0a">A</div>
+            <div class="person-meta"><div class="person-name">Alex (vendor)</div><div class="person-time">15m · phone call</div></div>
+          </div>
+          <div class="person">
+            <div class="person-avatar" style="background:#bf5af2">+6</div>
+            <div class="person-meta"><div class="person-name">6 others</div><div class="person-time">38m total</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ─── Right: detail + AI ─── -->
+  <aside class="right">
+    <div class="section-title">Selected segment</div>
+    <div class="detail-card" id="detail">
+      <span class="detail-label" id="detLabel" style="background:#0a84ff">meeting</span>
+      <span class="detail-conf">87% confident</span>
+      <div class="detail-time" id="detTime">14:00–15:00 · 1,247 words</div>
+      <div class="detail-transcript" id="detText">
+        <p>"OK so for Q3 we want to nail the GTM motion. Sarah, can you pull together the revised roadmap by Thursday? I'd like the design team to weigh in before we commit to dates."</p>
+        <p>"…the second thing I want to flag is that customer Alex is asking about the data export feature. They're blocking on it. We should get back to them with a date by end of week."</p>
+        <p>"…let's also make sure we have a clear answer on pricing tiers before the all-hands. I don't want to wing that one again."</p>
+      </div>
+      <div class="entities">
+        <span class="entity person">Sarah</span>
+        <span class="entity person">Alex</span>
+        <span class="entity topic">Q3 roadmap</span>
+        <span class="entity topic">GTM</span>
+        <span class="entity topic">data export</span>
+        <span class="entity topic">pricing tiers</span>
+      </div>
+    </div>
+
+    <div class="section-title">AI insights · today</div>
+    <div class="insight">
+      <div class="insight-title">✦ Pattern</div>
+      <div class="insight-body">Your longest focus block was <strong>09:15 → 11:42</strong> (2h 27m of silence after the standup). Tuesdays this month average 1h 50m — today was above average.</div>
+    </div>
+    <div class="insight">
+      <div class="insight-title">✦ Recurring topic</div>
+      <div class="insight-body">"Q3 launch" came up in 4 separate conversations totaling 38 minutes. You committed to a Thursday roadmap deadline at <strong>14:07</strong>.</div>
+    </div>
+    <div class="insight">
+      <div class="insight-title">✦ Mood signal</div>
+      <div class="insight-body">Speech rate dropped 18% after 16:00 — common pattern on days with back-to-back meetings.</div>
+    </div>
+
+    <div class="section-title" style="margin-top:18px;">Action items detected</div>
+    <div class="action-item">
+      <div class="action-check"></div>
+      <div>
+        <div>Send Q3 roadmap to Sarah by Thursday</div>
+        <div class="action-time">extracted from 14:07 meeting</div>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-check"></div>
+      <div>
+        <div>Reply to Alex with data-export ETA</div>
+        <div class="action-time">extracted from 14:12 meeting</div>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-check"></div>
+      <div>
+        <div>Finalize pricing tier doc before all-hands</div>
+        <div class="action-time">extracted from 14:34 meeting</div>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-check"></div>
+      <div>
+        <div>Call Mom back</div>
+        <div class="action-time">extracted from 19:42 dinner chat</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // Synthetic day: a software founder's Tuesday.
+  // start/end in minutes from 00:00.
+  const SEGMENTS = [
+    { s: 0,    e: 390,  label: 'sleep',     color: 'var(--c-sleep)',     conf: .95, name: 'Sleep' },
+    { s: 390,  e: 405,  label: 'silence',   color: 'var(--c-silence)',   conf: .9,  name: 'Silence' },
+    { s: 405,  e: 430,  label: 'cooking',   color: 'var(--c-cooking)',   conf: .82, name: 'Cooking' },
+    { s: 430,  e: 460,  label: 'one-on-one',color: 'var(--c-oneonone)',  conf: .78, name: 'Family breakfast' },
+    { s: 460,  e: 505,  label: 'commute',   color: 'var(--c-commute)',   conf: .85, name: 'Commute' },
+    { s: 505,  e: 540,  label: 'silence',   color: 'var(--c-silence)',   conf: .9,  name: 'Settling in' },
+    { s: 540,  e: 585,  label: 'meeting',   color: 'var(--c-meeting)',   conf: .91, name: 'Standup' },
+    { s: 585,  e: 690,  label: 'work',      color: 'var(--c-work)',      conf: .72, name: 'Focus work' },
+    { s: 690,  e: 720,  label: 'one-on-one',color: 'var(--c-oneonone)',  conf: .8,  name: 'Lunch chat' },
+    { s: 720,  e: 780,  label: 'silence',   color: 'var(--c-silence)',   conf: .9,  name: 'Silence' },
+    { s: 780,  e: 840,  label: 'meeting',   color: 'var(--c-meeting)',   conf: .87, name: 'Q3 planning' },
+    { s: 840,  e: 855,  label: 'phone-call',color: 'var(--c-call)',      conf: .92, name: 'Vendor call' },
+    { s: 855,  e: 960,  label: 'work',      color: 'var(--c-work)',      conf: .7,  name: 'Deep work' },
+    { s: 960,  e: 1020, label: 'meeting',   color: 'var(--c-meeting)',   conf: .89, name: '1:1 with manager' },
+    { s: 1020, e: 1080, label: 'commute',   color: 'var(--c-commute)',   conf: .85, name: 'Commute home' },
+    { s: 1080, e: 1140, label: 'cooking',   color: 'var(--c-cooking)',   conf: .8,  name: 'Dinner prep' },
+    { s: 1140, e: 1200, label: 'one-on-one',color: 'var(--c-oneonone)',  conf: .83, name: 'Family dinner' },
+    { s: 1200, e: 1260, label: 'silence',   color: 'var(--c-silence)',   conf: .9,  name: 'Kids bedtime' },
+    { s: 1260, e: 1350, label: 'tv',        color: 'var(--c-tv)',        conf: .6,  name: 'TV / wind-down' },
+    { s: 1350, e: 1380, label: 'one-on-one',color: 'var(--c-oneonone)',  conf: .75, name: 'Bedtime chat' },
+    { s: 1380, e: 1440, label: 'sleep',     color: 'var(--c-sleep)',     conf: .9,  name: 'Sleep (start)' },
+  ];
+
+  const totals = {};
+  for (const s of SEGMENTS) {
+    totals[s.label] = (totals[s.label] || 0) + (s.e - s.s);
+  }
+
+  const LABEL_META = {
+    'sleep':      { color: 'var(--c-sleep)',     name: '😴 Sleep' },
+    'work':       { color: 'var(--c-work)',      name: '💻 Focus work' },
+    'meeting':    { color: 'var(--c-meeting)',   name: '🗣 Meetings' },
+    'one-on-one': { color: 'var(--c-oneonone)',  name: '👥 One-on-one' },
+    'cooking':    { color: 'var(--c-cooking)',   name: '🍳 Cooking' },
+    'commute':    { color: 'var(--c-commute)',   name: '🚗 Commute' },
+    'phone-call': { color: 'var(--c-call)',      name: '📞 Phone' },
+    'tv':         { color: 'var(--c-tv)',        name: '📺 TV / leisure' },
+    'silence':    { color: 'var(--c-silence)',   name: '⊘  Silence' },
+    'uncertain':  { color: 'var(--c-uncertain)', name: '?  Uncertain' },
+  };
+
+  function fmt(mins) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    if (h === 0) return `${m}m`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${String(m).padStart(2, '0')}m`;
+  }
+  function hhmm(mins) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  // Sidebar legend
+  const legend = document.getElementById('legend');
+  const order = ['sleep','work','meeting','one-on-one','cooking','commute','phone-call','tv','silence'];
+  for (const k of order) {
+    if (!totals[k]) continue;
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `
+      <div class="legend-swatch" style="background:${LABEL_META[k].color}"></div>
+      <div class="legend-label">${LABEL_META[k].name}</div>
+      <div class="legend-time">${fmt(totals[k])}</div>
+    `;
+    legend.appendChild(item);
+  }
+
+  // Timeline rendering
+  const TL = document.getElementById('timeline');
+  const TOOLTIP = document.getElementById('tooltip');
+  const HOURS = document.getElementById('hours');
+  const DAY_MINS = 1440;
+
+  for (const seg of SEGMENTS) {
+    const d = document.createElement('div');
+    d.className = 'seg';
+    d.style.left = (seg.s / DAY_MINS * 100) + '%';
+    d.style.width = ((seg.e - seg.s) / DAY_MINS * 100) + '%';
+    d.style.background = seg.color;
+    d.style.opacity = (0.4 + 0.6 * seg.conf);
+    d.dataset.s = seg.s;
+    d.dataset.e = seg.e;
+    d.dataset.name = seg.name;
+    d.dataset.label = seg.label;
+    d.dataset.conf = seg.conf;
+    TL.appendChild(d);
+
+    d.addEventListener('mouseenter', (e) => {
+      TOOLTIP.textContent = `${seg.name} · ${hhmm(seg.s)}–${hhmm(seg.e)}`;
+      TOOLTIP.classList.add('is-visible');
+    });
+    d.addEventListener('mousemove', (e) => {
+      const rect = TL.getBoundingClientRect();
+      TOOLTIP.style.left = (e.clientX - rect.left + 10) + 'px';
+      TOOLTIP.style.top = '-28px';
+    });
+    d.addEventListener('mouseleave', () => TOOLTIP.classList.remove('is-visible'));
+    d.addEventListener('click', () => {
+      document.querySelectorAll('.seg').forEach(s => s.classList.remove('is-selected'));
+      d.classList.add('is-selected');
+      updateDetail(seg);
+    });
+  }
+
+  for (let h = 0; h <= 24; h += 3) {
+    const span = document.createElement('span');
+    span.textContent = String(h).padStart(2,'0') + ':00';
+    HOURS.appendChild(span);
+  }
+
+  function updateDetail(seg) {
+    document.getElementById('detLabel').textContent = seg.label;
+    document.getElementById('detLabel').style.background = seg.color;
+    document.getElementById('detTime').textContent =
+      `${hhmm(seg.s)}–${hhmm(seg.e)} · ${seg.name}`;
+    const transcripts = {
+      'Sleep':            "<p>(no speech detected)</p>",
+      'Cooking':          "<p>(humming · cabinet sounds · running water)</p><p>“Where did I put the … ah, there.”</p>",
+      'Family breakfast': "<p>“Did you finish your homework?” “Almost, just one more page.” “OK well don't forget your lunchbox today.”</p>",
+      'Commute':          "<p>(car ambient · podcast playing in background)</p><p>“…and that's why the Fed's decision matters more than people think.”</p>",
+      'Standup':          "<p>“Quick standup. Mike, you start.” “Yesterday I shipped the auth fix, today picking up the dashboard ticket.” “Any blockers?” “No.” “Good. Sarah?”</p>",
+      'Focus work':       "<p>(silence · occasional typing · ~14 words spoken across 1h 45m)</p>",
+      'Lunch chat':       "<p>“How was your weekend?” “Good, took the kids hiking. You?” “Just caught up on sleep honestly.”</p>",
+      'Q3 planning':      "<p>“OK so for Q3 we want to nail the GTM motion. Sarah, can you pull together the revised roadmap by Thursday?”</p><p>“…customer Alex is asking about the data export feature. They're blocking on it.”</p>",
+      'Vendor call':      "<p>“Hey Alex, thanks for jumping on. Quick one — when can we expect the data export endpoint?” “Two weeks, give or take.” “OK, I'll communicate that to the customer.”</p>",
+      '1:1 with manager': "<p>“How's the team doing?” “Generally good. Mike is unblocked. I'm a bit worried about the velocity on the dashboard side.”</p>",
+      'Dinner prep':      "<p>(chopping · pan sizzling)</p><p>“Honey, can you set the table?”</p>",
+      'Family dinner':    "<p>“How was school?” “Boring.” “What did you learn?” “I don't remember.”</p>",
+      'TV / wind-down':   "<p>(TV audio in background) “…and the verdict is in.” “Mute that for a sec — did you call your mom back yet?” “No, I'll do it tomorrow.”</p>",
+      'Bedtime chat':     "<p>“What's on tomorrow?” “Pretty light morning, then the all-hands at 2.” “OK, get some sleep.”</p>",
+    };
+    document.getElementById('detText').innerHTML = transcripts[seg.name] || "<p>(no transcript)</p>";
+  }
+
+  // Search demo: highlight Q3 mentions
+  document.getElementById('search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    const segs = document.querySelectorAll('.seg');
+    segs.forEach(s => s.classList.remove('is-search-hit'));
+    if (!q) return;
+    const hitNames = {
+      'q3': ['Q3 planning', '1:1 with manager'],
+      'sarah': ['Q3 planning', '1:1 with manager'],
+      'alex': ['Q3 planning', 'Vendor call'],
+      'sleep': ['Sleep', 'Bedtime chat'],
+      'mom': ['TV / wind-down'],
+      'data': ['Q3 planning', 'Vendor call'],
+    };
+    const hitFor = Object.keys(hitNames).find(k => q.includes(k));
+    if (!hitFor) return;
+    const names = hitNames[hitFor];
+    segs.forEach(s => { if (names.includes(s.dataset.name)) s.classList.add('is-search-hit'); });
+  });
+
+  // Auto-select the planning meeting on load
+  document.querySelector('.seg[data-name="Q3 planning"]').click();
+</script>
+</body>
+</html>
