@@ -60,6 +60,14 @@
   .illum-card .illum-title { font-size: 14px; font-weight: 600; }
   .illum-card .illum-pct { color: var(--phase); font-weight: 600; font-variant-numeric: tabular-nums; }
   .illum-card .illum-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .illum-card .illum-sub .luxv { color: #ffd87b; }
+  .illum-card .illum-sub .tempv { color: #ff5a78; }
+  .illum-card .illum-toggle { display: flex; gap: 6px; margin-top: 10px; }
+  .illum-card .illum-toggle button { flex: 1; background: transparent; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 0; font-size: 12px;
+    cursor: pointer; -webkit-appearance: none; appearance: none; font-family: inherit; }
+  .illum-card .illum-toggle button.active { background: rgba(255,184,107,0.15); color: var(--accent);
+    border-color: var(--accent); font-weight: 600; }
   .illum-card .illum-chart { width: 100%; height: 90px; margin-top: 10px; display: block; }
   .illum-card .illum-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
 
@@ -152,12 +160,14 @@
 
   <div class="illum-card" id="illum-card" hidden>
     <div class="illum-head">
-      <div class="illum-title">🌞 地面光照 · 理想晴空</div>
+      <div class="illum-title" id="illum-title">🌞 地面光照 + 气温</div>
       <div class="illum-pct" id="illum-pct">—</div>
     </div>
-    <div class="illum-sub">
-      <span id="illum-cur">— lux</span>
-      <span> / 24h 内最大 <span id="illum-max">— lux</span></span>
+    <div class="illum-sub" id="illum-info">—</div>
+    <div class="illum-toggle" id="illum-toggle">
+      <button data-mode="illum">光照</button>
+      <button data-mode="temp">气温</button>
+      <button data-mode="both" class="active">两者</button>
     </div>
     <svg id="illum-chart" class="illum-chart" viewBox="0 0 320 90" preserveAspectRatio="none"></svg>
     <div class="illum-axis">
@@ -381,65 +391,146 @@
     return direct + diffuse;
   }
 
-  // 构建 24h 光照曲线 SVG + 统计值
-  function buildIllumChart(now, lat, lng) {
+  // 构建 24h 曲线（mode = 'illum' / 'temp' / 'both'）
+  function buildChart(now, lat, lng, mode) {
     const W = 320, H = 90;
     const padL = 4, padR = 4, padT = 4, padB = 4;
     const cw = W - padL - padR, ch = H - padT - padB;
 
     const samples = [];
     let maxLux = 0;
+    let tempMin = Infinity, tempMax = -Infinity;
     for (let m = -12 * 60; m <= 12 * 60; m += 5) {
       const t = new Date(now.getTime() + m * 60000);
       const alt = getSunPos(t, lat, lng).alt / rad;
       const lux = illuminance(alt);
-      samples.push({ m, lux });
+      const temp = tempAt(t.getTime());
+      samples.push({ m, lux, temp });
       if (lux > maxLux) maxLux = lux;
+      if (temp != null) {
+        if (temp < tempMin) tempMin = temp;
+        if (temp > tempMax) tempMax = temp;
+      }
     }
-    const curLux = illuminance(getSunPos(now, lat, lng).alt / rad);
+    const curLux  = illuminance(getSunPos(now, lat, lng).alt / rad);
+    const curTemp = tempAt(now.getTime());
+    const hasTemp = tempMin !== Infinity;
+    if (hasTemp) {
+      // 给上下各加 10% 边距
+      const range = Math.max(2, tempMax - tempMin);
+      tempMin -= range * 0.1;
+      tempMax += range * 0.1;
+    }
 
-    // 对数 y 轴：让低光段也能看出变化
-    const yMin = -3.2;                   // 约 6e-4 lux
-    const yMax = Math.log10(maxLux + 1) + 0.05;
-    const yRange = yMax - yMin;
     const toX = m => padL + ((m + 12 * 60) / (24 * 60)) * cw;
-    const toY = lux => padT + ch - ((Math.log10(Math.max(lux, 1e-4)) - yMin) / yRange) * ch;
 
-    const pathD = samples.map((p, i) =>
-      `${i === 0 ? 'M' : 'L'}${toX(p.m).toFixed(1)},${toY(p.lux).toFixed(1)}`).join(' ');
-    const areaD = pathD +
-      ` L${toX(12 * 60).toFixed(1)},${(padT + ch).toFixed(1)}` +
-      ` L${toX(-12 * 60).toFixed(1)},${(padT + ch).toFixed(1)} Z`;
+    const yMinLux = -3.2;
+    const yMaxLux = Math.log10(maxLux + 1) + 0.05;
+    const toYLux  = lux => padT + ch - ((Math.log10(Math.max(lux, 1e-4)) - yMinLux) / (yMaxLux - yMinLux)) * ch;
+    const toYTemp = hasTemp ? (t => padT + ch - ((t - tempMin) / (tempMax - tempMin)) * ch) : null;
 
-    const cx = toX(0), cy = toY(curLux);
+    const parts = [];
+    parts.push(`<defs>
+      <linearGradient id="illum-area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffd87b" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#ffd87b" stop-opacity="0"/>
+      </linearGradient>
+    </defs>`);
 
-    // 横向参考线（10^0, 10^2, 10^4 lux）
-    const refs = [0, 2, 4].filter(p => p >= yMin && p <= yMax).map(p => {
-      const y = padT + ch - ((p - yMin) / yRange) * ch;
-      return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 3"/>` +
-             `<text x="${W - padR - 2}" y="${(y - 1).toFixed(1)}" text-anchor="end" fill="#5a6a90" font-size="9">10^${p} lux</text>`;
-    }).join('');
+    // 光照对数参考线
+    if (mode === 'illum' || mode === 'both') {
+      [0, 2, 4].filter(p => p >= yMinLux && p <= yMaxLux).forEach(p => {
+        const y = padT + ch - ((p - yMinLux) / (yMaxLux - yMinLux)) * ch;
+        parts.push(`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 3"/>`);
+        parts.push(`<text x="${padL + 2}" y="${(y - 1).toFixed(1)}" text-anchor="start" fill="#5a6a90" font-size="9">10^${p} lx</text>`);
+      });
+    }
+    // 气温上下限标记
+    if ((mode === 'temp' || mode === 'both') && hasTemp) {
+      parts.push(`<text x="${W - padR}" y="${(padT + 9).toFixed(1)}" text-anchor="end" fill="#ff5a78" font-size="9">${(tempMax).toFixed(1)}°</text>`);
+      parts.push(`<text x="${W - padR}" y="${(padT + ch - 2).toFixed(1)}" text-anchor="end" fill="#ff5a78" font-size="9">${(tempMin).toFixed(1)}°</text>`);
+    }
 
-    const svgInner = `
-      <defs>
-        <linearGradient id="illum-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffd87b" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="#ffd87b" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${refs}
-      <path d="${areaD}" fill="url(#illum-area)"/>
-      <path d="${pathD}" fill="none" stroke="#ffd87b" stroke-width="1.5"/>
-      <line x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${(padT + ch).toFixed(1)}"
-            stroke="#6cb6ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>
-      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="#ffe27a" stroke="#fff" stroke-width="1"/>
-    `;
+    // 光照曲线
+    if (mode === 'illum' || mode === 'both') {
+      const pathD = samples.map((s, i) =>
+        `${i === 0 ? 'M' : 'L'}${toX(s.m).toFixed(1)},${toYLux(s.lux).toFixed(1)}`).join(' ');
+      const areaD = pathD +
+        ` L${toX(12 * 60).toFixed(1)},${(padT + ch).toFixed(1)}` +
+        ` L${toX(-12 * 60).toFixed(1)},${(padT + ch).toFixed(1)} Z`;
+      parts.push(`<path d="${areaD}" fill="url(#illum-area)"/>`);
+      parts.push(`<path d="${pathD}" fill="none" stroke="#ffd87b" stroke-width="1.5"/>`);
+    }
+    // 气温曲线
+    if ((mode === 'temp' || mode === 'both') && hasTemp) {
+      const ts = samples.filter(s => s.temp != null);
+      if (ts.length >= 2) {
+        const pathT = ts.map((s, i) =>
+          `${i === 0 ? 'M' : 'L'}${toX(s.m).toFixed(1)},${toYTemp(s.temp).toFixed(1)}`).join(' ');
+        parts.push(`<path d="${pathT}" fill="none" stroke="#ff5a78" stroke-width="1.5"/>`);
+      }
+    }
+
+    // 「现在」虚线 + 当前点
+    const cx = toX(0);
+    parts.push(`<line x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${(padT + ch).toFixed(1)}" stroke="#6cb6ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>`);
+    if (mode === 'illum' || mode === 'both') {
+      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${toYLux(curLux).toFixed(1)}" r="4" fill="#ffe27a" stroke="#fff" stroke-width="1"/>`);
+    }
+    if ((mode === 'temp' || mode === 'both') && hasTemp && curTemp != null) {
+      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${toYTemp(curTemp).toFixed(1)}" r="4" fill="#ff5a78" stroke="#fff" stroke-width="1"/>`);
+    }
 
     return {
-      svgInner,
+      svgInner: parts.join(''),
       curLux, maxLux,
-      pct: maxLux > 0 ? (curLux / maxLux * 100) : 0,
+      illumPct: maxLux > 0 ? (curLux / maxLux * 100) : 0,
+      curTemp, tempMin: hasTemp ? tempMin : null, tempMax: hasTemp ? tempMax : null,
     };
+  }
+
+  // ---------- 气温（Open-Meteo，免 key，CORS 允许） ----------
+  let weatherCache = { lat: null, lng: null, ts: 0, data: null, inFlight: false };
+  async function ensureWeather(lat, lng) {
+    const now = Date.now();
+    if (weatherCache.data && weatherCache.lat != null &&
+        Math.abs(lat - weatherCache.lat) < 0.02 &&
+        Math.abs(lng - weatherCache.lng) < 0.02 &&
+        now - weatherCache.ts < 30 * 60 * 1000) {
+      return weatherCache.data;
+    }
+    if (weatherCache.inFlight) return weatherCache.data;
+    weatherCache.inFlight = true;
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+        `&hourly=temperature_2m&past_days=1&forecast_days=2&timezone=UTC`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      const times = json.hourly.time.map(s => new Date(s + 'Z').getTime());
+      const temps = json.hourly.temperature_2m;
+      weatherCache.data = { times, temps };
+      weatherCache.lat = lat; weatherCache.lng = lng; weatherCache.ts = now;
+      return weatherCache.data;
+    } catch (e) {
+      weatherCache.data = null;
+      return null;
+    } finally {
+      weatherCache.inFlight = false;
+    }
+  }
+  function tempAt(targetMs) {
+    const w = weatherCache.data;
+    if (!w) return null;
+    const { times, temps } = w;
+    if (targetMs <= times[0]) return temps[0];
+    if (targetMs >= times[times.length - 1]) return temps[times.length - 1];
+    let i = 0;
+    while (i < times.length - 1 && times[i + 1] < targetMs) i++;
+    const t0 = times[i], t1 = times[i + 1];
+    if (t1 === t0) return temps[i];
+    const u = (targetMs - t0) / (t1 - t0);
+    return temps[i] + u * (temps[i + 1] - temps[i]);
   }
 
   function fmtLux(v) {
@@ -594,6 +685,7 @@
     posRefreshTimer: null,
   };
   const POS_REFRESH_MS = 3 * 60 * 1000;
+  let chartMode = 'both';  // 'illum' | 'temp' | 'both'
 
   function setStatus(msg, isErr) {
     const el = $('status');
@@ -711,13 +803,34 @@
       $('ph-fill').style.width = overallPct + '%';
     }
 
-    // 光照曲线
-    const illum = buildIllumChart(now, state.lat, state.lng);
+    // 光照 / 气温 曲线
+    const chart = buildChart(now, state.lat, state.lng, chartMode);
     $('illum-card').hidden = false;
-    $('illum-chart').innerHTML = illum.svgInner;
-    $('illum-cur').textContent = fmtLux(illum.curLux);
-    $('illum-max').textContent = fmtLux(illum.maxLux);
-    $('illum-pct').textContent = fmtPct(illum.pct);
+    $('illum-chart').innerHTML = chart.svgInner;
+
+    const hasTemp = chart.curTemp != null;
+    if (chartMode === 'illum') {
+      $('illum-title').textContent = '🌞 地面光照 · 理想晴空';
+      $('illum-pct').textContent = fmtPct(chart.illumPct);
+      $('illum-info').innerHTML =
+        `<span class="luxv">${fmtLux(chart.curLux)}</span> · 24h 最大 ${fmtLux(chart.maxLux)}`;
+    } else if (chartMode === 'temp') {
+      $('illum-title').textContent = '🌡 气温 · 24 小时';
+      if (hasTemp) {
+        $('illum-pct').innerHTML = `<span class="tempv">${chart.curTemp.toFixed(1)}°C</span>`;
+        $('illum-info').innerHTML =
+          `24h 范围 <span class="tempv">${chart.tempMin.toFixed(1)}°C ~ ${chart.tempMax.toFixed(1)}°C</span>`;
+      } else {
+        $('illum-pct').textContent = '—';
+        $('illum-info').textContent = '气温数据加载中…';
+      }
+    } else {
+      $('illum-title').textContent = '🌞 光照 + 🌡 气温';
+      $('illum-pct').textContent = fmtPct(chart.illumPct);
+      $('illum-info').innerHTML =
+        `光 <span class="luxv">${fmtLux(chart.curLux)}</span>` +
+        (hasTemp ? ` · 温 <span class="tempv">${chart.curTemp.toFixed(1)}°C</span>` : ' · 气温加载中…');
+    }
 
     // 两组
     const riseRaw = findNextEvent(now, state.lat, state.lng, 'rise');
@@ -755,6 +868,7 @@
     setStatus('');
     render();
     lookupAddress(lat, lng);
+    ensureWeather(lat, lng).then(d => { if (d) render(); });
   }
 
   function requestGeoOnce(silent) {
@@ -806,6 +920,15 @@
   });
 
   $('btn-refresh').addEventListener('click', () => requestGeoOnce(false));
+
+  $('illum-toggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if (!btn) return;
+    chartMode = btn.dataset.mode;
+    $('illum-toggle').querySelectorAll('button').forEach(b =>
+      b.classList.toggle('active', b.dataset.mode === chartMode));
+    if (state.lat != null) render();
+  });
 
   setInterval(() => { if (state.lat != null) render(); }, 1000);
 
