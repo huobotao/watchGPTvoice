@@ -3,83 +3,125 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Apple Watch · ChatGPT Voice</title>
+<meta name="theme-color" content="#0b0d12" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>替尔泊肽 / 司美格鲁肽 · 一键记录</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="stage">
-    <div class="watch" role="application" aria-label="Apple Watch ChatGPT">
-      <div class="crown" aria-hidden="true"></div>
-      <div class="side-button" aria-hidden="true"></div>
+  <main class="app">
 
-      <div class="bezel">
-        <div class="screen" id="screen">
+    <!-- 顶部：距上一次状态 -->
+    <header class="status">
+      <div class="status-card">
+        <div class="status-label">距上一顿饭</div>
+        <div class="status-value" id="sinceMeal">—</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">距上一针</div>
+        <div class="status-value" id="sinceShot">—</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">最近体重</div>
+        <div class="status-value" id="latestWeight">—</div>
+      </div>
+    </header>
 
-          <!-- Status bar -->
-          <header class="status-bar">
-            <span class="status-time" id="statusTime">10:09</span>
-            <span class="status-dot" aria-hidden="true"></span>
-          </header>
+    <!-- 三个大按钮：一键记录 -->
+    <section class="actions">
+      <button class="action action-meal" data-action="meal" aria-label="记录一顿饭">
+        <span class="action-icon">🍽️</span>
+        <span class="action-text">吃了一顿</span>
+        <span class="action-hint" id="hintMeal">点一下记一顿</span>
+      </button>
 
-          <!-- Home screen: ChatGPT app icon -->
-          <section class="view view-home is-active" id="viewHome" aria-label="主屏幕">
-            <button class="app-icon" id="openApp" aria-label="打开 ChatGPT">
-              <svg viewBox="0 0 64 64" class="logo" aria-hidden="true">
-                <defs>
-                  <radialGradient id="g" cx="50%" cy="50%" r="60%">
-                    <stop offset="0%" stop-color="#10a37f"/>
-                    <stop offset="100%" stop-color="#0b6f57"/>
-                  </radialGradient>
-                </defs>
-                <rect width="64" height="64" rx="14" fill="url(#g)"/>
-                <path fill="#fff" d="M44.6 27.2a8.6 8.6 0 0 0-.74-7.06 8.7 8.7 0 0 0-9.37-4.17 8.62 8.62 0 0 0-6.5-2.9 8.7 8.7 0 0 0-8.3 6.02 8.62 8.62 0 0 0-5.76 4.17 8.7 8.7 0 0 0 1.07 10.2 8.62 8.62 0 0 0 .74 7.07 8.7 8.7 0 0 0 9.37 4.17 8.62 8.62 0 0 0 6.5 2.9 8.7 8.7 0 0 0 8.3-6.02 8.62 8.62 0 0 0 5.76-4.17 8.7 8.7 0 0 0-1.07-10.2zM34.5 47.2a6.45 6.45 0 0 1-4.13-1.5l.2-.12 6.86-3.96a1.13 1.13 0 0 0 .57-.98v-9.66l2.9 1.68a.1.1 0 0 1 .06.08v8.01a6.47 6.47 0 0 1-6.46 6.45zM20.6 41.3a6.43 6.43 0 0 1-.77-4.32l.2.12 6.87 3.96a1.12 1.12 0 0 0 1.13 0l8.39-4.84v3.35a.11.11 0 0 1-.04.09l-6.94 4a6.46 6.46 0 0 1-8.84-2.36zM18.8 26.27a6.44 6.44 0 0 1 3.36-2.83v8.16a1.11 1.11 0 0 0 .56.98l8.36 4.82-2.9 1.68a.11.11 0 0 1-.1 0l-6.95-4a6.47 6.47 0 0 1-2.36-8.81zm23.83 5.55-8.39-4.86 2.9-1.67a.11.11 0 0 1 .1 0l6.95 4a6.46 6.46 0 0 1-1 11.65v-8.16a1.13 1.13 0 0 0-.56-.97zM45.5 26.5l-.2-.12-6.86-3.99a1.12 1.12 0 0 0-1.13 0l-8.39 4.84v-3.35a.1.1 0 0 1 .04-.09l6.95-4a6.46 6.46 0 0 1 9.6 6.7zm-18.2 5.49-2.9-1.68a.11.11 0 0 1-.06-.08v-8.01a6.46 6.46 0 0 1 10.6-4.96l-.2.11-6.87 3.97a1.12 1.12 0 0 0-.57.97zm1.58-3.4 3.74-2.16 3.74 2.15v4.32l-3.73 2.16-3.74-2.16z"/>
-              </svg>
-              <span class="app-label">ChatGPT</span>
-            </button>
-          </section>
+      <button class="action action-shot" data-action="shot" aria-label="记录打针">
+        <span class="action-icon">💉</span>
+        <span class="action-text">打了一针</span>
+        <span class="action-hint" id="hintShot">替尔泊肽 / 司美格鲁肽</span>
+      </button>
 
-          <!-- Recording screen -->
-          <section class="view view-record" id="viewRecord" aria-label="语音录制">
-            <button class="back-btn" id="backHome" aria-label="返回">‹</button>
-            <div class="record-title" id="recordTitle">轻点开始说话</div>
+      <button class="action action-weight" data-action="weight" aria-label="记录体重">
+        <span class="action-icon">⚖️</span>
+        <span class="action-text">称了体重</span>
+        <span class="action-hint" id="hintWeight">输入当前公斤数</span>
+      </button>
+    </section>
 
-            <div class="waveform" id="waveform" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
-
-            <div class="timer" id="timer">0:00</div>
-
-            <button class="mic-btn" id="micBtn" aria-label="录音">
-              <svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"/>
-              </svg>
-              <svg class="send-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M3 11.5 21 3l-8.5 18-2.5-7.5z"/>
-              </svg>
-            </button>
-
-            <div class="hint" id="recordHint">点击话筒开始录音</div>
-          </section>
-
-          <!-- Reply screen -->
-          <section class="view view-reply" id="viewReply" aria-label="ChatGPT 回复">
-            <button class="back-btn" id="backRecord" aria-label="重新录制">‹</button>
-            <div class="reply-header">ChatGPT</div>
-            <div class="reply-bubble" id="replyBubble">
-              <span class="dots"><span></span><span></span><span></span></span>
-            </div>
-            <button class="again-btn" id="askAgain">再问一次</button>
-          </section>
-
+    <!-- 图表：体重 + 每日吃饭顿数 -->
+    <section class="chart-section">
+      <div class="section-head">
+        <h2>近 30 天</h2>
+        <div class="legend">
+          <span class="legend-item"><span class="dot dot-weight"></span>体重</span>
+          <span class="legend-item"><span class="dot dot-meal"></span>顿数</span>
+          <span class="legend-item"><span class="dot dot-shot"></span>打针</span>
         </div>
       </div>
-    </div>
+      <canvas id="chart" width="600" height="220" aria-label="体重与吃饭趋势图"></canvas>
+    </section>
 
-    <p class="caption">轻点图标 → 轻点话筒开始录音 → 再轻点发送</p>
+    <!-- 事件流水 -->
+    <section class="log-section">
+      <div class="section-head">
+        <h2>最近记录</h2>
+        <div class="log-tools">
+          <button class="btn-mini" id="exportCsv">导出 CSV</button>
+          <button class="btn-mini btn-danger" id="clearAll">清空</button>
+        </div>
+      </div>
+      <ul class="log" id="log"></ul>
+      <div class="empty" id="emptyHint">还没有记录。点上面的大按钮开始。</div>
+    </section>
+
   </main>
+
+  <!-- 弹窗：选药 / 输入剂量 -->
+  <div class="modal" id="shotModal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>打了哪一针？</h3>
+      <div class="seg" role="radiogroup" id="shotDrug">
+        <button class="seg-btn is-active" data-drug="tirzepatide">替尔泊肽</button>
+        <button class="seg-btn" data-drug="semaglutide">司美格鲁肽</button>
+      </div>
+      <label class="field">
+        <span>剂量 (mg)</span>
+        <input id="shotDose" type="number" step="0.25" inputmode="decimal" placeholder="例 2.5 / 5 / 7.5" />
+      </label>
+      <div class="modal-row">
+        <button class="btn-ghost" data-close>取消</button>
+        <button class="btn-primary" id="shotSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：输入体重 -->
+  <div class="modal" id="weightModal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>当前体重</h3>
+      <label class="field">
+        <span>公斤</span>
+        <input id="weightValue" type="number" step="0.1" inputmode="decimal" placeholder="例 78.5" />
+      </label>
+      <div class="modal-row">
+        <button class="btn-ghost" data-close>取消</button>
+        <button class="btn-primary" id="weightSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：撤销/编辑某条 -->
+  <div class="modal" id="editModal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>这条记录</h3>
+      <div id="editSummary" class="edit-summary"></div>
+      <div class="modal-row">
+        <button class="btn-ghost" data-close>关闭</button>
+        <button class="btn-danger" id="editDelete">删除</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
