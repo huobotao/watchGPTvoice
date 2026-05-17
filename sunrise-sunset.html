@@ -191,18 +191,19 @@
     return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
   }
 
-  // 三天范围内找最接近 now 的 rise/set
-  function findNearest(now, lat, lng, altDeg, which) {
-    const candidates = [];
-    for (const off of [-1, 0, 1]) {
+  // 找下一次未来事件（地平线时刻在未来），返回该事件当天的 4 个角度时刻
+  function findNextEvent(now, lat, lng, which) {
+    for (const off of [0, 1, 2, 3]) {
       const d = new Date(now.getTime() + off * dayMs);
-      const t = getSunTimes(d, lat, lng, altDeg);
-      if (t[which]) candidates.push(t[which]);
+      const horizT = getSunTimes(d, lat, lng, -0.833)[which];
+      if (horizT && horizT >= now) {
+        return ANGLES.map(angle => {
+          const t = getSunTimes(d, lat, lng, angle.alt)[which];
+          return { angle, time: t, passed: t && t < now };
+        });
+      }
     }
-    if (!candidates.length) return null;
-    return candidates.reduce((a, b) =>
-      Math.abs(b - now) < Math.abs(a - now) ? b : a
-    );
+    return ANGLES.map(angle => ({ angle, time: null, passed: false }));
   }
 
   // ---------- 配置 ----------
@@ -410,22 +411,19 @@
       $('ph-fill').style.width = pct + '%';
     }
 
-    // 计算两组
-    const riseItems = ANGLES.slice().sort((a, b) => a.alt - b.alt).map(angle => {
-      const time = findNearest(now, state.lat, state.lng, angle.alt, 'rise');
-      return { angle, time, passed: time && time < now };
-    });
-    const setItems = ANGLES.slice().sort((a, b) => b.alt - a.alt).map(angle => {
-      const time = findNearest(now, state.lat, state.lng, angle.alt, 'set');
-      return { angle, time, passed: time && time < now };
-    });
+    // 计算两组 —— 都强制是「下一次」未来事件
+    const riseRaw = findNextEvent(now, state.lat, state.lng, 'rise');
+    const setRaw  = findNextEvent(now, state.lat, state.lng, 'set');
+    // 按时间从早到晚排列：rise 是 alt 升序，set 是 alt 降序
+    const riseItems = riseRaw.slice().sort((a, b) => a.angle.alt - b.angle.alt);
+    const setItems  = setRaw.slice().sort((a, b) => b.angle.alt - a.angle.alt);
 
-    // 用 horizon 的时间作为「这个事件」的代表，比较谁更近
+    // 用 horizon 时间比较谁先到
     const riseHoriz = riseItems.find(i => i.angle.key === 'horiz').time;
     const setHoriz  = setItems.find(i => i.angle.key === 'horiz').time;
-    const riseDelta = riseHoriz ? Math.abs(riseHoriz - now) : Infinity;
-    const setDelta  = setHoriz  ? Math.abs(setHoriz - now)  : Infinity;
-    const riseFirst = riseDelta <= setDelta;
+    const riseTtl = riseHoriz ? (riseHoriz - now) : Infinity;
+    const setTtl  = setHoriz  ? (setHoriz  - now) : Infinity;
+    const riseFirst = riseTtl <= setTtl;
 
     const html = riseFirst
       ? buildGroupHTML('rise', riseItems, phase) + buildGroupHTML('set', setItems, phase)
