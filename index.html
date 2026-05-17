@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>微信壳 · AI 聊天</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="phone">
+    <!-- 顶部状态栏(模拟 iPhone) -->
+    <div class="status-bar">
+      <span class="time" id="statusTime">9:41</span>
+      <span class="right">
+        <span class="signal">●●●●</span>
+        <span class="wifi">WiFi</span>
+        <span class="battery">100%</span>
+      </span>
+    </div>
+
+    <!-- 三个页面切换 -->
+    <div class="screen" id="screen-list">
+      <div class="nav-bar">
+        <span class="nav-title">微信</span>
+        <button class="nav-btn" id="addBtn" title="添加 AI 联系人">+</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" placeholder="搜索" disabled />
+      </div>
+      <div class="chat-list" id="chatList"></div>
+      <div class="empty-tip" id="emptyTip" hidden>
+        <p>还没有联系人</p>
+        <p class="dim">点右上角 + 添加一个 AI 朋友</p>
+      </div>
+    </div>
+
+    <div class="screen hidden" id="screen-chat">
+      <div class="nav-bar chat-nav">
+        <button class="nav-btn back" id="backBtn">‹</button>
+        <span class="nav-title" id="chatTitle">联系人</span>
+        <button class="nav-btn" id="chatMenuBtn">⋯</button>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="input-bar">
+        <button class="icon-btn" title="语音">🎤</button>
+        <input type="text" id="msgInput" placeholder="输入消息..." />
+        <button class="icon-btn" title="表情">😊</button>
+        <button class="send-btn" id="sendBtn">发送</button>
+      </div>
+    </div>
+
+    <div class="screen hidden" id="screen-add">
+      <div class="nav-bar">
+        <button class="nav-btn back" id="addCancelBtn">取消</button>
+        <span class="nav-title">添加 AI 联系人</span>
+        <button class="nav-btn primary" id="addSaveBtn">保存</button>
+      </div>
+      <div class="form">
+        <label>头像 (选一个 emoji)</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+        <label>昵称</label>
+        <input type="text" id="formName" placeholder="比如「小雅」" maxlength="20" />
+        <label>人设 / 角色描述 (system prompt)</label>
+        <textarea id="formPrompt" rows="6" placeholder="比如:你是温柔的女朋友小雅,会撒娇,爱听对方说话,回复简短自然像真人,会用「嗯嗯」「哈哈」「啊?」这种语气词,绝不暴露你是 AI。"></textarea>
+        <p class="hint">提示:写得越具体,聊起来越像真人。可以包含性格、说话习惯、口头禅、回复长度偏好等。</p>
+      </div>
+    </div>
+
+    <div class="screen hidden" id="screen-settings">
+      <div class="nav-bar">
+        <button class="nav-btn back" id="settingsBackBtn">‹</button>
+        <span class="nav-title">设置</span>
+        <span class="nav-btn"></span>
+      </div>
+      <div class="form">
+        <label>Anthropic API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
+        <p class="hint">仅保存在你浏览器的 localStorage,不会上传到任何服务器。</p>
+        <label>模型</label>
+        <select id="modelSelect">
+          <option value="claude-sonnet-4-6">claude-sonnet-4-6 (推荐)</option>
+          <option value="claude-opus-4-7">claude-opus-4-7 (更聪明,更贵)</option>
+          <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 (更快更便宜)</option>
+        </select>
+        <button class="big-btn" id="saveSettingsBtn">保存</button>
+        <hr />
+        <button class="big-btn danger" id="clearAllBtn">清空全部聊天和联系人</button>
+      </div>
+    </div>
+
+    <!-- 底部 Tab(只是装饰,点了不切换实际功能) -->
+    <div class="tab-bar">
+      <div class="tab active">
+        <div class="tab-icon">💬</div>
+        <div class="tab-label">微信</div>
+      </div>
+      <div class="tab">
+        <div class="tab-icon">👥</div>
+        <div class="tab-label">通讯录</div>
+      </div>
+      <div class="tab">
+        <div class="tab-icon">🧭</div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab" id="tabMe">
+        <div class="tab-icon">👤</div>
+        <div class="tab-label">我</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
