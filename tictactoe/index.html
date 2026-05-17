@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>井字棋 · 所有可能对弈的可视化</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>井字棋全树</h1>
+      <p class="subtitle">穷举所有 <strong>255,168</strong> 局对弈 ·
+        X 胜 <strong class="x-c">131,184</strong> ·
+        O 胜 <strong class="o-c">77,904</strong> ·
+        平 <strong class="d-c">46,080</strong></p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="explorer">博弈树浏览器</button>
+      <button class="tab" data-tab="dashboard">统计仪表盘</button>
+      <button class="tab" data-tab="sunburst">全景放射图</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============================== EXPLORER ============================== -->
+    <section class="panel active" id="panel-explorer">
+      <div class="explorer-grid">
+        <div class="board-wrap">
+          <div id="breadcrumb" class="breadcrumb"></div>
+          <div id="board" class="board"></div>
+          <div class="board-controls">
+            <button id="btn-back" disabled>↶ 撤销</button>
+            <button id="btn-reset" disabled>重置</button>
+            <span id="turn-indicator" class="turn">轮到 <span class="x-c">X</span> 落子</span>
+          </div>
+        </div>
+        <aside class="explorer-side">
+          <div id="summary" class="summary"></div>
+          <div class="legend">
+            <h3>读法</h3>
+            <p>每个空格上叠加的三组数字表示：<em>如果接下来下在这里</em>，剩余所有走法穷举后会出现多少局 X 胜 / O 胜 / 平。点格子下钻，"撤销"回退一手。</p>
+            <ul>
+              <li><span class="swatch x"></span> X 胜局数</li>
+              <li><span class="swatch o"></span> O 胜局数</li>
+              <li><span class="swatch d"></span> 和局数</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================== DASHBOARD ============================== -->
+    <section class="panel" id="panel-dashboard">
+      <div class="cards">
+        <div class="card total"><span class="label">总局数</span><span class="value" id="card-total">—</span></div>
+        <div class="card xwin"><span class="label">X 胜</span><span class="value" id="card-x">—</span><span class="pct" id="card-x-pct"></span></div>
+        <div class="card owin"><span class="label">O 胜</span><span class="value" id="card-o">—</span><span class="pct" id="card-o-pct"></span></div>
+        <div class="card draw"><span class="label">和局</span><span class="value" id="card-d">—</span><span class="pct" id="card-d-pct"></span></div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-block">
+          <h3>结局占比</h3>
+          <p class="caption">把所有 255,168 局按胜负分组的百分比。</p>
+          <svg id="pie" viewBox="-110 -110 220 220" aria-label="pie chart"></svg>
+        </div>
+
+        <div class="chart-block">
+          <h3>首手落点的命运</h3>
+          <p class="caption">如果 X 第一手落在这里，后续穷举所有走法，X 胜 / O 胜 / 平 的占比。中心格胜率最高，对称性一目了然。</p>
+          <div id="heatmap" class="heatmap"></div>
+        </div>
+
+        <div class="chart-block wide">
+          <h3>对局长度分布</h3>
+          <p class="caption">对局在第几手结束。只有偶数手能让 O 取胜，奇数手只能让 X 取胜；9 手满盘要么 X 胜要么平。</p>
+          <svg id="bars" viewBox="0 0 600 260" aria-label="bar chart"></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== SUNBURST ============================== -->
+    <section class="panel" id="panel-sunburst">
+      <div class="sunburst-toolbar">
+        <label>展开深度
+          <select id="depth-select">
+            <option value="3">3 手</option>
+            <option value="4" selected>4 手</option>
+            <option value="5">5 手</option>
+            <option value="6">6 手</option>
+          </select>
+        </label>
+        <span class="hint">越外圈层 = 越靠后的落子。圈块面积 ∝ 子树中包含的对局数；颜色 = 该子树中 X 胜 / O 胜 / 平 的混色。点击任一圈块缩放，点中心回退。</span>
+      </div>
+      <div class="sunburst-stage">
+        <svg id="sunburst" viewBox="-360 -360 720 720" aria-label="sunburst"></svg>
+        <div id="sun-tooltip" class="tooltip"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    引擎完整穷举（带 memo 化），所有数字均为精确计数 — 不是采样。
+  </footer>
+
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
