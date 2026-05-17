@@ -3,10 +3,14 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import { SchematicRenderer } from './SchematicRenderer';
 import { MannequinRenderer } from './MannequinRenderer';
+import { DragHandles } from './DragHandles';
+import { useSimStore } from '@/store/useSimStore';
 
 type Mode = 'schematic' | 'mannequin';
 
 export function Scene({ mode }: { mode: Mode }) {
+  const isDragging = useSimStore(s => s.isDragging);
+
   return (
     <Canvas
       shadows
@@ -42,6 +46,8 @@ export function Scene({ mode }: { mode: Mode }) {
           <>
             <SchematicRenderer person="A" />
             <SchematicRenderer person="B" />
+            <DragHandles person="A" />
+            <DragHandles person="B" />
           </>
         ) : (
           <>
@@ -54,6 +60,7 @@ export function Scene({ mode }: { mode: Mode }) {
           target={[0, 0.4, 0]}
           enablePan
           enableDamping
+          enabled={!isDragging}
           minDistance={0.4}
           maxDistance={6}
         />

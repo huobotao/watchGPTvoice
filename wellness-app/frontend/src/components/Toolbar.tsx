@@ -11,6 +11,8 @@ export function Toolbar() {
   const setViewMode = useSimStore(s => s.setViewMode);
   const showLabels = useSimStore(s => s.showLabels);
   const toggleLabels = useSimStore(s => s.toggleLabels);
+  const showHandles = useSimStore(s => s.showHandles);
+  const toggleHandles = useSimStore(s => s.toggleHandles);
   const resetToRest = useSimStore(s => s.resetToRest);
   const presetId = useSimStore(s => s.presetId);
 
@@ -42,6 +44,16 @@ export function Toolbar() {
         }`}
       >
         Labels: {showLabels ? 'on' : 'off'}
+      </button>
+
+      <button
+        onClick={toggleHandles}
+        title="Drag the colored balls on hands/feet/pelvis to pose with inverse kinematics"
+        className={`text-xs px-2 py-1 rounded border border-slate-700 ${
+          showHandles ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-800'
+        }`}
+      >
+        Drag: {showHandles ? 'on' : 'off'}
       </button>
 
       <div className="flex-1" />
