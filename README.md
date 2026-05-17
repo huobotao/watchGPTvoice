@@ -78,3 +78,14 @@
 ## 浏览器预览
 
 如果你只是想先看 UI 长什么样,用浏览器打开 `index.html` 即可,不需要 Xcode。
+
+---
+
+## 另一个项目：`weather-route/` — RainAway 驱雨
+
+本仓库同时托管另一个独立小工具：**给无计划自驾游用户找"脱雨方向"**。
+朝周围 8 个方向各发出探针，告诉你往哪开最快脱离雨区，并给出真实驾车路线。
+
+- 网页版直接打开 `weather-route/web/index.html`
+- iPhone 原生版源码在 `weather-route/iOSApp/`
+- 详见 [`weather-route/README.md`](weather-route/README.md)

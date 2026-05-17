@@ -1,0 +1,16 @@
+<!--
+  把下面这些键加进 Xcode 工程 Target → Info 选项卡的
+  「Custom iOS Target Properties」表里，或者直接拷进项目里的 Info.plist。
+-->
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>用于查询你当前位置周边各方向的降水预报，帮你找到脱离雨区的方向。</string>
+
+<!--
+  发送给 Open-Meteo (api.open-meteo.com) 和 Apple MapKit 的请求都使用 HTTPS，
+  不需要在 Info.plist 里加 NSAppTransportSecurity 例外。
+
+  如果你想要后台/锁屏中也能继续语音播报，可启用以下 Background Mode：
+    - Target → Signing & Capabilities → + Capability → Background Modes
+    - 勾选 "Audio, AirPlay and Picture in Picture"
+-->
