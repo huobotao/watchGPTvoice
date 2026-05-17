@@ -377,8 +377,98 @@ body{
   z-index:5;
 }
 
-/* --- Mobile fit --- */
-@media (max-width:440px){
-  .stage{padding:18px 8px}
-  .phone{transform:scale(.92);transform-origin:top center}
+/* --- Mobile / installed PWA: 拆掉假手机框,全屏铺满,像真 App --- */
+@media (max-width:520px), (display-mode:standalone) {
+  html,body{height:100%;background:#0a0e1a}
+  body{
+    background:
+      radial-gradient(120% 80% at 80% 0%, rgba(255,106,139,.30) 0%, transparent 55%),
+      radial-gradient(120% 90% at 0% 100%, rgba(74,220,255,.18) 0%, transparent 60%),
+      linear-gradient(180deg,#15182a 0%, #1f2342 50%, #2a1d3f 100%);
+  }
+  .stage{
+    min-height:100dvh;
+    padding:0;
+    gap:0;
+    display:block;
+  }
+  .phone,.phone-frame,.phone-screen{display:contents}
+  .notch,.side-btn,.home-indicator,.caption{display:none !important}
+
+  /* PWA standalone 没有 Safari 地址栏,需要自己留状态栏空间 */
+  .ios-status{
+    position:fixed;
+    top:0;left:0;right:0;
+    padding-top:max(10px, env(safe-area-inset-top));
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
+    background:linear-gradient(180deg, rgba(10,14,26,.85), rgba(10,14,26,0));
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  /* 在 Safari 浏览器里(非 standalone)就藏掉假状态栏,用真的 */
+  @media not all and (display-mode:standalone){
+    .ios-status{display:none}
+  }
+
+  .today{
+    position:static;inset:auto;
+    padding:
+      calc(env(safe-area-inset-top) + 14px)
+      max(14px, env(safe-area-inset-right))
+      calc(env(safe-area-inset-bottom) + 24px)
+      max(14px, env(safe-area-inset-left));
+    overflow:visible;
+    gap:14px;
+  }
+  /* standalone 模式下给状态栏留位 */
+  @media (display-mode:standalone){
+    .today{padding-top:calc(env(safe-area-inset-top) + 48px)}
+  }
+
+  .today-head{padding:4px 2px}
+  .today-greet{font-size:30px}
+
+  /* 让 day 单元格更大,触屏好点 */
+  .day{min-height:84px;padding:9px 4px}
+  .day .pri{font-size:13px}
+
+  .widget{padding:14px 14px 12px;border-radius:22px}
+}
+
+/* iPhone 横屏时回到桌面预览,避免被拉宽变丑 */
+@media (max-width:520px) and (orientation:landscape){
+  .today{max-width:560px;margin:0 auto}
+}
+
+/* --- Install hint (iPhone Safari 首次打开) --- */
+.install-hint{
+  position:fixed;left:0;right:0;
+  bottom:max(12px, env(safe-area-inset-bottom));
+  display:flex;justify-content:center;padding:0 12px;
+  z-index:50;pointer-events:none;
+  animation:notif-in .4s ease-out both;
+}
+.install-hint .ih-card{
+  pointer-events:auto;
+  max-width:380px;width:100%;
+  background:rgba(20,24,42,.88);
+  backdrop-filter:saturate(160%) blur(20px);
+  -webkit-backdrop-filter:saturate(160%) blur(20px);
+  border:1px solid var(--card-line);
+  border-radius:16px;
+  padding:12px 14px;
+  box-shadow:var(--shadow-1);
+  display:grid;grid-template-columns:1fr auto;gap:6px 12px;
+  align-items:center;
+}
+.install-hint b{font-size:13px;color:var(--ink);grid-column:1/2}
+.install-hint span{font-size:11.5px;color:var(--ink-2);line-height:1.5;grid-column:1/2}
+.install-hint span svg{vertical-align:-2px;color:var(--accent-2)}
+.install-hint .ih-close{
+  grid-column:2/3;grid-row:1/3;
+  appearance:none;border:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#0b1220;font-weight:700;font-size:12px;
+  padding:8px 12px;border-radius:10px;cursor:pointer;
 }

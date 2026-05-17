@@ -181,3 +181,32 @@ grid.addEventListener('click', (e) => {
 });
 
 switchCity('AKL');
+
+// 检测是否运行在已添加到主屏幕的 PWA 模式
+if (window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true) {
+  document.documentElement.classList.add('is-pwa');
+}
+
+// 首次在 iPhone Safari 打开时,提示「添加到主屏幕」
+(function maybeShowInstallHint(){
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true ||
+                       window.matchMedia('(display-mode: standalone)').matches;
+  if (!isIOS || isStandalone) return;
+  if (localStorage.getItem('athro-hint-shown')) return;
+
+  const hint = document.createElement('div');
+  hint.className = 'install-hint';
+  hint.innerHTML = `
+    <div class="ih-card">
+      <b>把 Athro 加到主屏幕</b>
+      <span>Safari 底部 <svg viewBox="0 0 16 20" width="14" height="16"><path fill="currentColor" d="M8 0 4 4l1 1 2-2v11h2V3l2 2 1-1zM2 8v10h12V8h-3v2h1v6H3v-6h1V8z"/></svg> 分享 → 添加到主屏幕,以后从图标点开就像 App。</span>
+      <button class="ih-close">知道了</button>
+    </div>`;
+  document.body.appendChild(hint);
+  hint.querySelector('.ih-close').addEventListener('click', () => {
+    localStorage.setItem('athro-hint-shown', '1');
+    hint.remove();
+  });
+})();

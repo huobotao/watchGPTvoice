@@ -1,0 +1,15 @@
+{
+  "name": "Athro · 机票特价监视",
+  "short_name": "Athro",
+  "description": "SYD 出发,锚定的目的地未来 7 天每天最低往返价 + 同期 4★ 酒店均价。",
+  "start_url": "./athro.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "icons": [
+    { "src": "athro-icon.svg", "sizes": "any",     "type": "image/svg+xml", "purpose": "any" },
+    { "src": "athro-icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
