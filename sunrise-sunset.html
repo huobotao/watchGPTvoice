@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>日出日落时刻</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b1220;
+    --card: #131c2e;
+    --card-2: #1a2540;
+    --text: #e8eefc;
+    --muted: #8a98b8;
+    --accent: #ffb86b;
+    --accent-2: #6cb6ff;
+    --past: #8a98b8;
+    --future: #6cb6ff;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 20px 0 40px; }
+  h1 { font-size: 22px; margin: 0 0 16px; font-weight: 600; letter-spacing: 0.5px; }
+  .meta { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .meta .row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 14px; }
+  .meta .row .label { color: var(--muted); }
+  .meta .row .val { font-variant-numeric: tabular-nums; }
+  .status { font-size: 13px; color: var(--muted); padding: 4px 0; }
+  .status.err { color: #ff8a8a; }
+  .group { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    margin-bottom: 16px; overflow: hidden; }
+  .group h2 { margin: 0; padding: 14px 16px; font-size: 15px; font-weight: 600;
+    background: var(--card-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .group h2 .emoji { font-size: 18px; }
+  .item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: baseline;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .item:last-child { border-bottom: none; }
+  .name { font-size: 15px; }
+  .name small { color: var(--muted); font-size: 12px; margin-left: 6px; font-weight: normal; }
+  .time { font-size: 17px; font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: 0.5px; }
+  .delta { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; }
+  .delta.past { color: var(--past); }
+  .delta.future { color: var(--future); }
+  .na { color: var(--muted); font-size: 13px; }
+  .manual { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .manual p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+  .manual .inputs { display: flex; gap: 8px; }
+  .manual input { flex: 1; min-width: 0; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px;
+    font-variant-numeric: tabular-nums; }
+  .manual button { background: var(--accent); color: #1a1200; border: none; border-radius: 8px;
+    padding: 10px 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .footer { margin-top: 20px; text-align: center; font-size: 12px; color: var(--muted); }
+  .footer a { color: var(--accent-2); text-decoration: none; }
+  .refresh { background: transparent; color: var(--accent-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>日出日落时刻</h1>
+    <button class="refresh" id="btn-refresh">刷新</button>
+  </div>
+  <div id="status" class="status">正在获取位置…</div>
+
+  <div class="meta" id="meta" hidden>
+    <div class="row"><span class="label">当前时间</span><span class="val" id="now-time">—</span></div>
+    <div class="row"><span class="label">当前位置</span><span class="val" id="pos">—</span></div>
+    <div class="row"><span class="label">时区</span><span class="val" id="tz">—</span></div>
+  </div>
+
+  <div class="manual" id="manual" hidden>
+    <p>无法自动获取位置，可手动输入经纬度（十进制度）：</p>
+    <div class="inputs">
+      <input id="in-lat" type="number" step="0.0001" placeholder="纬度  例 31.2304">
+      <input id="in-lng" type="number" step="0.0001" placeholder="经度  例 121.4737">
+      <button id="btn-go">计算</button>
+    </div>
+  </div>
+
+  <div class="group" id="g-rise" hidden>
+    <h2><span class="emoji">🌅</span> 最近的日出</h2>
+    <div id="list-rise"></div>
+  </div>
+
+  <div class="group" id="g-set" hidden>
+    <h2><span class="emoji">🌇</span> 最近的日落</h2>
+    <div id="list-set"></div>
+  </div>
+
+  <div class="footer">
+    距今分钟数每分钟自动刷新 · 位置不会上传
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- 日出日落算法（参考 SunCalc, BSD-2-Clause, by Vladimir Agafonkin） ----------
+  const PI = Math.PI, rad = PI / 180;
+  const dayMs = 86400000, J1970 = 2440588, J2000 = 2451545;
+  const e = rad * 23.4397;
+
+  const toJulian = d => d.valueOf() / dayMs - 0.5 + J1970;
+  const fromJulian = j => new Date((j + 0.5 - J1970) * dayMs);
+  const toDays = d => toJulian(d) - J2000;
+
+  const declination = (l, b) =>
+    Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+  const solarMeanAnomaly = d => rad * (357.5291 + 0.98560028 * d);
+  const eclipticLongitude = M => {
+    const C = rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
+    const P = rad * 102.9372;
+    return M + C + P + PI;
+  };
+
+  const J0 = 0.0009;
+  const julianCycle = (d, lw) => Math.round(d - J0 - lw / (2 * PI));
+  const approxTransit = (Ht, lw, n) => J0 + (Ht + lw) / (2 * PI) + n;
+  const solarTransitJ = (ds, M, L) =>
+    J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+  const hourAngle = (h, phi, d) =>
+    Math.acos((Math.sin(h) - Math.sin(phi) * Math.sin(d)) / (Math.cos(phi) * Math.cos(d)));
+
+  // 计算指定日期、经纬度下，太阳到达指定地平高度 altDeg（度，负值表示地平线下）的日出/日落
+  function getSunTimes(date, lat, lng, altDeg) {
+    const lw = rad * -lng;
+    const phi = rad * lat;
+    const d = toDays(date);
+    const n = julianCycle(d, lw);
+    const ds = approxTransit(0, lw, n);
+    const M = solarMeanAnomaly(ds);
+    const L = eclipticLongitude(M);
+    const dec = declination(L, 0);
+    const Jnoon = solarTransitJ(ds, M, L);
+    const h = altDeg * rad;
+    const cosW = (Math.sin(h) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec));
+    if (cosW < -1 || cosW > 1) return { rise: null, set: null }; // 极昼/极夜
+    const w = Math.acos(cosW);
+    const Jset = solarTransitJ(approxTransit(w, lw, n), M, L);
+    const Jrise = Jnoon - (Jset - Jnoon);
+    return { rise: fromJulian(Jrise), set: fromJulian(Jset) };
+  }
+
+  // 在 [now-1d, now+1d] 范围内找离 now 最近的一次 rise 或 set
+  function findNearest(now, lat, lng, altDeg, which) {
+    const candidates = [];
+    for (const off of [-1, 0, 1]) {
+      const d = new Date(now.getTime() + off * dayMs);
+      const t = getSunTimes(d, lat, lng, altDeg);
+      if (t[which]) candidates.push(t[which]);
+    }
+    if (!candidates.length) return null;
+    return candidates.reduce((a, b) =>
+      Math.abs(b - now) < Math.abs(a - now) ? b : a
+    );
+  }
+
+  // ---------- UI ----------
+  const ANGLES = [
+    { key: 'astro', label: '天文晨光/暮光', alt: -18, hint: '−18°' },
+    { key: 'naut',  label: '航海晨光/暮光', alt: -12, hint: '−12°' },
+    { key: 'civil', label: '民用晨光/暮光', alt: -6,  hint: '−6°'  },
+    { key: 'horiz', label: '地平线日出/日落', alt: -0.833, hint: '0°（含折射）' },
+  ];
+
+  const $ = id => document.getElementById(id);
+  const pad2 = n => String(n).padStart(2, '0');
+  const fmtTime = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  function fmtDelta(target, now) {
+    const diffMin = Math.round((target - now) / 60000);
+    if (diffMin === 0) return { text: '就是现在', cls: 'future' };
+    if (diffMin > 0) {
+      return { text: humanMin(diffMin) + '后', cls: 'future' };
+    }
+    return { text: humanMin(-diffMin) + '前', cls: 'past' };
+  }
+  function humanMin(m) {
+    if (m < 60) return m + ' 分钟';
+    const h = Math.floor(m / 60), r = m % 60;
+    return r === 0 ? `${h} 小时` : `${h} 小时 ${r} 分`;
+  }
+
+  let state = { lat: null, lng: null };
+
+  function render() {
+    const now = new Date();
+    $('now-time').textContent =
+      `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())} ${fmtTime(now)}`;
+
+    if (state.lat == null) return;
+    $('pos').textContent =
+      `${state.lat.toFixed(4)}°, ${state.lng.toFixed(4)}°`;
+    try {
+      $('tz').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '—';
+    } catch (_) { $('tz').textContent = '—'; }
+
+    const buildList = (which, order) => {
+      const list = order.map(a => {
+        const t = findNearest(now, state.lat, state.lng, a.alt, which);
+        return { angle: a, time: t };
+      });
+      return list.map(({ angle, time }) => {
+        if (!time) {
+          return `<div class="item">
+            <div class="name">${angle.label}<small>${angle.hint}</small></div>
+            <div class="na" style="grid-column: 2 / span 2;">当日无此现象（极昼/极夜）</div>
+          </div>`;
+        }
+        const d = fmtDelta(time, now);
+        return `<div class="item">
+          <div class="name">${angle.label}<small>${angle.hint}</small></div>
+          <div class="time">${fmtTime(time)}</div>
+          <div class="delta ${d.cls}">${d.text}</div>
+        </div>`;
+      }).join('');
+    };
+
+    // 日出从最暗（天文）到最亮（地平线）；日落从最亮到最暗
+    const riseOrder = ANGLES.slice().sort((a, b) => a.alt - b.alt);
+    const setOrder  = ANGLES.slice().sort((a, b) => b.alt - a.alt);
+
+    $('list-rise').innerHTML = buildList('rise', riseOrder);
+    $('list-set').innerHTML  = buildList('set',  setOrder);
+
+    $('meta').hidden = false;
+    $('g-rise').hidden = false;
+    $('g-set').hidden = false;
+  }
+
+  function setStatus(msg, isErr) {
+    const el = $('status');
+    el.textContent = msg || '';
+    el.className = 'status' + (isErr ? ' err' : '');
+    el.style.display = msg ? '' : 'none';
+  }
+
+  function useLocation(lat, lng, source) {
+    state.lat = lat; state.lng = lng;
+    try {
+      localStorage.setItem('sunPos', JSON.stringify({ lat, lng }));
+    } catch (_) {}
+    setStatus(source ? '位置来源：' + source : '');
+    render();
+  }
+
+  function requestGeo() {
+    if (!('geolocation' in navigator)) {
+      setStatus('当前浏览器不支持定位 API。', true);
+      $('manual').hidden = false;
+      return;
+    }
+    setStatus('正在获取位置… 请在浏览器弹窗中允许');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        useLocation(pos.coords.latitude, pos.coords.longitude, '浏览器定位');
+        $('manual').hidden = true;
+      },
+      err => {
+        let msg = '获取位置失败：' + (err && err.message ? err.message : '未知错误');
+        if (location.protocol === 'file:') {
+          msg += '（部分浏览器在 file:// 下禁用定位，请手动输入或用 Safari/Firefox 打开）';
+        }
+        setStatus(msg, true);
+        $('manual').hidden = false;
+        // 尝试上次保存的位置
+        try {
+          const saved = JSON.parse(localStorage.getItem('sunPos') || 'null');
+          if (saved && typeof saved.lat === 'number' && typeof saved.lng === 'number') {
+            $('in-lat').value = saved.lat;
+            $('in-lng').value = saved.lng;
+            useLocation(saved.lat, saved.lng, '上次手动输入');
+          }
+        } catch (_) {}
+      },
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 5 * 60 * 1000 }
+    );
+  }
+
+  $('btn-go').addEventListener('click', () => {
+    const lat = parseFloat($('in-lat').value);
+    const lng = parseFloat($('in-lng').value);
+    if (!isFinite(lat) || !isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setStatus('请输入有效的纬度 (-90~90) 和经度 (-180~180)。', true);
+      return;
+    }
+    useLocation(lat, lng, '手动输入');
+  });
+
+  $('btn-refresh').addEventListener('click', () => {
+    if (state.lat == null) requestGeo();
+    else render();
+  });
+
+  // 每 30 秒重渲染以更新"距今多少分钟"
+  setInterval(() => { if (state.lat != null) render(); }, 30000);
+
+  requestGeo();
+})();
+</script>
+</body>
+</html>
