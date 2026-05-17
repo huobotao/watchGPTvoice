@@ -37,6 +37,8 @@
   .meta .row .label { color: var(--muted); flex-shrink: 0; }
   .meta .row .val { font-variant-numeric: tabular-nums; text-align: right; }
   .meta .row .val small { color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .meta .row .val .pctchip { color: var(--phase); margin-left: 6px; font-weight: 600; }
+  .meta .row.addr .val { text-align: right; color: var(--text); font-variant-numeric: normal; }
   .status { font-size: 13px; color: var(--muted); padding: 4px 0; }
   .status.err { color: #ff8a8a; }
 
@@ -51,6 +53,15 @@
   .now-phase .ph-fill { height: 100%; border-radius: 3px;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
     transition: width 0.6s ease-out; }
+
+  .illum-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .illum-card .illum-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .illum-card .illum-title { font-size: 14px; font-weight: 600; }
+  .illum-card .illum-pct { color: var(--phase); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .illum-card .illum-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .illum-card .illum-chart { width: 100%; height: 90px; margin-top: 10px; display: block; }
+  .illum-card .illum-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
 
   .group { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     margin-bottom: 16px; overflow: hidden; }
@@ -80,12 +91,17 @@
   .sky-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     margin-bottom: 16px; padding: 12px 14px 14px; }
   .sky-card .sky-head { display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 6px; }
-  .sky-card .sky-title { font-size: 14px; color: var(--muted); font-weight: 500; }
+    margin-bottom: 8px; }
+  .sky-card .sky-title { font-size: 14px; color: var(--text); font-weight: 600; }
   .sky-card .sky-hint  { font-size: 11px; color: var(--muted); }
-  .sky-card .sky-svg   { width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto; }
-  .sky-card .sky-legend { display: flex; justify-content: space-around; margin-top: 6px;
-    font-size: 11px; color: var(--muted); gap: 10px; }
+  .sky3d-canvas { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 360px;
+    margin: 0 auto; background: radial-gradient(circle at 50% 40%, #0b1830, #050a14 70%);
+    border-radius: 12px; overflow: hidden; touch-action: none; }
+  .sky3d-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+  .sky3d-loading { position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; color: var(--muted); font-size: 12px; pointer-events: none; }
+  .sky-card .sky-legend { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 8px;
+    font-size: 11px; color: var(--muted); gap: 6px 14px; }
   .sky-card .sky-legend .lg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
     vertical-align: middle; margin-right: 4px; }
 
@@ -100,6 +116,15 @@
     padding: 10px 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
   .footer { margin-top: 20px; text-align: center; font-size: 12px; color: var(--muted); }
 </style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -112,6 +137,7 @@
   <div class="meta" id="meta" hidden>
     <div class="row"><span class="label">当前时间</span><span class="val" id="now-time">—</span></div>
     <div class="row"><span class="label">当前位置</span><span class="val" id="pos">—</span></div>
+    <div class="row addr"><span class="label">地址</span><span class="val" id="addr">查询中…</span></div>
     <div class="row"><span class="label">时区</span><span class="val" id="tz">—</span></div>
     <div class="row"><span class="label">太阳高度</span><span class="val" id="sun-alt">—</span></div>
   </div>
@@ -125,6 +151,21 @@
     <div class="ph-bar"><div class="ph-fill" id="ph-fill"></div></div>
   </div>
 
+  <div class="illum-card" id="illum-card" hidden>
+    <div class="illum-head">
+      <div class="illum-title">🌞 地面光照 · 理想晴空</div>
+      <div class="illum-pct" id="illum-pct">—</div>
+    </div>
+    <div class="illum-sub">
+      <span id="illum-cur">— lux</span>
+      <span> / 24h 内最大 <span id="illum-max">— lux</span></span>
+    </div>
+    <svg id="illum-chart" class="illum-chart" viewBox="0 0 320 90" preserveAspectRatio="none"></svg>
+    <div class="illum-axis">
+      <span>−12h</span><span>−6h</span><span>现在</span><span>+6h</span><span>+12h</span>
+    </div>
+  </div>
+
   <div class="manual" id="manual" hidden>
     <p>无法自动获取位置，可手动输入经纬度（十进制度）：</p>
     <div class="inputs">
@@ -134,7 +175,25 @@
     </div>
   </div>
 
-  <div id="groups"></div>
+  <div id="group-before"></div>
+
+  <div id="sky3d-card" class="sky-card">
+    <div class="sky-head">
+      <div class="sky-title">太阳 3D 轨迹 · 前后 12 小时</div>
+      <div class="sky-hint">手指拖动可旋转</div>
+    </div>
+    <div id="sky3d-canvas" class="sky3d-canvas">
+      <div class="sky3d-loading">3D 场景加载中…</div>
+    </div>
+    <div class="sky-legend">
+      <span><span class="lg-dot" style="background:#ffd87b"></span>白天轨迹</span>
+      <span><span class="lg-dot" style="background:#5a6a90"></span>地平线下</span>
+      <span><span class="lg-dot" style="background:#ff8e5a"></span>当前太阳</span>
+      <span><span class="lg-dot" style="background:#7a96c8"></span>地平线 N/E/S/W</span>
+    </div>
+  </div>
+
+  <div id="group-after"></div>
 
   <div class="footer">每秒刷新时间 · 每 3 分钟刷新位置 · 位置不会上传</div>
 </div>
@@ -190,7 +249,6 @@
     return { rise: fromJulian(Jrise), set: fromJulian(Jset) };
   }
 
-  // 当前太阳位置（alt 高度角弧度，az 方位角弧度，从南起西为正）
   function getSunPos(date, lat, lng) {
     const lw = rad * -lng;
     const phi = rad * lat;
@@ -206,14 +264,27 @@
     };
   }
 
-  // 当前太阳高度角（弧度）
+  // 给 3D 模块用
+  window.__sun = { getSunPos, PI };
+
   function getSunAltitudeRad(date, lat, lng) {
     return getSunPos(date, lat, lng).alt;
   }
 
-  // 找下一次未来事件，返回该事件当天的 4 个角度时刻
-  // 锚点用「时间序列上的最后一个角度」：日出最后是 horizon，日落最后是 astro
-  // 这样如果还在某次日落/日出的中间段，会保留显示这一次（而不是跳到下一次）
+  // ---------- 配置 ----------
+  const ANGLES = [
+    { key: 'astro', riseName: '天文晨光', setName: '天文暮光', alt: -18,     hint: '−18°' },
+    { key: 'naut',  riseName: '航海晨光', setName: '航海暮光', alt: -12,     hint: '−12°' },
+    { key: 'civil', riseName: '民用晨光', setName: '民用暮光', alt: -6,      hint: '−6°'  },
+    { key: 'horiz', riseName: '日出',     setName: '日落',     alt: -0.833,  hint: '0°（含折射）' },
+  ];
+
+  const PHASES = [
+    { name: '天文', low: -18,     high: -12     },
+    { name: '航海', low: -12,     high: -6      },
+    { name: '民用', low: -6,      high: -0.833  },
+  ];
+
   function findNextEvent(now, lat, lng, which) {
     const anchorAlt = which === 'rise' ? -0.833 : -18;
     for (const off of [0, 1, 2, 3]) {
@@ -229,27 +300,9 @@
     return ANGLES.map(angle => ({ angle, time: null, passed: false }));
   }
 
-  // ---------- 配置 ----------
-  // alt 是地平高度角（度，负值表示在地平线下）
-  const ANGLES = [
-    { key: 'astro', riseName: '天文晨光', setName: '天文暮光', alt: -18,     hint: '−18°' },
-    { key: 'naut',  riseName: '航海晨光', setName: '航海暮光', alt: -12,     hint: '−12°' },
-    { key: 'civil', riseName: '民用晨光', setName: '民用暮光', alt: -6,      hint: '−6°'  },
-    { key: 'horiz', riseName: '日出',     setName: '日落',     alt: -0.833,  hint: '0°（含折射）' },
-  ];
-
-  // 相位：相邻两个角度之间为一段
-  // 名字: 天文/航海/民用 三段, 各自上下界
-  const PHASES = [
-    { name: '天文', low: -18,     high: -12     },
-    { name: '航海', low: -12,     high: -6      },
-    { name: '民用', low: -6,      high: -0.833  },
-  ];
-
   function currentPhase(date, lat, lng) {
     const altRad = getSunAltitudeRad(date, lat, lng);
     const altDeg = altRad / rad;
-    // 升降速率（度/分钟，正=上升，负=下降）
     const altSoon = getSunAltitudeRad(new Date(date.getTime() + 60000), lat, lng) / rad;
     const rateDegPerMin = altSoon - altDeg;
     const rising = rateDegPerMin > 0;
@@ -257,14 +310,11 @@
     if (altDeg > -0.833) return { kind: 'day', altDeg, rising, rateDegPerMin };
     if (altDeg < -18)    return { kind: 'night', altDeg, rising, rateDegPerMin };
 
-    // 处于某个 twilight 段
     const seg = PHASES.find(p => altDeg > p.low && altDeg <= p.high) || PHASES[0];
-    // 段内进度：晨（rising）从 low 到 high；暮（setting）从 high 到 low
     const range = seg.high - seg.low;
     const segPct = rising
       ? (altDeg - seg.low) / range
       : (seg.high - altDeg) / range;
-    // 整体进度：晨从 -18 到 -0.833 进度 0→1；暮从 -0.833 到 -18 进度 0→1
     const overallPct = rising
       ? (altDeg - (-18)) / (-0.833 - (-18))
       : (-0.833 - altDeg) / (-0.833 - (-18));
@@ -275,6 +325,135 @@
       pct: Math.max(0, Math.min(1, segPct)),
       overallPct: Math.max(0, Math.min(1, overallPct)),
     };
+  }
+
+  // 当日太阳高度角变化的最大速率（绝对值，度/分），按 lat/lng/日期缓存
+  let cachedMaxRate = { key: null, val: 0 };
+  function getMaxAltRate(now, lat, lng) {
+    const dayKey = Math.floor(now.getTime() / dayMs);
+    const key = `${lat.toFixed(2)}|${lng.toFixed(2)}|${dayKey}`;
+    if (cachedMaxRate.key === key) return cachedMaxRate.val;
+    let maxR = 0;
+    for (let m = -12 * 60; m < 12 * 60; m += 5) {
+      const t1 = new Date(now.getTime() + m * 60000);
+      const a1 = getSunPos(t1, lat, lng).alt / rad;
+      const a2 = getSunPos(new Date(t1.getTime() + 60000), lat, lng).alt / rad;
+      const r = Math.abs(a2 - a1);
+      if (r > maxR) maxR = r;
+    }
+    cachedMaxRate = { key, val: maxR };
+    return maxR;
+  }
+
+  // 理想晴空地面水平光照（lux）—— 太阳高度角→近似光照
+  // 来源：白天用 Bouguer/sin(alt) 经验近似，夜空段用 log-linear 拟合 + 星光底
+  function illuminance(altDeg) {
+    if (altDeg >= 0) {
+      const sinAlt = Math.sin(altDeg * PI / 180);
+      // 地平 ≈ 450 lux，天顶 ≈ 100000 lux，平滑过渡
+      return 450 * Math.pow(10, 2.35 * sinAlt) + 50 * sinAlt;
+    }
+    if (altDeg > -6)  return Math.pow(10, 2.65 + altDeg / 3);
+    if (altDeg > -12) return Math.pow(10, 0.65 + (altDeg + 6) / 3);
+    if (altDeg > -18) return Math.pow(10, -1.35 + (altDeg + 12) / 3);
+    return 0.002;
+  }
+
+  // 构建 24h 光照曲线 SVG + 统计值
+  function buildIllumChart(now, lat, lng) {
+    const W = 320, H = 90;
+    const padL = 4, padR = 4, padT = 4, padB = 4;
+    const cw = W - padL - padR, ch = H - padT - padB;
+
+    const samples = [];
+    let maxLux = 0;
+    for (let m = -12 * 60; m <= 12 * 60; m += 5) {
+      const t = new Date(now.getTime() + m * 60000);
+      const alt = getSunPos(t, lat, lng).alt / rad;
+      const lux = illuminance(alt);
+      samples.push({ m, lux });
+      if (lux > maxLux) maxLux = lux;
+    }
+    const curLux = illuminance(getSunPos(now, lat, lng).alt / rad);
+
+    // 对数 y 轴：让低光段也能看出变化
+    const yMin = -3.2;                   // 约 6e-4 lux
+    const yMax = Math.log10(maxLux + 1) + 0.05;
+    const yRange = yMax - yMin;
+    const toX = m => padL + ((m + 12 * 60) / (24 * 60)) * cw;
+    const toY = lux => padT + ch - ((Math.log10(Math.max(lux, 1e-4)) - yMin) / yRange) * ch;
+
+    const pathD = samples.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'}${toX(p.m).toFixed(1)},${toY(p.lux).toFixed(1)}`).join(' ');
+    const areaD = pathD +
+      ` L${toX(12 * 60).toFixed(1)},${(padT + ch).toFixed(1)}` +
+      ` L${toX(-12 * 60).toFixed(1)},${(padT + ch).toFixed(1)} Z`;
+
+    const cx = toX(0), cy = toY(curLux);
+
+    // 横向参考线（10^0, 10^2, 10^4 lux）
+    const refs = [0, 2, 4].filter(p => p >= yMin && p <= yMax).map(p => {
+      const y = padT + ch - ((p - yMin) / yRange) * ch;
+      return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 3"/>` +
+             `<text x="${W - padR - 2}" y="${(y - 1).toFixed(1)}" text-anchor="end" fill="#5a6a90" font-size="9">10^${p} lux</text>`;
+    }).join('');
+
+    const svgInner = `
+      <defs>
+        <linearGradient id="illum-area" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffd87b" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#ffd87b" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${refs}
+      <path d="${areaD}" fill="url(#illum-area)"/>
+      <path d="${pathD}" fill="none" stroke="#ffd87b" stroke-width="1.5"/>
+      <line x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${(padT + ch).toFixed(1)}"
+            stroke="#6cb6ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>
+      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="#ffe27a" stroke="#fff" stroke-width="1"/>
+    `;
+
+    return {
+      svgInner,
+      curLux, maxLux,
+      pct: maxLux > 0 ? (curLux / maxLux * 100) : 0,
+    };
+  }
+
+  function fmtLux(v) {
+    if (v >= 10000) return Math.round(v / 100) / 10 + ' 万 lux';
+    if (v >= 1000)  return Math.round(v).toLocaleString() + ' lux';
+    if (v >= 10)    return v.toFixed(0) + ' lux';
+    if (v >= 1)     return v.toFixed(1) + ' lux';
+    if (v >= 0.01)  return v.toFixed(2) + ' lux';
+    return v.toExponential(1).replace('e', 'e') + ' lux';
+  }
+
+  function fmtPct(p) {
+    if (p >= 10) return p.toFixed(1) + '%';
+    if (p >= 1)  return p.toFixed(2) + '%';
+    if (p >= 0.01) return p.toFixed(2) + '%';
+    if (p > 0)   return p.toExponential(1) + '%';
+    return '0%';
+  }
+
+  // 白天/夜晚进度：白天 = horizon-rise → horizon-set；夜晚 = astro-set → astro-rise（真天文夜）
+  function dayNightProgress(now, lat, lng, kind) {
+    const targetAlt = kind === 'day' ? -0.833 : -18;
+    let start = null, end = null;
+    for (const off of [-2, -1, 0, 1, 2]) {
+      const d = new Date(now.getTime() + off * dayMs);
+      const t = getSunTimes(d, lat, lng, targetAlt);
+      if (kind === 'day') {
+        if (t.rise && t.rise <= now && (!start || t.rise > start)) start = t.rise;
+        if (t.set  && t.set  >  now && (!end   || t.set  < end))   end   = t.set;
+      } else {
+        if (t.set  && t.set  <= now && (!start || t.set  > start)) start = t.set;
+        if (t.rise && t.rise >  now && (!end   || t.rise < end))   end   = t.rise;
+      }
+    }
+    if (!start || !end || end <= start) return null;
+    return { start, end, pct: Math.max(0, Math.min(1, (now - start) / (end - start))) };
   }
 
   // ---------- UI helpers ----------
@@ -310,12 +489,48 @@
     return { text: text + suffix, cls };
   }
 
+  function fmtRate(rateAbs) {
+    return rateAbs.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + '°/分';
+  }
+
+  // ---------- 反向地理编码（BigDataCloud 免费、免 key、CORS 允许） ----------
+  let cachedAddr = { lat: null, lng: null, text: null };
+  let addrInFlight = false;
+  async function lookupAddress(lat, lng) {
+    if (cachedAddr.lat != null) {
+      if (Math.abs(lat - cachedAddr.lat) < 0.005 && Math.abs(lng - cachedAddr.lng) < 0.005) {
+        return cachedAddr.text;
+      }
+    }
+    if (addrInFlight) return null;
+    addrInFlight = true;
+    try {
+      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=zh`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      const parts = [];
+      if (d.countryName) parts.push(d.countryName);
+      if (d.principalSubdivision && d.principalSubdivision !== d.countryName) parts.push(d.principalSubdivision);
+      if (d.city && d.city !== d.principalSubdivision) parts.push(d.city);
+      if (d.locality && d.locality !== d.city && d.locality !== d.principalSubdivision) parts.push(d.locality);
+      const text = parts.join(' · ') || '（未识别）';
+      cachedAddr = { lat, lng, text };
+      $('addr').textContent = text;
+      return text;
+    } catch (err) {
+      $('addr').textContent = '（查询失败）';
+      return null;
+    } finally {
+      addrInFlight = false;
+    }
+  }
+
   // ---------- state ----------
   let state = {
     lat: null, lng: null,
     posUpdatedAt: null,
     posSource: '',
-    watchId: null,
     posRefreshTimer: null,
   };
   const POS_REFRESH_MS = 3 * 60 * 1000;
@@ -327,131 +542,18 @@
     el.style.display = msg ? '' : 'none';
   }
 
-  // 太阳轨迹示意图：天顶在中心，地平线为外圈，北上东右
-  function buildSkySVG(now, lat, lng) {
-    const R = 100;    // 地平线半径
-    const VB = 144;   // viewBox 半幅
-    const altToR = altDeg => (90 - altDeg) / 90 * R;
-    const rCivil = altToR(-6);
-    const rNaut  = altToR(-12);
-    const rAstro = altToR(-18);
-
-    function project(altRad, azRad) {
-      const r = ((PI / 2) - altRad) / (PI / 2) * R;
-      const compassAz = PI + azRad;
-      return { x: Math.sin(compassAz) * r, y: -Math.cos(compassAz) * r };
-    }
-
-    // 采样 -12h 到 +12h，每 10 分钟
-    const points = [];
-    for (let m = -12 * 60; m <= 12 * 60; m += 10) {
-      const t = new Date(now.getTime() + m * 60000);
-      const p = getSunPos(t, lat, lng);
-      const proj = project(p.alt, p.az);
-      points.push({ alt: p.alt, x: proj.x, y: proj.y, m });
-    }
-
-    // 按地平线上下拆段
-    const aboveSegs = [], belowSegs = [];
-    let curA = [], curB = [];
-    for (const p of points) {
-      if (p.alt >= 0) { curA.push(p); if (curB.length) { belowSegs.push(curB); curB = []; } }
-      else            { curB.push(p); if (curA.length) { aboveSegs.push(curA); curA = []; } }
-    }
-    if (curA.length) aboveSegs.push(curA);
-    if (curB.length) belowSegs.push(curB);
-
-    const pathD = seg => seg.map((p, i) =>
-      `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-
-    const sunNow = getSunPos(now, lat, lng);
-    const sun = project(sunNow.alt, sunNow.az);
-
-    // 每 3 小时标记一个时间点
-    const ticks = [];
-    for (let m = -12 * 60; m <= 12 * 60; m += 180) {
-      const t = new Date(now.getTime() + m * 60000);
-      const p = getSunPos(t, lat, lng);
-      const pr = project(p.alt, p.az);
-      const lbl = pad2(t.getHours()) + ':' + pad2(t.getMinutes());
-      ticks.push({ ...pr, lbl, cur: m === 0, alt: p.alt });
-    }
-
-    const above = aboveSegs.map(seg => `<path d="${pathD(seg)}" fill="none" stroke="#ffd87b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
-    const below = belowSegs.map(seg => `<path d="${pathD(seg)}" fill="none" stroke="#5a6a90" stroke-width="1.5" stroke-dasharray="3 3" stroke-linecap="round" opacity="0.7"/>`).join('');
-
-    const tickMarks = ticks.map(t => {
-      if (t.cur) return '';
-      return `<circle cx="${t.x.toFixed(1)}" cy="${t.y.toFixed(1)}" r="2" fill="${t.alt >= 0 ? '#ffd87b' : '#5a6a90'}" opacity="0.8"/>`;
-    }).join('');
-
-    return `
-      <svg viewBox="-${VB} -${VB} ${2 * VB} ${2 * VB}" class="sky-svg" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <radialGradient id="sun-rg" cx="40%" cy="40%" r="60%">
-            <stop offset="0%" stop-color="#fffbb0"/>
-            <stop offset="55%" stop-color="#ffd87b"/>
-            <stop offset="100%" stop-color="#ff8e5a"/>
-          </radialGradient>
-          <filter id="sun-glow" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="5"/>
-          </filter>
-        </defs>
-
-        <circle r="${VB}" fill="#070b14"/>
-        <circle r="${rAstro.toFixed(1)}" fill="#101a30"/>
-        <circle r="${rNaut.toFixed(1)}"  fill="#1a2a4f"/>
-        <circle r="${rCivil.toFixed(1)}" fill="#2b4577"/>
-        <circle r="${R}" fill="#3d6aa8" stroke="#7a96c8" stroke-width="1"/>
-
-        <line x1="0" y1="-${R}" x2="0" y2="${R}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-        <line x1="-${R}" y1="0" x2="${R}" y2="0" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-
-        <text x="0" y="-${R + 14}" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">N</text>
-        <text x="${R + 12}" y="4" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">E</text>
-        <text x="0" y="${R + 18}" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">S</text>
-        <text x="-${R + 12}" y="4" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">W</text>
-
-        ${below}
-        ${above}
-        ${tickMarks}
-
-        <circle cx="${sun.x.toFixed(1)}" cy="${sun.y.toFixed(1)}" r="18" fill="#ffd87b" opacity="${sunNow.alt >= 0 ? 0.45 : 0.2}" filter="url(#sun-glow)"/>
-        <circle cx="${sun.x.toFixed(1)}" cy="${sun.y.toFixed(1)}" r="8" fill="url(#sun-rg)" stroke="#fff8a0" stroke-width="0.5"/>
-        <circle cx="${sun.x.toFixed(1)}" cy="${sun.y.toFixed(1)}" r="3" fill="#fffaf0"/>
-      </svg>
-    `;
-  }
-
   function buildGroupHTML(which, items, phase) {
     const emoji = which === 'rise' ? '🌅' : '🌇';
     const title = which === 'rise' ? '最近的日出' : '最近的日落';
-
-    // 在哪两行中间插一条进度条？
-    // rise group 顺序（从晚到早→不对，从暗到亮）：astro, naut, civil, horiz
-    // dusk in set group 顺序（从亮到暗）：horiz, civil, naut, astro
-    // 当前相位段 seg 名 = 天文/航海/民用
-    // 对应的进度条插在该 seg 所跨的两行之间：
-    //   rise + 天文 → 在 astro(−18) 和 naut(−12) 之间
-    //   rise + 航海 → 在 naut(−12)  和 civil(−6) 之间
-    //   rise + 民用 → 在 civil(−6)  和 horiz(0)  之间
-    //   set  + 民用 → 在 horiz(0)   和 civil(−6) 之间
-    //   set  + 航海 → 在 civil(−6)  和 naut(−12) 之间
-    //   set  + 天文 → 在 naut(−12)  和 astro(−18) 之间
     const showInRow = phase &&
       ((phase.kind === 'dawn' && which === 'rise') ||
        (phase.kind === 'dusk' && which === 'set'));
-    const segKeyMap = { '天文': 'astro', '航海': 'naut', '民用': 'civil' };
     let insertAfterKey = null;
     if (showInRow) {
-      // 在「靠近现在那一端」的 row 后面插
       if (which === 'rise') {
-        // 晨：astro→naut→civil→horiz；段名定义了 low/high；在 high 端那一行之前其实更好——
-        // 我们以「已过的角度行」之后插：rise 时已经过 low 端那一行（更暗）。
         const lowKeyMap = { '天文': 'astro', '航海': 'naut', '民用': 'civil' };
         insertAfterKey = lowKeyMap[phase.segName];
       } else {
-        // 暮：horiz→civil→naut→astro；高端先发生（接近 horiz）
         const highKeyMap = { '民用': 'horiz', '航海': 'civil', '天文': 'naut' };
         insertAfterKey = highKeyMap[phase.segName];
       }
@@ -484,11 +586,8 @@
       }
     });
 
-    // 最近一次时间（horizon）距今的标签
     const horiz = items.find(it => it.angle.key === 'horiz');
-    const tag = horiz && horiz.time
-      ? fmtDelta(horiz.time, now).text
-      : '';
+    const tag = horiz && horiz.time ? fmtDelta(horiz.time, now).text : '';
 
     return `<div class="group">
       <h2><span class="emoji">${emoji}</span> ${title}<span class="tag">${tag}</span></h2>
@@ -510,27 +609,43 @@
 
     const phase = currentPhase(now, state.lat, state.lng);
     const rateAbs = Math.abs(phase.rateDegPerMin);
-    const rateStr = rateAbs.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + '°/分';
-    $('sun-alt').textContent =
-      phase.altDeg.toFixed(2) + '°  ' + (phase.rising ? '↑' : '↓') + ' ' + rateStr;
+    const maxRate = getMaxAltRate(now, state.lat, state.lng);
+    const ratePct = maxRate > 0 ? Math.round(rateAbs / maxRate * 100) : 0;
+    $('sun-alt').innerHTML =
+      `${phase.altDeg.toFixed(2)}°  ${phase.rising ? '↑' : '↓'} ${fmtRate(rateAbs)}` +
+      `<span class="pctchip">${ratePct}%</span>`;
 
     // 当前相位卡片
     const np = $('now-phase');
+    np.hidden = false;
     if (phase.kind === 'day') {
-      np.hidden = false;
+      const dn = dayNightProgress(now, state.lat, state.lng, 'day');
       $('ph-name').innerHTML = '☀️ 白天';
-      $('ph-pct').textContent = '';
-      $('ph-sub').textContent = `太阳在地平线上 ${phase.altDeg.toFixed(1)}°`;
-      $('ph-fill').style.width = '100%';
+      if (dn) {
+        const pct = Math.round(dn.pct * 100);
+        $('ph-pct').textContent = pct + '%';
+        $('ph-sub').textContent = `白天进度 ${pct}% · 太阳在地平线上 ${phase.altDeg.toFixed(1)}°（${fmtHM(dn.start)} 出 → ${fmtHM(dn.end)} 落）`;
+        $('ph-fill').style.width = pct + '%';
+      } else {
+        $('ph-pct').textContent = '';
+        $('ph-sub').textContent = `太阳在地平线上 ${phase.altDeg.toFixed(1)}°`;
+        $('ph-fill').style.width = '100%';
+      }
     } else if (phase.kind === 'night') {
-      np.hidden = false;
+      const dn = dayNightProgress(now, state.lat, state.lng, 'night');
       $('ph-name').innerHTML = '🌑 夜晚';
-      $('ph-pct').textContent = '';
-      $('ph-sub').textContent = `太阳在地平线下 ${(-phase.altDeg).toFixed(1)}°`;
-      $('ph-fill').style.width = '0%';
+      if (dn) {
+        const pct = Math.round(dn.pct * 100);
+        $('ph-pct').textContent = pct + '%';
+        $('ph-sub').textContent = `夜晚进度 ${pct}% · 太阳在地平线下 ${(-phase.altDeg).toFixed(1)}°（${fmtHM(dn.start)} 天文暮 → ${fmtHM(dn.end)} 天文晨）`;
+        $('ph-fill').style.width = pct + '%';
+      } else {
+        $('ph-pct').textContent = '';
+        $('ph-sub').textContent = `太阳在地平线下 ${(-phase.altDeg).toFixed(1)}°`;
+        $('ph-fill').style.width = '0%';
+      }
     } else {
       const isDawn = phase.kind === 'dawn';
-      np.hidden = false;
       $('ph-name').innerHTML = (isDawn ? '🌄 日出中' : '🌆 日落中') +
         ' · ' + phase.segName + (isDawn ? '晨光' : '暮光');
       const overallPct = Math.round(phase.overallPct * 100);
@@ -540,14 +655,20 @@
       $('ph-fill').style.width = overallPct + '%';
     }
 
-    // 计算两组 —— 都强制是「下一次」未来事件
+    // 光照曲线
+    const illum = buildIllumChart(now, state.lat, state.lng);
+    $('illum-card').hidden = false;
+    $('illum-chart').innerHTML = illum.svgInner;
+    $('illum-cur').textContent = fmtLux(illum.curLux);
+    $('illum-max').textContent = fmtLux(illum.maxLux);
+    $('illum-pct').textContent = fmtPct(illum.pct);
+
+    // 两组
     const riseRaw = findNextEvent(now, state.lat, state.lng, 'rise');
     const setRaw  = findNextEvent(now, state.lat, state.lng, 'set');
-    // 按时间从早到晚排列：rise 是 alt 升序，set 是 alt 降序
     const riseItems = riseRaw.slice().sort((a, b) => a.angle.alt - b.angle.alt);
     const setItems  = setRaw.slice().sort((a, b) => b.angle.alt - a.angle.alt);
 
-    // 排序：正在经历的事件优先放前面；否则按 horizon 谁先到排
     let riseFirst;
     if (phase.kind === 'dawn')      riseFirst = true;
     else if (phase.kind === 'dusk') riseFirst = false;
@@ -559,23 +680,13 @@
       riseFirst = riseTtl <= setTtl;
     }
 
-    const groupA = riseFirst ? buildGroupHTML('rise', riseItems, phase) : buildGroupHTML('set', setItems, phase);
-    const groupB = riseFirst ? buildGroupHTML('set', setItems, phase)  : buildGroupHTML('rise', riseItems, phase);
-    const skyHTML = `<div class="sky-card">
-      <div class="sky-head">
-        <div class="sky-title">太阳轨迹 · 前后 12 小时</div>
-        <div class="sky-hint">中心 ＝ 头顶 · 圆环 ＝ 地平线</div>
-      </div>
-      ${buildSkySVG(now, state.lat, state.lng)}
-      <div class="sky-legend">
-        <span><span class="lg-dot" style="background:#ffd87b"></span>当前太阳</span>
-        <span><span class="lg-dot" style="background:#3d6aa8"></span>白天</span>
-        <span><span class="lg-dot" style="background:#2b4577"></span>民用</span>
-        <span><span class="lg-dot" style="background:#1a2a4f"></span>航海</span>
-        <span><span class="lg-dot" style="background:#101a30"></span>天文</span>
-      </div>
-    </div>`;
-    $('groups').innerHTML = groupA + skyHTML + groupB;
+    $('group-before').innerHTML = riseFirst ? buildGroupHTML('rise', riseItems, phase) : buildGroupHTML('set', setItems, phase);
+    $('group-after').innerHTML  = riseFirst ? buildGroupHTML('set', setItems, phase)  : buildGroupHTML('rise', riseItems, phase);
+
+    // 3D 场景更新
+    if (window.SunScene && window.SunScene.update) {
+      window.SunScene.update(now, state.lat, state.lng);
+    }
 
     $('meta').hidden = false;
   }
@@ -587,6 +698,7 @@
     try { localStorage.setItem('sunPos', JSON.stringify({ lat, lng })); } catch (_) {}
     setStatus('');
     render();
+    lookupAddress(lat, lng);
   }
 
   function requestGeoOnce(silent) {
@@ -602,10 +714,7 @@
         $('manual').hidden = true;
       },
       err => {
-        if (state.lat != null) {
-          // 已有位置就静默失败
-          return;
-        }
+        if (state.lat != null) return;
         let msg = '获取位置失败：' + (err && err.message ? err.message : '未知错误');
         if (location.protocol === 'file:') {
           msg += '（file:// 下定位被禁用，请用 HTTPS 打开或手动输入）';
@@ -642,19 +751,261 @@
 
   $('btn-refresh').addEventListener('click', () => requestGeoOnce(false));
 
-  // 每秒刷新时钟和距今
   setInterval(() => { if (state.lat != null) render(); }, 1000);
 
   requestGeoOnce(false);
   startPosAutoRefresh();
 
-  // 页面从后台回来时立刻刷新一次位置
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && state.lat != null) {
       requestGeoOnce(true);
     }
   });
 })();
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const SunScene = {
+  ready: false,
+  scene: null, camera: null, renderer: null, controls: null,
+  trajGroup: null, sunMesh: null, sunGlow: null,
+  lastLat: null, lastLng: null,
+  cameraOriented: false,
+
+  init(container) {
+    if (this.ready) return;
+    const w = container.clientWidth || 320;
+    const h = w;
+
+    this.scene = new THREE.Scene();
+
+    this.camera = new THREE.PerspectiveCamera(45, w / h, 0.01, 100);
+    this.camera.position.set(0, 1.2, 2.6);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(w, h);
+    this.renderer.setClearColor(0x000000, 0);
+    container.innerHTML = '';
+    container.appendChild(this.renderer.domElement);
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.target.set(0, 0, 0);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.12;
+    this.controls.minDistance = 1.4;
+    this.controls.maxDistance = 6;
+    this.controls.enablePan = false;
+    this.controls.enableZoom = true;
+    this.controls.rotateSpeed = 0.8;
+    this.controls.autoRotate = true;
+    this.controls.autoRotateSpeed = 0.6;
+    this.controls.addEventListener('start', () => { this.controls.autoRotate = false; });
+
+    // 地平面（半透明圆盘）
+    const groundGeom = new THREE.CircleGeometry(1.0, 96);
+    groundGeom.rotateX(-Math.PI / 2);
+    this.scene.add(new THREE.Mesh(groundGeom,
+      new THREE.MeshBasicMaterial({ color: 0x1a2a4f, transparent: true, opacity: 0.35, side: THREE.DoubleSide })));
+
+    // 地平线圆环
+    const ringGeom = new THREE.RingGeometry(0.995, 1.012, 96);
+    ringGeom.rotateX(-Math.PI / 2);
+    this.scene.add(new THREE.Mesh(ringGeom,
+      new THREE.MeshBasicMaterial({ color: 0x7a96c8, side: THREE.DoubleSide })));
+
+    // 子午线/方位环（很淡）
+    const meridGeom = new THREE.RingGeometry(0.998, 1.002, 96);
+    const merid1 = new THREE.Mesh(meridGeom, new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
+    merid1.rotation.set(0, 0, Math.PI / 2);  // E-W vertical great circle
+    this.scene.add(merid1);
+    const merid2 = new THREE.Mesh(meridGeom, new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
+    merid2.rotation.set(Math.PI / 2, 0, 0);  // N-S vertical great circle
+    this.scene.add(merid2);
+
+    // 方位标签
+    this.scene.add(this._makeLabel('N', 0, 0.04, -1.13, '#ffd87b'));
+    this.scene.add(this._makeLabel('S', 0, 0.04,  1.13, '#9aa8c8'));
+    this.scene.add(this._makeLabel('E', 1.13, 0.04, 0,  '#9aa8c8'));
+    this.scene.add(this._makeLabel('W', -1.13, 0.04, 0, '#9aa8c8'));
+    // 头顶/天底标
+    this.scene.add(this._makeLabel('天顶', 0, 1.1, 0, '#6cb6ff'));
+
+    // 轨迹容器
+    this.trajGroup = new THREE.Group();
+    this.scene.add(this.trajGroup);
+
+    // 太阳
+    const sunGeom = new THREE.SphereGeometry(0.05, 32, 24);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe27a });
+    this.sunMesh = new THREE.Mesh(sunGeom, sunMat);
+    this.scene.add(this.sunMesh);
+
+    // 光晕
+    const glowGeom = new THREE.SphereGeometry(0.12, 24, 16);
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xff8e5a, transparent: true, opacity: 0.25 });
+    this.sunGlow = new THREE.Mesh(glowGeom, glowMat);
+    this.scene.add(this.sunGlow);
+
+    // 天顶杆
+    const zenithGeom = new THREE.CylinderGeometry(0.002, 0.002, 1.0, 8);
+    const zenithMat = new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.4 });
+    const zenithRod = new THREE.Mesh(zenithGeom, zenithMat);
+    zenithRod.position.set(0, 0.5, 0);
+    this.scene.add(zenithRod);
+
+    // resize
+    const onResize = () => {
+      const w = container.clientWidth || 320;
+      const h = w;
+      this.renderer.setSize(w, h);
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+    };
+    window.addEventListener('resize', onResize);
+    const ro = new ResizeObserver(onResize);
+    ro.observe(container);
+
+    // 动画
+    const animate = () => {
+      requestAnimationFrame(animate);
+      this.controls.update();
+      this.renderer.render(this.scene, this.camera);
+    };
+    animate();
+
+    this.ready = true;
+  },
+
+  _makeLabel(text, x, y, z, color) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = color || '#9aa8c8';
+    const fontSize = text.length > 1 ? 48 : 80;
+    ctx.font = `bold ${fontSize}px -apple-system, "PingFang SC", sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 64, 64);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.set(x, y, z);
+    sprite.scale.set(0.2, 0.2, 1);
+    return sprite;
+  },
+
+  _altAzToXYZ(alt, az) {
+    // az: SunCalc 弧度（从南起，西正） → compass = π + az（从北起顺时针）
+    const compassAz = Math.PI + az;
+    return new THREE.Vector3(
+      Math.cos(alt) * Math.sin(compassAz),
+      Math.sin(alt),
+      -Math.cos(alt) * Math.cos(compassAz)
+    );
+  },
+
+  _disposeTraj() {
+    while (this.trajGroup.children.length > 0) {
+      const m = this.trajGroup.children.pop();
+      if (m.geometry) m.geometry.dispose();
+      if (m.material) m.material.dispose();
+    }
+  },
+
+  update(now, lat, lng) {
+    if (!this.ready || !window.__sun) return;
+    const getSunPos = window.__sun.getSunPos;
+
+    // 摄像机初始朝向：根据纬度让太阳一侧在前方
+    if (!this.cameraOriented) {
+      // 南半球太阳在北方（-Z），相机站南；北半球太阳在南方（+Z），相机站北
+      const z = lat < 0 ? 2.6 : -2.6;
+      this.camera.position.set(0, 1.2, z);
+      this.controls.update();
+      this.cameraOriented = true;
+    }
+
+    // 仅在位置变化时重建轨迹
+    if (lat !== this.lastLat || lng !== this.lastLng) {
+      this.lastLat = lat; this.lastLng = lng;
+      this._disposeTraj();
+
+      // 采样 24h
+      const samples = [];
+      for (let m = -12 * 60; m <= 12 * 60; m += 5) {
+        const t = new Date(now.getTime() + m * 60000);
+        const p = getSunPos(t, lat, lng);
+        const v = this._altAzToXYZ(p.alt, p.az);
+        samples.push({ alt: p.alt, v });
+      }
+
+      // 拆段：alt>=0 是白天，<0 是地平线下
+      const segs = [];
+      let cur = null;
+      for (const s of samples) {
+        const isUp = s.alt >= 0;
+        if (!cur || cur.up !== isUp) {
+          if (cur && cur.pts.length >= 2) segs.push(cur);
+          cur = { up: isUp, pts: [] };
+        }
+        cur.pts.push(s.v);
+      }
+      if (cur && cur.pts.length >= 2) segs.push(cur);
+
+      // 每段做 Tube
+      segs.forEach(seg => {
+        if (seg.pts.length < 2) return;
+        const curve = new THREE.CatmullRomCurve3(seg.pts, false);
+        const tubeR = seg.up ? 0.009 : 0.006;
+        const tubeMat = new THREE.MeshBasicMaterial({
+          color: seg.up ? 0xffd87b : 0x5a6a90,
+          transparent: !seg.up,
+          opacity: seg.up ? 1 : 0.7,
+        });
+        const tubeGeom = new THREE.TubeGeometry(curve, seg.pts.length * 2, tubeR, 8, false);
+        this.trajGroup.add(new THREE.Mesh(tubeGeom, tubeMat));
+      });
+
+      // 每 3 小时小球标记
+      for (let m = -12 * 60; m <= 12 * 60; m += 180) {
+        const t = new Date(now.getTime() + m * 60000);
+        const p = getSunPos(t, lat, lng);
+        const v = this._altAzToXYZ(p.alt, p.az);
+        const tickGeom = new THREE.SphereGeometry(0.012, 12, 8);
+        const tickMat = new THREE.MeshBasicMaterial({
+          color: p.alt >= 0 ? 0xffb86b : 0x5a6a90,
+          transparent: p.alt < 0, opacity: p.alt >= 0 ? 1 : 0.7,
+        });
+        const tick = new THREE.Mesh(tickGeom, tickMat);
+        tick.position.copy(v);
+        this.trajGroup.add(tick);
+      }
+    }
+
+    // 更新当前太阳位置
+    const sunPos = getSunPos(now, lat, lng);
+    const v = this._altAzToXYZ(sunPos.alt, sunPos.az);
+    this.sunMesh.position.copy(v);
+    this.sunGlow.position.copy(v);
+    this.sunGlow.material.opacity = sunPos.alt >= 0 ? 0.35 : 0.15;
+    this.sunMesh.material.color.setHex(sunPos.alt >= 0 ? 0xffe27a : 0xff8e5a);
+  },
+};
+
+window.SunScene = SunScene;
+
+const container = document.getElementById('sky3d-canvas');
+if (container) {
+  try {
+    SunScene.init(container);
+  } catch (e) {
+    container.innerHTML = '<div class="sky3d-loading">3D 加载失败：' + (e.message || e) + '</div>';
+  }
+}
 </script>
 </body>
 </html>
