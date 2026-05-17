@@ -77,6 +77,18 @@
   .inrow-bar .track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
   .inrow-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s ease-out; }
 
+  .sky-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    margin-bottom: 16px; padding: 12px 14px 14px; }
+  .sky-card .sky-head { display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px; }
+  .sky-card .sky-title { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .sky-card .sky-hint  { font-size: 11px; color: var(--muted); }
+  .sky-card .sky-svg   { width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto; }
+  .sky-card .sky-legend { display: flex; justify-content: space-around; margin-top: 6px;
+    font-size: 11px; color: var(--muted); gap: 10px; }
+  .sky-card .sky-legend .lg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    vertical-align: middle; margin-right: 4px; }
+
   .manual { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     padding: 14px 16px; margin-bottom: 16px; }
   .manual p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
@@ -178,8 +190,8 @@
     return { rise: fromJulian(Jrise), set: fromJulian(Jset) };
   }
 
-  // 当前太阳高度角（弧度）
-  function getSunAltitudeRad(date, lat, lng) {
+  // 当前太阳位置（alt 高度角弧度，az 方位角弧度，从南起西为正）
+  function getSunPos(date, lat, lng) {
     const lw = rad * -lng;
     const phi = rad * lat;
     const d = toDays(date);
@@ -188,7 +200,15 @@
     const dec = declination(L, 0);
     const ra = rightAscension(L, 0);
     const H = siderealTime(d, lw) - ra;
-    return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
+    return {
+      alt: Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)),
+      az:  Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)),
+    };
+  }
+
+  // 当前太阳高度角（弧度）
+  function getSunAltitudeRad(date, lat, lng) {
+    return getSunPos(date, lat, lng).alt;
   }
 
   // 找下一次未来事件，返回该事件当天的 4 个角度时刻
@@ -305,6 +325,102 @@
     el.textContent = msg || '';
     el.className = 'status' + (isErr ? ' err' : '');
     el.style.display = msg ? '' : 'none';
+  }
+
+  // 太阳轨迹示意图：天顶在中心，地平线为外圈，北上东右
+  function buildSkySVG(now, lat, lng) {
+    const R = 100;    // 地平线半径
+    const VB = 144;   // viewBox 半幅
+    const altToR = altDeg => (90 - altDeg) / 90 * R;
+    const rCivil = altToR(-6);
+    const rNaut  = altToR(-12);
+    const rAstro = altToR(-18);
+
+    function project(altRad, azRad) {
+      const r = ((PI / 2) - altRad) / (PI / 2) * R;
+      const compassAz = PI + azRad;
+      return { x: Math.sin(compassAz) * r, y: -Math.cos(compassAz) * r };
+    }
+
+    // 采样 -12h 到 +12h，每 10 分钟
+    const points = [];
+    for (let m = -12 * 60; m <= 12 * 60; m += 10) {
+      const t = new Date(now.getTime() + m * 60000);
+      const p = getSunPos(t, lat, lng);
+      const proj = project(p.alt, p.az);
+      points.push({ alt: p.alt, x: proj.x, y: proj.y, m });
+    }
+
+    // 按地平线上下拆段
+    const aboveSegs = [], belowSegs = [];
+    let curA = [], curB = [];
+    for (const p of points) {
+      if (p.alt >= 0) { curA.push(p); if (curB.length) { belowSegs.push(curB); curB = []; } }
+      else            { curB.push(p); if (curA.length) { aboveSegs.push(curA); curA = []; } }
+    }
+    if (curA.length) aboveSegs.push(curA);
+    if (curB.length) belowSegs.push(curB);
+
+    const pathD = seg => seg.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+    const sunNow = getSunPos(now, lat, lng);
+    const sun = project(sunNow.alt, sunNow.az);
+
+    // 每 3 小时标记一个时间点
+    const ticks = [];
+    for (let m = -12 * 60; m <= 12 * 60; m += 180) {
+      const t = new Date(now.getTime() + m * 60000);
+      const p = getSunPos(t, lat, lng);
+      const pr = project(p.alt, p.az);
+      const lbl = pad2(t.getHours()) + ':' + pad2(t.getMinutes());
+      ticks.push({ ...pr, lbl, cur: m === 0, alt: p.alt });
+    }
+
+    const above = aboveSegs.map(seg => `<path d="${pathD(seg)}" fill="none" stroke="#ffd87b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+    const below = belowSegs.map(seg => `<path d="${pathD(seg)}" fill="none" stroke="#5a6a90" stroke-width="1.5" stroke-dasharray="3 3" stroke-linecap="round" opacity="0.7"/>`).join('');
+
+    const tickMarks = ticks.map(t => {
+      if (t.cur) return '';
+      return `<circle cx="${t.x.toFixed(1)}" cy="${t.y.toFixed(1)}" r="2" fill="${t.alt >= 0 ? '#ffd87b' : '#5a6a90'}" opacity="0.8"/>`;
+    }).join('');
+
+    return `
+      <svg viewBox="-${VB} -${VB} ${2 * VB} ${2 * VB}" class="sky-svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="sun-rg" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#fffbb0"/>
+            <stop offset="55%" stop-color="#ffd87b"/>
+            <stop offset="100%" stop-color="#ff8e5a"/>
+          </radialGradient>
+          <filter id="sun-glow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="5"/>
+          </filter>
+        </defs>
+
+        <circle r="${VB}" fill="#070b14"/>
+        <circle r="${rAstro.toFixed(1)}" fill="#101a30"/>
+        <circle r="${rNaut.toFixed(1)}"  fill="#1a2a4f"/>
+        <circle r="${rCivil.toFixed(1)}" fill="#2b4577"/>
+        <circle r="${R}" fill="#3d6aa8" stroke="#7a96c8" stroke-width="1"/>
+
+        <line x1="0" y1="-${R}" x2="0" y2="${R}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="-${R}" y1="0" x2="${R}" y2="0" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+        <text x="0" y="-${R + 14}" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">N</text>
+        <text x="${R + 12}" y="4" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">E</text>
+        <text x="0" y="${R + 18}" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">S</text>
+        <text x="-${R + 12}" y="4" text-anchor="middle" fill="#9aa8c8" font-size="11" font-weight="600">W</text>
+
+        ${below}
+        ${above}
+        ${tickMarks}
+
+        <circle cx="${sun.x.toFixed(1)}" cy="${sun.y.toFixed(1)}" r="18" fill="#ffd87b" opacity="${sunNow.alt >= 0 ? 0.45 : 0.2}" filter="url(#sun-glow)"/>
+        <circle cx="${sun.x.toFixed(1)}" cy="${sun.y.toFixed(1)}" r="8" fill="url(#sun-rg)" stroke="#fff8a0" stroke-width="0.5"/>
+        <circle cx="${sun.x.toFixed(1)}" cy="${sun.y.toFixed(1)}" r="3" fill="#fffaf0"/>
+      </svg>
+    `;
   }
 
   function buildGroupHTML(which, items, phase) {
@@ -443,10 +559,23 @@
       riseFirst = riseTtl <= setTtl;
     }
 
-    const html = riseFirst
-      ? buildGroupHTML('rise', riseItems, phase) + buildGroupHTML('set', setItems, phase)
-      : buildGroupHTML('set', setItems, phase)  + buildGroupHTML('rise', riseItems, phase);
-    $('groups').innerHTML = html;
+    const groupA = riseFirst ? buildGroupHTML('rise', riseItems, phase) : buildGroupHTML('set', setItems, phase);
+    const groupB = riseFirst ? buildGroupHTML('set', setItems, phase)  : buildGroupHTML('rise', riseItems, phase);
+    const skyHTML = `<div class="sky-card">
+      <div class="sky-head">
+        <div class="sky-title">太阳轨迹 · 前后 12 小时</div>
+        <div class="sky-hint">中心 ＝ 头顶 · 圆环 ＝ 地平线</div>
+      </div>
+      ${buildSkySVG(now, state.lat, state.lng)}
+      <div class="sky-legend">
+        <span><span class="lg-dot" style="background:#ffd87b"></span>当前太阳</span>
+        <span><span class="lg-dot" style="background:#3d6aa8"></span>白天</span>
+        <span><span class="lg-dot" style="background:#2b4577"></span>民用</span>
+        <span><span class="lg-dot" style="background:#1a2a4f"></span>航海</span>
+        <span><span class="lg-dot" style="background:#101a30"></span>天文</span>
+      </div>
+    </div>`;
+    $('groups').innerHTML = groupA + skyHTML + groupB;
 
     $('meta').hidden = false;
   }
