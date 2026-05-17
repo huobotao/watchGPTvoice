@@ -1,11 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import mdx from '@mdx-js/rollup';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
 export default defineConfig({
   plugins: [
-    react(),
+    // MDX must run before React so .mdx is transformed to JSX first.
+    { enforce: 'pre', ...mdx({ providerImportSource: '@mdx-js/react' }) },
+    react({ include: /\.(jsx|tsx|mdx)$/ }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*'],

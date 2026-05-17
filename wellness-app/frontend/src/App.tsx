@@ -6,10 +6,11 @@ import { MetricsPanel } from './components/MetricsPanel';
 import { PresetList } from './components/PresetList';
 import { AttemptsLog } from './components/AttemptsLog';
 import { SessionsPanel } from './components/SessionsPanel';
+import { KnowledgePanel } from './components/KnowledgePanel';
 import { useSimStore } from './store/useSimStore';
 import { decodeImportParam } from './data/hrImport';
 
-type Tab = 'sessions' | 'metrics' | 'params' | 'attempts';
+type Tab = 'sessions' | 'knowledge' | 'metrics' | 'params' | 'attempts';
 
 function consumeImportFromUrl(): string | null {
   const params = new URLSearchParams(window.location.search);
@@ -62,7 +63,7 @@ export default function App() {
         {/* Right rail: tabbed sessions / metrics / params / attempts */}
         <aside className="border-l border-slate-800 min-h-0 flex flex-col hidden lg:flex">
           <div className="flex border-b border-slate-800 text-xs">
-            {(['sessions', 'metrics', 'params', 'attempts'] as Tab[]).map(t => (
+            {(['sessions', 'knowledge', 'metrics', 'params', 'attempts'] as Tab[]).map(t => (
               <button
                 key={t}
                 onClick={() => setRightTab(t)}
@@ -83,6 +84,7 @@ export default function App() {
                 onConsumeImport={() => setPendingImportText(undefined)}
               />
             )}
+            {rightTab === 'knowledge' && <KnowledgePanel />}
             {rightTab === 'metrics' && <MetricsPanel />}
             {rightTab === 'params' && <ParamPanel />}
             {rightTab === 'attempts' && <AttemptsLog />}
@@ -106,6 +108,12 @@ export default function App() {
             Presets
           </summary>
           <PresetList />
+        </details>
+        <details className="border-b border-slate-800">
+          <summary className="px-3 py-2 text-xs uppercase tracking-wider text-slate-400 cursor-pointer">
+            Knowledge
+          </summary>
+          <KnowledgePanel />
         </details>
         <details className="border-b border-slate-800">
           <summary className="px-3 py-2 text-xs uppercase tracking-wider text-slate-400 cursor-pointer">
