@@ -345,18 +345,41 @@
     return maxR;
   }
 
-  // 理想晴空地面水平光照（lux）—— 太阳高度角→近似光照
-  // 来源：白天用 Bouguer/sin(alt) 经验近似，夜空段用 log-linear 拟合 + 星光底
+  // 理想晴空地面水平照度（lux），范围 ~0.0006 到 ~110000
+  // 物理：日地大气外 ~128000 lx 法向 × Kasten-Young 大气质量 × Bouguer 透过率 × sin(alt)（投影到水平）
+  //       + 天空漫射；地平线下 0~−18° 用经验对数过渡，−18° 以下取夜空底（星光 ~0.0006 lx）
+  // 关键数据点：alt=90° ~108k, 60° ~91k, 30° ~47k, 10° ~11k, 0° ~480,
+  //              −6° ~3.4, −12° ~0.008, −18° ~0.0006 lx（与现实接近）
   function illuminance(altDeg) {
-    if (altDeg >= 0) {
-      const sinAlt = Math.sin(altDeg * PI / 180);
-      // 地平 ≈ 450 lux，天顶 ≈ 100000 lux，平滑过渡
-      return 450 * Math.pow(10, 2.35 * sinAlt) + 50 * sinAlt;
+    // ---- 漫射天空背景，从星光到白天平滑过渡 ----
+    let diffuse;
+    if (altDeg > 6) {
+      diffuse = 0.15 * 128000 * Math.sin(altDeg * PI / 180);
+    } else if (altDeg > -0.833) {
+      // 0 ~ 6°：400 → ~2007 lx 的对数插值
+      const hi = 0.15 * 128000 * Math.sin(6 * PI / 180);
+      const u = (altDeg + 0.833) / 6.833;
+      diffuse = 400 * Math.pow(hi / 400, u);
+    } else if (altDeg > -6) {
+      const u = (altDeg + 6) / 5.167;
+      diffuse = 3.4 * Math.pow(400 / 3.4, u);
+    } else if (altDeg > -12) {
+      const u = (altDeg + 12) / 6;
+      diffuse = 0.008 * Math.pow(3.4 / 0.008, u);
+    } else if (altDeg > -18) {
+      const u = (altDeg + 18) / 6;
+      diffuse = 0.0006 * Math.pow(0.008 / 0.0006, u);
+    } else {
+      diffuse = 0.0006;
     }
-    if (altDeg > -6)  return Math.pow(10, 2.65 + altDeg / 3);
-    if (altDeg > -12) return Math.pow(10, 0.65 + (altDeg + 6) / 3);
-    if (altDeg > -18) return Math.pow(10, -1.35 + (altDeg + 12) / 3);
-    return 0.002;
+    // ---- 直射分量：仅日出（alt > 0）时有 ----
+    let direct = 0;
+    if (altDeg > 0) {
+      const sinAlt = Math.sin(altDeg * PI / 180);
+      const am = 1 / (sinAlt + 0.50572 * Math.pow(altDeg + 6.07995, -1.6364));
+      direct = 128000 * Math.pow(0.7, Math.pow(am, 0.678)) * sinAlt;
+    }
+    return direct + diffuse;
   }
 
   // 构建 24h 光照曲线 SVG + 统计值
@@ -493,33 +516,41 @@
     return rateAbs.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + '°/分';
   }
 
-  // ---------- 反向地理编码（BigDataCloud 免费、免 key、CORS 允许） ----------
+  // ---------- 反向地理编码（Nominatim / OpenStreetMap，免 key，英文，门牌号精度） ----------
   let cachedAddr = { lat: null, lng: null, text: null };
   let addrInFlight = false;
   async function lookupAddress(lat, lng) {
     if (cachedAddr.lat != null) {
-      if (Math.abs(lat - cachedAddr.lat) < 0.005 && Math.abs(lng - cachedAddr.lng) < 0.005) {
+      if (Math.abs(lat - cachedAddr.lat) < 0.0003 && Math.abs(lng - cachedAddr.lng) < 0.0003) {
         return cachedAddr.text;
       }
     }
     if (addrInFlight) return null;
     addrInFlight = true;
     try {
-      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=zh`;
-      const res = await fetch(url);
+      const url = `https://nominatim.openstreetmap.org/reverse` +
+        `?lat=${lat}&lon=${lng}&format=jsonv2&zoom=18&addressdetails=1&accept-language=en`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const d = await res.json();
-      const parts = [];
-      if (d.countryName) parts.push(d.countryName);
-      if (d.principalSubdivision && d.principalSubdivision !== d.countryName) parts.push(d.principalSubdivision);
-      if (d.city && d.city !== d.principalSubdivision) parts.push(d.city);
-      if (d.locality && d.locality !== d.city && d.locality !== d.principalSubdivision) parts.push(d.locality);
-      const text = parts.join(' · ') || '（未识别）';
+      let text = d.display_name || '';
+      // Fall back to assembling from address parts if display_name missing
+      if (!text && d.address) {
+        const a = d.address;
+        const parts = [
+          a.house_number && a.road ? `${a.house_number} ${a.road}` : a.road,
+          a.neighbourhood || a.suburb,
+          a.city || a.town || a.village,
+          a.state, a.country,
+        ].filter(Boolean);
+        text = parts.join(', ');
+      }
+      text = text || '(unknown)';
       cachedAddr = { lat, lng, text };
       $('addr').textContent = text;
       return text;
     } catch (err) {
-      $('addr').textContent = '（查询失败）';
+      $('addr').textContent = '(lookup failed)';
       return null;
     } finally {
       addrInFlight = false;
@@ -850,6 +881,17 @@ const SunScene = {
     this.sunGlow = new THREE.Mesh(glowGeom, glowMat);
     this.scene.add(this.sunGlow);
 
+    // 运动方向箭头（尾在太阳，头指向未来 15 分钟方向）
+    this.sunArrow = new THREE.ArrowHelper(
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(0, 0, 0),
+      0.2,
+      0xffe27a,
+      0.06,
+      0.035
+    );
+    this.scene.add(this.sunArrow);
+
     // 天顶杆
     const zenithGeom = new THREE.CylinderGeometry(0.002, 0.002, 1.0, 8);
     const zenithMat = new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.4 });
@@ -993,6 +1035,22 @@ const SunScene = {
     this.sunGlow.position.copy(v);
     this.sunGlow.material.opacity = sunPos.alt >= 0 ? 0.35 : 0.15;
     this.sunMesh.material.color.setHex(sunPos.alt >= 0 ? 0xffe27a : 0xff8e5a);
+
+    // 运动方向箭头：取当前 → 未来 15 分钟的方向
+    const futureT = new Date(now.getTime() + 15 * 60 * 1000);
+    const futurePos = getSunPos(futureT, lat, lng);
+    const futureV = this._altAzToXYZ(futurePos.alt, futurePos.az);
+    const dir = futureV.clone().sub(v);
+    const dirLen = dir.length();
+    if (dirLen > 1e-6) {
+      dir.divideScalar(dirLen);
+      this.sunArrow.position.copy(v);
+      this.sunArrow.setDirection(dir);
+      this.sunArrow.setLength(0.22, 0.07, 0.04);
+      this.sunArrow.visible = true;
+    } else {
+      this.sunArrow.visible = false;
+    }
   },
 };
 
