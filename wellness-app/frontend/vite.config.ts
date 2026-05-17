@@ -4,7 +4,13 @@ import mdx from '@mdx-js/rollup';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
+// When deploying to GitHub Pages at https://<user>.github.io/watchGPTvoice/
+// the build needs a non-root base path. CI sets PUBLIC_BASE=/watchGPTvoice/;
+// local dev leaves it unset and serves from /.
+const base = process.env.PUBLIC_BASE ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [
     // MDX must run before React so .mdx is transformed to JSX first.
     { enforce: 'pre', ...mdx({ providerImportSource: '@mdx-js/react' }) },
