@@ -1,0 +1,57 @@
+[
+  {
+    "name": "attempts",
+    "type": "base",
+    "schema": [
+      { "name": "clientId", "type": "text", "required": true },
+      { "name": "presetId", "type": "text", "required": true },
+      { "name": "triedAt", "type": "number", "required": true },
+      { "name": "rating", "type": "number" },
+      { "name": "note", "type": "text" },
+      { "name": "updatedAt", "type": "number", "required": true }
+    ],
+    "listRule": "@request.auth.id != ''",
+    "viewRule": "@request.auth.id != ''",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": "@request.auth.id != ''"
+  },
+  {
+    "name": "notes",
+    "type": "base",
+    "schema": [
+      { "name": "clientId", "type": "text", "required": true },
+      { "name": "title", "type": "text", "required": true },
+      { "name": "body", "type": "text" },
+      { "name": "linkedPreset", "type": "text" },
+      { "name": "createdAt", "type": "number", "required": true },
+      { "name": "updatedAt", "type": "number", "required": true }
+    ],
+    "listRule": "@request.auth.id != ''",
+    "viewRule": "@request.auth.id != ''",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": "@request.auth.id != ''"
+  },
+  {
+    "name": "sessions",
+    "type": "base",
+    "schema": [
+      { "name": "clientId", "type": "text", "required": true },
+      { "name": "startedAt", "type": "number", "required": true },
+      { "name": "endedAt", "type": "number" },
+      { "name": "context", "type": "text" },
+      { "name": "ratingA", "type": "number" },
+      { "name": "ratingB", "type": "number" },
+      { "name": "updatedAt", "type": "number", "required": true },
+      { "name": "actsJson", "type": "text", "options": { "max": 1000000 } },
+      { "name": "notesJson", "type": "text", "options": { "max": 1000000 } },
+      { "name": "hrJson", "type": "text", "options": { "max": 5000000 } }
+    ],
+    "listRule": "@request.auth.id != ''",
+    "viewRule": "@request.auth.id != ''",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": "@request.auth.id != ''"
+  }
+]
