@@ -17,6 +17,7 @@
     --accent-2: #6cb6ff;
     --past: #8a98b8;
     --future: #6cb6ff;
+    --phase: #ffb86b;
     --border: rgba(255,255,255,0.08);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,28 +27,56 @@
   body { min-height: 100vh; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
   .wrap { max-width: 520px; margin: 0 auto; padding: 20px 0 40px; }
   h1 { font-size: 22px; margin: 0 0 16px; font-weight: 600; letter-spacing: 0.5px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .refresh { background: transparent; color: var(--accent-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+
   .meta { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     padding: 14px 16px; margin-bottom: 16px; }
-  .meta .row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 14px; }
-  .meta .row .label { color: var(--muted); }
-  .meta .row .val { font-variant-numeric: tabular-nums; }
+  .meta .row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 14px; gap: 12px; }
+  .meta .row .label { color: var(--muted); flex-shrink: 0; }
+  .meta .row .val { font-variant-numeric: tabular-nums; text-align: right; }
+  .meta .row .val small { color: var(--muted); font-size: 12px; margin-left: 6px; }
   .status { font-size: 13px; color: var(--muted); padding: 4px 0; }
   .status.err { color: #ff8a8a; }
+
+  .now-phase { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .now-phase .nowtitle { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .now-phase .ph-name { font-size: 15px; font-weight: 600; }
+  .now-phase .ph-pct { font-variant-numeric: tabular-nums; color: var(--phase); font-weight: 600; }
+  .now-phase .ph-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .now-phase .ph-bar { margin-top: 10px; height: 6px; background: rgba(255,255,255,0.08);
+    border-radius: 3px; overflow: hidden; }
+  .now-phase .ph-fill { height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.6s ease-out; }
+
   .group { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     margin-bottom: 16px; overflow: hidden; }
   .group h2 { margin: 0; padding: 14px 16px; font-size: 15px; font-weight: 600;
     background: var(--card-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
   .group h2 .emoji { font-size: 18px; }
+  .group h2 .tag { font-size: 11px; color: var(--accent-2); background: rgba(108,182,255,0.12);
+    padding: 2px 8px; border-radius: 99px; margin-left: auto; font-weight: 500; }
   .item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: baseline;
     padding: 12px 16px; border-bottom: 1px solid var(--border); }
   .item:last-child { border-bottom: none; }
+  .item.passed .time, .item.passed .name { opacity: 0.55; }
   .name { font-size: 15px; }
   .name small { color: var(--muted); font-size: 12px; margin-left: 6px; font-weight: normal; }
   .time { font-size: 17px; font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: 0.5px; }
-  .delta { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; }
+  .delta { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
   .delta.past { color: var(--past); }
   .delta.future { color: var(--future); }
   .na { color: var(--muted); font-size: 13px; }
+
+  .inrow-bar { padding: 6px 16px 10px; background: linear-gradient(90deg, rgba(255,184,107,0.06), rgba(108,182,255,0.06));
+    border-bottom: 1px solid var(--border); position: relative; }
+  .inrow-bar .lbl { font-size: 11px; color: var(--phase); display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .inrow-bar .track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  .inrow-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s ease-out; }
+
   .manual { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     padding: 14px 16px; margin-bottom: 16px; }
   .manual p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
@@ -58,17 +87,13 @@
   .manual button { background: var(--accent); color: #1a1200; border: none; border-radius: 8px;
     padding: 10px 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
   .footer { margin-top: 20px; text-align: center; font-size: 12px; color: var(--muted); }
-  .footer a { color: var(--accent-2); text-decoration: none; }
-  .refresh { background: transparent; color: var(--accent-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
-  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
     <h1>日出日落时刻</h1>
-    <button class="refresh" id="btn-refresh">刷新</button>
+    <button class="refresh" id="btn-refresh">刷新位置</button>
   </div>
   <div id="status" class="status">正在获取位置…</div>
 
@@ -76,6 +101,16 @@
     <div class="row"><span class="label">当前时间</span><span class="val" id="now-time">—</span></div>
     <div class="row"><span class="label">当前位置</span><span class="val" id="pos">—</span></div>
     <div class="row"><span class="label">时区</span><span class="val" id="tz">—</span></div>
+    <div class="row"><span class="label">太阳高度</span><span class="val" id="sun-alt">—</span></div>
+  </div>
+
+  <div class="now-phase" id="now-phase" hidden>
+    <div class="nowtitle">
+      <span class="ph-name" id="ph-name">—</span>
+      <span class="ph-pct" id="ph-pct">—</span>
+    </div>
+    <div class="ph-sub" id="ph-sub"></div>
+    <div class="ph-bar"><div class="ph-fill" id="ph-fill"></div></div>
   </div>
 
   <div class="manual" id="manual" hidden>
@@ -87,19 +122,9 @@
     </div>
   </div>
 
-  <div class="group" id="g-rise" hidden>
-    <h2><span class="emoji">🌅</span> 最近的日出</h2>
-    <div id="list-rise"></div>
-  </div>
+  <div id="groups"></div>
 
-  <div class="group" id="g-set" hidden>
-    <h2><span class="emoji">🌇</span> 最近的日落</h2>
-    <div id="list-set"></div>
-  </div>
-
-  <div class="footer">
-    距今分钟数每分钟自动刷新 · 位置不会上传
-  </div>
+  <div class="footer">每秒刷新时间 · 每 3 分钟刷新位置 · 位置不会上传</div>
 </div>
 
 <script>
@@ -115,8 +140,12 @@
   const fromJulian = j => new Date((j + 0.5 - J1970) * dayMs);
   const toDays = d => toJulian(d) - J2000;
 
+  const rightAscension = (l, b) =>
+    Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l));
   const declination = (l, b) =>
     Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+  const siderealTime = (d, lw) => rad * (280.16 + 360.9856235 * d) - lw;
+
   const solarMeanAnomaly = d => rad * (357.5291 + 0.98560028 * d);
   const eclipticLongitude = M => {
     const C = rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
@@ -129,10 +158,7 @@
   const approxTransit = (Ht, lw, n) => J0 + (Ht + lw) / (2 * PI) + n;
   const solarTransitJ = (ds, M, L) =>
     J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
-  const hourAngle = (h, phi, d) =>
-    Math.acos((Math.sin(h) - Math.sin(phi) * Math.sin(d)) / (Math.cos(phi) * Math.cos(d)));
 
-  // 计算指定日期、经纬度下，太阳到达指定地平高度 altDeg（度，负值表示地平线下）的日出/日落
   function getSunTimes(date, lat, lng, altDeg) {
     const lw = rad * -lng;
     const phi = rad * lat;
@@ -145,14 +171,27 @@
     const Jnoon = solarTransitJ(ds, M, L);
     const h = altDeg * rad;
     const cosW = (Math.sin(h) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec));
-    if (cosW < -1 || cosW > 1) return { rise: null, set: null }; // 极昼/极夜
+    if (cosW < -1 || cosW > 1) return { rise: null, set: null };
     const w = Math.acos(cosW);
     const Jset = solarTransitJ(approxTransit(w, lw, n), M, L);
     const Jrise = Jnoon - (Jset - Jnoon);
     return { rise: fromJulian(Jrise), set: fromJulian(Jset) };
   }
 
-  // 在 [now-1d, now+1d] 范围内找离 now 最近的一次 rise 或 set
+  // 当前太阳高度角（弧度）
+  function getSunAltitudeRad(date, lat, lng) {
+    const lw = rad * -lng;
+    const phi = rad * lat;
+    const d = toDays(date);
+    const M = solarMeanAnomaly(d);
+    const L = eclipticLongitude(M);
+    const dec = declination(L, 0);
+    const ra = rightAscension(L, 0);
+    const H = siderealTime(d, lw) - ra;
+    return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
+  }
+
+  // 三天范围内找最接近 now 的 rise/set
   function findNearest(now, lat, lng, altDeg, which) {
     const candidates = [];
     for (const off of [-1, 0, 1]) {
@@ -166,78 +205,89 @@
     );
   }
 
-  // ---------- UI ----------
+  // ---------- 配置 ----------
+  // alt 是地平高度角（度，负值表示在地平线下）
   const ANGLES = [
-    { key: 'astro', label: '天文晨光/暮光', alt: -18, hint: '−18°' },
-    { key: 'naut',  label: '航海晨光/暮光', alt: -12, hint: '−12°' },
-    { key: 'civil', label: '民用晨光/暮光', alt: -6,  hint: '−6°'  },
-    { key: 'horiz', label: '地平线日出/日落', alt: -0.833, hint: '0°（含折射）' },
+    { key: 'astro', riseName: '天文晨光', setName: '天文暮光', alt: -18,     hint: '−18°' },
+    { key: 'naut',  riseName: '航海晨光', setName: '航海暮光', alt: -12,     hint: '−12°' },
+    { key: 'civil', riseName: '民用晨光', setName: '民用暮光', alt: -6,      hint: '−6°'  },
+    { key: 'horiz', riseName: '日出',     setName: '日落',     alt: -0.833,  hint: '0°（含折射）' },
   ];
 
+  // 相位：相邻两个角度之间为一段
+  // 名字: 天文/航海/民用 三段, 各自上下界
+  const PHASES = [
+    { name: '天文', low: -18,     high: -12     },
+    { name: '航海', low: -12,     high: -6      },
+    { name: '民用', low: -6,      high: -0.833  },
+  ];
+
+  function currentPhase(date, lat, lng) {
+    const altRad = getSunAltitudeRad(date, lat, lng);
+    const altDeg = altRad / rad;
+    // 升降方向
+    const altSoon = getSunAltitudeRad(new Date(date.getTime() + 60000), lat, lng) / rad;
+    const rising = altSoon > altDeg;
+
+    if (altDeg > -0.833) return { kind: 'day', altDeg, rising };
+    if (altDeg < -18)    return { kind: 'night', altDeg, rising };
+
+    // 处于某个 twilight 段
+    const seg = PHASES.find(p => altDeg > p.low && altDeg <= p.high) || PHASES[0];
+    // 进度：晨（rising）从 low 到 high；暮（setting）从 high 到 low
+    const range = seg.high - seg.low;
+    const pct = rising
+      ? (altDeg - seg.low) / range
+      : (seg.high - altDeg) / range;
+    return {
+      kind: rising ? 'dawn' : 'dusk',
+      altDeg, rising, segName: seg.name, segLow: seg.low, segHigh: seg.high,
+      pct: Math.max(0, Math.min(1, pct)),
+    };
+  }
+
+  // ---------- UI helpers ----------
   const $ = id => document.getElementById(id);
   const pad2 = n => String(n).padStart(2, '0');
-  const fmtTime = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const fmtClock = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  const fmtHM    = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  function fmtAgo(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return s + ' 秒前';
+    if (s < 3600) return Math.round(s / 60) + ' 分前';
+    return Math.round(s / 3600) + ' 小时前';
+  }
 
   function fmtDelta(target, now) {
-    const diffMin = Math.round((target - now) / 60000);
-    if (diffMin === 0) return { text: '就是现在', cls: 'future' };
-    if (diffMin > 0) {
-      return { text: humanMin(diffMin) + '后', cls: 'future' };
+    const diffS = Math.round((target - now) / 1000);
+    const abs = Math.abs(diffS);
+    const suffix = diffS >= 0 ? '后' : '前';
+    const cls = diffS >= 0 ? 'future' : 'past';
+    let text;
+    if (abs < 60) text = abs + ' 秒';
+    else if (abs < 3600) {
+      const m = Math.floor(abs / 60), s = abs % 60;
+      text = m + ' 分 ' + pad2(s) + ' 秒';
+    } else if (abs < dayMs / 1000) {
+      const h = Math.floor(abs / 3600), m = Math.floor((abs % 3600) / 60);
+      text = h + ' 小时 ' + m + ' 分';
+    } else {
+      const d = Math.floor(abs / 86400), h = Math.floor((abs % 86400) / 3600);
+      text = d + ' 天 ' + h + ' 小时';
     }
-    return { text: humanMin(-diffMin) + '前', cls: 'past' };
-  }
-  function humanMin(m) {
-    if (m < 60) return m + ' 分钟';
-    const h = Math.floor(m / 60), r = m % 60;
-    return r === 0 ? `${h} 小时` : `${h} 小时 ${r} 分`;
+    return { text: text + suffix, cls };
   }
 
-  let state = { lat: null, lng: null };
-
-  function render() {
-    const now = new Date();
-    $('now-time').textContent =
-      `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())} ${fmtTime(now)}`;
-
-    if (state.lat == null) return;
-    $('pos').textContent =
-      `${state.lat.toFixed(4)}°, ${state.lng.toFixed(4)}°`;
-    try {
-      $('tz').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '—';
-    } catch (_) { $('tz').textContent = '—'; }
-
-    const buildList = (which, order) => {
-      const list = order.map(a => {
-        const t = findNearest(now, state.lat, state.lng, a.alt, which);
-        return { angle: a, time: t };
-      });
-      return list.map(({ angle, time }) => {
-        if (!time) {
-          return `<div class="item">
-            <div class="name">${angle.label}<small>${angle.hint}</small></div>
-            <div class="na" style="grid-column: 2 / span 2;">当日无此现象（极昼/极夜）</div>
-          </div>`;
-        }
-        const d = fmtDelta(time, now);
-        return `<div class="item">
-          <div class="name">${angle.label}<small>${angle.hint}</small></div>
-          <div class="time">${fmtTime(time)}</div>
-          <div class="delta ${d.cls}">${d.text}</div>
-        </div>`;
-      }).join('');
-    };
-
-    // 日出从最暗（天文）到最亮（地平线）；日落从最亮到最暗
-    const riseOrder = ANGLES.slice().sort((a, b) => a.alt - b.alt);
-    const setOrder  = ANGLES.slice().sort((a, b) => b.alt - a.alt);
-
-    $('list-rise').innerHTML = buildList('rise', riseOrder);
-    $('list-set').innerHTML  = buildList('set',  setOrder);
-
-    $('meta').hidden = false;
-    $('g-rise').hidden = false;
-    $('g-set').hidden = false;
-  }
+  // ---------- state ----------
+  let state = {
+    lat: null, lng: null,
+    posUpdatedAt: null,
+    posSource: '',
+    watchId: null,
+    posRefreshTimer: null,
+  };
+  const POS_REFRESH_MS = 3 * 60 * 1000;
 
   function setStatus(msg, isErr) {
     const el = $('status');
@@ -246,46 +296,193 @@
     el.style.display = msg ? '' : 'none';
   }
 
-  function useLocation(lat, lng, source) {
+  function buildGroupHTML(which, items, phase) {
+    const emoji = which === 'rise' ? '🌅' : '🌇';
+    const title = which === 'rise' ? '最近的日出' : '最近的日落';
+
+    // 在哪两行中间插一条进度条？
+    // rise group 顺序（从晚到早→不对，从暗到亮）：astro, naut, civil, horiz
+    // dusk in set group 顺序（从亮到暗）：horiz, civil, naut, astro
+    // 当前相位段 seg 名 = 天文/航海/民用
+    // 对应的进度条插在该 seg 所跨的两行之间：
+    //   rise + 天文 → 在 astro(−18) 和 naut(−12) 之间
+    //   rise + 航海 → 在 naut(−12)  和 civil(−6) 之间
+    //   rise + 民用 → 在 civil(−6)  和 horiz(0)  之间
+    //   set  + 民用 → 在 horiz(0)   和 civil(−6) 之间
+    //   set  + 航海 → 在 civil(−6)  和 naut(−12) 之间
+    //   set  + 天文 → 在 naut(−12)  和 astro(−18) 之间
+    const showInRow = phase &&
+      ((phase.kind === 'dawn' && which === 'rise') ||
+       (phase.kind === 'dusk' && which === 'set'));
+    const segKeyMap = { '天文': 'astro', '航海': 'naut', '民用': 'civil' };
+    let insertAfterKey = null;
+    if (showInRow) {
+      // 在「靠近现在那一端」的 row 后面插
+      if (which === 'rise') {
+        // 晨：astro→naut→civil→horiz；段名定义了 low/high；在 high 端那一行之前其实更好——
+        // 我们以「已过的角度行」之后插：rise 时已经过 low 端那一行（更暗）。
+        const lowKeyMap = { '天文': 'astro', '航海': 'naut', '民用': 'civil' };
+        insertAfterKey = lowKeyMap[phase.segName];
+      } else {
+        // 暮：horiz→civil→naut→astro；高端先发生（接近 horiz）
+        const highKeyMap = { '民用': 'horiz', '航海': 'civil', '天文': 'naut' };
+        insertAfterKey = highKeyMap[phase.segName];
+      }
+    }
+
+    const now = new Date();
+    let rows = '';
+    items.forEach(({ angle, time, passed }) => {
+      const nameLbl = which === 'rise' ? angle.riseName : angle.setName;
+      if (!time) {
+        rows += `<div class="item"><div class="name">${nameLbl}<small>${angle.hint}</small></div>
+          <div class="na" style="grid-column: 2 / span 2;">当日无此现象（极昼/极夜）</div></div>`;
+      } else {
+        const d = fmtDelta(time, now);
+        rows += `<div class="item ${passed ? 'passed' : ''}">
+          <div class="name">${nameLbl}<small>${angle.hint}</small></div>
+          <div class="time">${fmtHM(time)}</div>
+          <div class="delta ${d.cls}">${d.text}</div>
+        </div>`;
+      }
+      if (showInRow && insertAfterKey === angle.key) {
+        const pct = Math.round(phase.pct * 100);
+        const segLbl = phase.kind === 'dawn'
+          ? phase.segName + '晨光中'
+          : phase.segName + '暮光中';
+        rows += `<div class="inrow-bar">
+          <div class="lbl"><span>${segLbl}</span><span>${pct}%</span></div>
+          <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }
+    });
+
+    // 最近一次时间（horizon）距今的标签
+    const horiz = items.find(it => it.angle.key === 'horiz');
+    const tag = horiz && horiz.time
+      ? fmtDelta(horiz.time, now).text
+      : '';
+
+    return `<div class="group">
+      <h2><span class="emoji">${emoji}</span> ${title}<span class="tag">${tag}</span></h2>
+      ${rows}
+    </div>`;
+  }
+
+  function render() {
+    const now = new Date();
+    $('now-time').textContent =
+      `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())} ${fmtClock(now)}`;
+    if (state.lat == null) return;
+
+    const posStr = `${state.lat.toFixed(4)}°, ${state.lng.toFixed(4)}°`;
+    const ago = state.posUpdatedAt ? ` <small>${fmtAgo(now - state.posUpdatedAt)}</small>` : '';
+    $('pos').innerHTML = posStr + ago;
+    try { $('tz').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '—'; }
+    catch (_) { $('tz').textContent = '—'; }
+
+    const phase = currentPhase(now, state.lat, state.lng);
+    $('sun-alt').textContent = phase.altDeg.toFixed(2) + '°  ' + (phase.rising ? '↑ 上升' : '↓ 下降');
+
+    // 当前相位卡片
+    const np = $('now-phase');
+    if (phase.kind === 'day') {
+      np.hidden = false;
+      $('ph-name').innerHTML = '☀️ 白天';
+      $('ph-pct').textContent = '';
+      $('ph-sub').textContent = `太阳在地平线上 ${phase.altDeg.toFixed(1)}°`;
+      $('ph-fill').style.width = '100%';
+    } else if (phase.kind === 'night') {
+      np.hidden = false;
+      $('ph-name').innerHTML = '🌑 夜晚';
+      $('ph-pct').textContent = '';
+      $('ph-sub').textContent = `太阳在地平线下 ${(-phase.altDeg).toFixed(1)}°`;
+      $('ph-fill').style.width = '0%';
+    } else {
+      const isDawn = phase.kind === 'dawn';
+      np.hidden = false;
+      $('ph-name').innerHTML = (isDawn ? '🌄 日出中' : '🌆 日落中') +
+        ' · ' + phase.segName + (isDawn ? '晨光' : '暮光');
+      const pct = Math.round(phase.pct * 100);
+      $('ph-pct').textContent = pct + '%';
+      $('ph-sub').textContent =
+        `太阳高度 ${phase.altDeg.toFixed(2)}°（${phase.segLow}° ~ ${phase.segHigh}°）`;
+      $('ph-fill').style.width = pct + '%';
+    }
+
+    // 计算两组
+    const riseItems = ANGLES.slice().sort((a, b) => a.alt - b.alt).map(angle => {
+      const time = findNearest(now, state.lat, state.lng, angle.alt, 'rise');
+      return { angle, time, passed: time && time < now };
+    });
+    const setItems = ANGLES.slice().sort((a, b) => b.alt - a.alt).map(angle => {
+      const time = findNearest(now, state.lat, state.lng, angle.alt, 'set');
+      return { angle, time, passed: time && time < now };
+    });
+
+    // 用 horizon 的时间作为「这个事件」的代表，比较谁更近
+    const riseHoriz = riseItems.find(i => i.angle.key === 'horiz').time;
+    const setHoriz  = setItems.find(i => i.angle.key === 'horiz').time;
+    const riseDelta = riseHoriz ? Math.abs(riseHoriz - now) : Infinity;
+    const setDelta  = setHoriz  ? Math.abs(setHoriz - now)  : Infinity;
+    const riseFirst = riseDelta <= setDelta;
+
+    const html = riseFirst
+      ? buildGroupHTML('rise', riseItems, phase) + buildGroupHTML('set', setItems, phase)
+      : buildGroupHTML('set', setItems, phase)  + buildGroupHTML('rise', riseItems, phase);
+    $('groups').innerHTML = html;
+
+    $('meta').hidden = false;
+  }
+
+  function onLocation(lat, lng, source) {
     state.lat = lat; state.lng = lng;
-    try {
-      localStorage.setItem('sunPos', JSON.stringify({ lat, lng }));
-    } catch (_) {}
-    setStatus(source ? '位置来源：' + source : '');
+    state.posUpdatedAt = new Date();
+    state.posSource = source || '';
+    try { localStorage.setItem('sunPos', JSON.stringify({ lat, lng })); } catch (_) {}
+    setStatus('');
     render();
   }
 
-  function requestGeo() {
+  function requestGeoOnce(silent) {
     if (!('geolocation' in navigator)) {
       setStatus('当前浏览器不支持定位 API。', true);
       $('manual').hidden = false;
       return;
     }
-    setStatus('正在获取位置… 请在浏览器弹窗中允许');
+    if (!silent) setStatus('正在获取位置… 请在弹窗中允许');
     navigator.geolocation.getCurrentPosition(
       pos => {
-        useLocation(pos.coords.latitude, pos.coords.longitude, '浏览器定位');
+        onLocation(pos.coords.latitude, pos.coords.longitude, '浏览器定位');
         $('manual').hidden = true;
       },
       err => {
+        if (state.lat != null) {
+          // 已有位置就静默失败
+          return;
+        }
         let msg = '获取位置失败：' + (err && err.message ? err.message : '未知错误');
         if (location.protocol === 'file:') {
-          msg += '（部分浏览器在 file:// 下禁用定位，请手动输入或用 Safari/Firefox 打开）';
+          msg += '（file:// 下定位被禁用，请用 HTTPS 打开或手动输入）';
         }
         setStatus(msg, true);
         $('manual').hidden = false;
-        // 尝试上次保存的位置
         try {
           const saved = JSON.parse(localStorage.getItem('sunPos') || 'null');
           if (saved && typeof saved.lat === 'number' && typeof saved.lng === 'number') {
             $('in-lat').value = saved.lat;
             $('in-lng').value = saved.lng;
-            useLocation(saved.lat, saved.lng, '上次手动输入');
+            onLocation(saved.lat, saved.lng, '上次手动输入');
           }
         } catch (_) {}
       },
-      { enableHighAccuracy: false, timeout: 12000, maximumAge: 5 * 60 * 1000 }
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 60 * 1000 }
     );
+  }
+
+  function startPosAutoRefresh() {
+    if (state.posRefreshTimer) clearInterval(state.posRefreshTimer);
+    state.posRefreshTimer = setInterval(() => requestGeoOnce(true), POS_REFRESH_MS);
   }
 
   $('btn-go').addEventListener('click', () => {
@@ -295,18 +492,23 @@
       setStatus('请输入有效的纬度 (-90~90) 和经度 (-180~180)。', true);
       return;
     }
-    useLocation(lat, lng, '手动输入');
+    onLocation(lat, lng, '手动输入');
   });
 
-  $('btn-refresh').addEventListener('click', () => {
-    if (state.lat == null) requestGeo();
-    else render();
+  $('btn-refresh').addEventListener('click', () => requestGeoOnce(false));
+
+  // 每秒刷新时钟和距今
+  setInterval(() => { if (state.lat != null) render(); }, 1000);
+
+  requestGeoOnce(false);
+  startPosAutoRefresh();
+
+  // 页面从后台回来时立刻刷新一次位置
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.lat != null) {
+      requestGeoOnce(true);
+    }
   });
-
-  // 每 30 秒重渲染以更新"距今多少分钟"
-  setInterval(() => { if (state.lat != null) render(); }, 30000);
-
-  requestGeo();
 })();
 </script>
 </body>
