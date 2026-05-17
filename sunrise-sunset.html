@@ -235,15 +235,20 @@
 
     // 处于某个 twilight 段
     const seg = PHASES.find(p => altDeg > p.low && altDeg <= p.high) || PHASES[0];
-    // 进度：晨（rising）从 low 到 high；暮（setting）从 high 到 low
+    // 段内进度：晨（rising）从 low 到 high；暮（setting）从 high 到 low
     const range = seg.high - seg.low;
-    const pct = rising
+    const segPct = rising
       ? (altDeg - seg.low) / range
       : (seg.high - altDeg) / range;
+    // 整体进度：晨从 -18 到 -0.833 进度 0→1；暮从 -0.833 到 -18 进度 0→1
+    const overallPct = rising
+      ? (altDeg - (-18)) / (-0.833 - (-18))
+      : (-0.833 - altDeg) / (-0.833 - (-18));
     return {
       kind: rising ? 'dawn' : 'dusk',
       altDeg, rising, segName: seg.name, segLow: seg.low, segHigh: seg.high,
-      pct: Math.max(0, Math.min(1, pct)),
+      pct: Math.max(0, Math.min(1, segPct)),
+      overallPct: Math.max(0, Math.min(1, overallPct)),
     };
   }
 
@@ -404,11 +409,11 @@
       np.hidden = false;
       $('ph-name').innerHTML = (isDawn ? '🌄 日出中' : '🌆 日落中') +
         ' · ' + phase.segName + (isDawn ? '晨光' : '暮光');
-      const pct = Math.round(phase.pct * 100);
-      $('ph-pct').textContent = pct + '%';
-      $('ph-sub').textContent =
-        `太阳高度 ${phase.altDeg.toFixed(2)}°（${phase.segLow}° ~ ${phase.segHigh}°）`;
-      $('ph-fill').style.width = pct + '%';
+      const overallPct = Math.round(phase.overallPct * 100);
+      const segPct = Math.round(phase.pct * 100);
+      $('ph-pct').textContent = overallPct + '%';
+      $('ph-sub').textContent = `${isDawn ? '日出' : '日落'}整体进度 · 太阳高度 ${phase.altDeg.toFixed(2)}°（当前段 ${phase.segLow}° ~ ${phase.segHigh}°，段内 ${segPct}%）`;
+      $('ph-fill').style.width = overallPct + '%';
     }
 
     // 计算两组 —— 都强制是「下一次」未来事件
