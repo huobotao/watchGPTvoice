@@ -63,11 +63,14 @@ wellness-app/
 
 ## Roadmap
 
-- **V1:** CCD-IK end-effector drag, ~~30+ presets~~ (✓ 31, with category /
-  search filter UI), MDX knowledge base linked to presets, PocketBase sync
-  server, deploy to self-hosted VPS.
+- **V1:** ~~CCD-IK end-effector drag~~ (✓ drag wrists / ankles / pelvis),
+  ~~30+ presets~~ (✓ 31, with category / search filter UI), ~~MDX knowledge
+  base linked to presets~~ (✓ 10 articles + lazy code-split loader),
+  ~~PocketBase sync server~~ (✓ embedded-children sync; see
+  [`docs/SYNC.md`](./docs/SYNC.md)), deploy to self-hosted VPS.
 - **V2:** Soft-tissue contact visualization (Rapier), pose-space 2D map
-  (UMAP), animation timeline, Capacitor wrappers for iOS / iPadOS / macOS.
+  (UMAP), animation timeline, Capacitor wrappers for iOS / iPadOS / macOS,
+  PB realtime channel + per-user `owner` stamping.
 
 ## License
 

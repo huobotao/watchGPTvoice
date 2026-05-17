@@ -9,6 +9,8 @@ export interface Attempt {
   rating?: number;
   note?: string;
   updatedAt: number;
+  /** PocketBase record id if synced (V3+). */
+  pbId?: string;
 }
 
 export interface Note {
@@ -18,6 +20,7 @@ export interface Note {
   linkedPreset?: string;
   createdAt: number;
   updatedAt: number;
+  pbId?: string;
 }
 
 /** A "session" = one occasion. Two partners may each contribute notes & HR data. */
@@ -31,6 +34,7 @@ export interface Session {
   ratingA?: number;
   ratingB?: number;
   updatedAt: number;
+  pbId?: string;
 }
 
 /** Which preset/technique was practised during a session, optionally with timing. */
@@ -89,6 +93,15 @@ class IntimacyDB extends Dexie {
       attempts: '++id, presetId, triedAt',
       notes: '++id, linkedPreset, updatedAt',
       sessions: '++id, startedAt, endedAt',
+      sessionActs: '++id, sessionId, ordinal',
+      sessionNotes: '++id, sessionId, partner',
+      hrSamples: '++id, sessionId, partner, recordedAt'
+    });
+    // V3: index pbId so sync lookups are O(log n).
+    this.version(3).stores({
+      attempts: '++id, presetId, triedAt, pbId',
+      notes: '++id, linkedPreset, updatedAt, pbId',
+      sessions: '++id, startedAt, endedAt, pbId',
       sessionActs: '++id, sessionId, ordinal',
       sessionNotes: '++id, sessionId, partner',
       hrSamples: '++id, sessionId, partner, recordedAt'
