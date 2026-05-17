@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BlackBox · Analysis Complete (34h 12m)</title>
+<style>
+  :root {
+    --bg: #0a0c11;
+    --panel: #14171f;
+    --panel-2: #1c2029;
+    --panel-3: #232734;
+    --border: #262a36;
+    --text: #ffffff;
+    --muted: #8a90a0;
+    --dim: #5a6072;
+    --accent: #10a37f;
+    --warning: #ff9f0a;
+    --danger: #ff453a;
+    --c-sleep: #5e5ce6;
+    --c-work: #30d158;
+    --c-meeting: #0a84ff;
+    --c-oneonone: #10a37f;
+    --c-cooking: #ff9f0a;
+    --c-commute: #64d2ff;
+    --c-call: #ff375f;
+    --c-tv: #bf5af2;
+    --c-silence: #2a2e3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+    font-size: 13px; -webkit-font-smoothing: antialiased; }
+  body { display: grid; grid-template-columns: 1fr 380px; height: 100vh; overflow: hidden; }
+
+  /* ─── Left: scrolling report ─── */
+  .report { overflow-y: auto; padding: 0; }
+  .report::-webkit-scrollbar { width: 8px; }
+  .report::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 4px; }
+
+  /* Header banner */
+  .banner {
+    padding: 32px 40px 24px;
+    background: linear-gradient(135deg, rgba(16,163,127,.18), rgba(10,132,255,.10) 60%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .banner-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,163,127,.15);
+    color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+  .banner-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .banner h1 { margin: 0 0 6px; font-size: 28px; font-weight: 700; letter-spacing: -.3px; }
+  .banner-sub { color: var(--muted); font-size: 14px; }
+  .banner-stats { display: flex; gap: 28px; margin-top: 18px; }
+  .stat { }
+  .stat-num { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+  /* Section blocks */
+  section.block { padding: 28px 40px; border-bottom: 1px solid var(--border); }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+  .section-head h2 { margin: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+  .section-head .meta { font-size: 12px; color: var(--dim); }
+
+  /* Hero insights */
+  .insights { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .insight-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .insight-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent);
+  }
+  .insight-card.warn::before { background: var(--warning); }
+  .insight-card.alert::before { background: var(--danger); }
+  .insight-num { font-size: 32px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .insight-num.warn { color: var(--warning); }
+  .insight-num.alert { color: var(--danger); }
+  .insight-text { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
+  .insight-text strong { font-weight: 600; }
+  .insight-foot { font-size: 11px; color: var(--muted); }
+
+  /* Days strip */
+  .days { display: flex; flex-direction: column; gap: 4px; }
+  .day-row { display: grid; grid-template-columns: 80px 1fr 90px; align-items: center; gap: 12px;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background .15s; }
+  .day-row:hover { background: var(--panel); }
+  .day-row.is-empty { opacity: .35; }
+  .day-label { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .day-label .dow { color: var(--text); font-weight: 600; margin-right: 4px; }
+  .day-bar { position: relative; height: 18px; background: rgba(255,255,255,.02); border-radius: 4px; overflow: visible; }
+  .day-bar .seg { position: absolute; top: 0; height: 100%; transition: filter .15s; }
+  .day-bar .seg:hover { filter: brightness(1.3); }
+  .day-bar .seg.is-selected { box-shadow: inset 0 0 0 2px #fff; z-index: 2; }
+  .day-bar .seg.is-search-hit::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 2px;
+    background: #ffd60a; border-radius: 1px;
+  }
+  .day-total { font-size: 11px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .day-hour-axis { display: flex; justify-content: space-between; margin: 8px 0 0;
+    padding-left: 92px; padding-right: 102px;
+    font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+  /* Activity breakdown */
+  .breakdown { display: flex; gap: 24px; align-items: center; }
+  .breakdown-chart { flex-shrink: 0; }
+  .breakdown-list { flex: 1; }
+  .br-row { display: grid; grid-template-columns: 18px 1fr 60px 50px; gap: 10px; align-items: center;
+    padding: 7px 0; font-size: 12.5px; border-bottom: 1px solid var(--border); }
+  .br-row:last-child { border-bottom: 0; }
+  .br-swatch { width: 12px; height: 12px; border-radius: 3px; }
+  .br-time { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .br-pct { color: var(--dim); font-variant-numeric: tabular-nums; text-align: right; font-size: 11px; }
+
+  /* People / topics */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .list-card .row { padding: 10px 0; border-bottom: 1px solid var(--border); display: grid;
+    grid-template-columns: 32px 1fr 90px; gap: 12px; align-items: center; cursor: pointer; }
+  .list-card .row:hover { background: var(--panel); margin: 0 -10px; padding-left: 10px; padding-right: 10px; border-radius: 6px; }
+  .list-card .row:last-child { border-bottom: 0; }
+  .person-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; color: #fff; font-size: 12px; }
+  .person-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .person-meta { font-size: 11px; color: var(--muted); }
+  .person-time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .person-time .big { display: block; color: var(--text); font-weight: 600; font-size: 13px; }
+
+  .topic-row { padding: 9px 0; border-bottom: 1px solid var(--border); display: grid;
+    grid-template-columns: 1fr 100px 70px; gap: 14px; align-items: center; cursor: pointer; }
+  .topic-row:hover { background: var(--panel); margin: 0 -10px; padding-left: 10px; padding-right: 10px; border-radius: 6px; }
+  .topic-row:last-child { border-bottom: 0; }
+  .topic-name { font-size: 13px; }
+  .topic-name .dim { color: var(--muted); font-size: 11px; }
+  .topic-spark { height: 18px; display: flex; align-items: flex-end; gap: 2px; }
+  .topic-spark span { display: block; width: 4px; background: var(--accent); border-radius: 1px; }
+  .topic-count { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Action items */
+  .actions { display: flex; flex-direction: column; gap: 6px; }
+  .action {
+    display: grid; grid-template-columns: 22px 1fr 110px; gap: 10px; align-items: flex-start;
+    padding: 11px 12px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; transition: border-color .15s; cursor: pointer;
+  }
+  .action:hover { border-color: var(--dim); }
+  .action.done { opacity: .55; }
+  .action.done .action-text { text-decoration: line-through; }
+  .action-check {
+    width: 16px; height: 16px; border: 1.5px solid var(--muted); border-radius: 4px;
+    margin-top: 1px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .action.done .action-check { background: var(--accent); border-color: var(--accent); }
+  .action.done .action-check::after { content: "✓"; color: #fff; font-size: 12px; line-height: 1; }
+  .action-text { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .action-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .action-time { font-size: 11px; color: var(--dim); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Search */
+  .search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .search-input {
+    flex: 1; background: var(--panel-2); border: 1px solid var(--border); color: #fff;
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; outline: none;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-result { font-size: 12px; color: var(--muted); padding: 8px 0; }
+  .search-result strong { color: var(--text); font-weight: 600; }
+
+  /* ─── Right: transcript panel ─── */
+  .panel {
+    border-left: 1px solid var(--border);
+    background: var(--panel);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
+  }
+  .panel-head .when { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .panel-head .what { font-size: 18px; font-weight: 700; margin: 4px 0 8px; }
+  .panel-head .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .panel-meta { padding: 12px 22px; background: var(--panel-2); display: flex; gap: 18px; font-size: 11px; color: var(--muted); }
+  .panel-meta strong { color: var(--text); font-size: 13px; display: block; font-variant-numeric: tabular-nums; }
+
+  .panel-controls { padding: 12px 22px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border); }
+  .play-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); border: 0;
+    color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .panel-progress { flex: 1; height: 3px; background: var(--panel-3); border-radius: 2px; overflow: hidden; }
+  .panel-progress-fill { width: 32%; height: 100%; background: var(--accent); }
+  .panel-time { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .transcript { flex: 1; overflow-y: auto; padding: 18px 22px; font-size: 13.5px; line-height: 1.65; }
+  .transcript .speaker { font-weight: 700; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: .3px; margin-top: 14px; display: block; }
+  .transcript .speaker:first-child { margin-top: 0; }
+  .transcript .speaker.b { color: #ff9f0a; }
+  .transcript .speaker.c { color: #0a84ff; }
+  .transcript .ts { color: var(--dim); font-size: 10px; font-variant-numeric: tabular-nums; margin-right: 8px; font-weight: 600; }
+  .transcript p { margin: 2px 0 8px; }
+  .transcript p .highlight { background: rgba(255,214,10,.25); border-radius: 2px; padding: 0 2px; }
+
+  .panel-entities { padding: 14px 22px; border-top: 1px solid var(--border); }
+  .panel-entities .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .entity-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+    padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; }
+  .chip.person { color: var(--c-oneonone); border-color: rgba(16,163,127,.35); }
+  .chip.topic { color: var(--c-cooking); border-color: rgba(255,159,10,.35); }
+  .chip.action { color: var(--c-call); border-color: rgba(255,55,95,.35); }
+
+  /* Brand pill in corner */
+  .brand-pill {
+    position: fixed; top: 16px; right: 400px; display: flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; z-index: 5;
+  }
+  .brand-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* Tooltip */
+  .tooltip { position: fixed; pointer-events: none; background: #000; border: 1px solid var(--border);
+    color: #fff; font-size: 11px; padding: 5px 8px; border-radius: 4px; white-space: nowrap; z-index: 100;
+    opacity: 0; transition: opacity .1s; }
+  .tooltip.is-visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="brand-pill"><span class="dot"></span>BlackBox</div>
+
+<!-- ════════════════════════════════════════════════════ LEFT: REPORT -->
+<div class="report">
+
+  <!-- Banner -->
+  <div class="banner">
+    <div class="banner-tag"><span class="dot"></span>Analysis complete</div>
+    <h1>Your audio · 14 days · 34h 12m</h1>
+    <div class="banner-sub">Apr 29 — May 12, 2026 · processed in 8 min 14 sec · cost $0.42</div>
+    <div class="banner-stats">
+      <div class="stat"><div class="stat-num">34h 12m</div><div class="stat-label">total audio</div></div>
+      <div class="stat"><div class="stat-num">9h 38m</div><div class="stat-label">speech</div></div>
+      <div class="stat"><div class="stat-num">23</div><div class="stat-label">people mentioned</div></div>
+      <div class="stat"><div class="stat-num">147</div><div class="stat-label">segments</div></div>
+      <div class="stat"><div class="stat-num">14</div><div class="stat-label">action items</div></div>
+    </div>
+  </div>
+
+  <!-- ─── Hero insights ─── -->
+  <section class="block">
+    <div class="section-head">
+      <h2>What stood out</h2>
+      <span class="meta">auto-generated · click a card to see source</span>
+    </div>
+    <div class="insights">
+      <div class="insight-card">
+        <div class="insight-num">73%</div>
+        <div class="insight-text">of your speech time was with <strong>just 3 people</strong> — Sarah, Mike, and Emma.</div>
+        <div class="insight-foot">across 14 days · 47 conversations</div>
+      </div>
+      <div class="insight-card warn">
+        <div class="insight-num warn">9 of 14</div>
+        <div class="insight-text"><strong>action items you committed to are still open</strong>. Oldest one is 12 days old.</div>
+        <div class="insight-foot">"Reply to Alex about data export" — committed Apr 30</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-num">"Q3 launch"</div>
+        <div class="insight-text">came up in <strong>12 conversations</strong> totaling 1h 38m — by far your biggest topic.</div>
+        <div class="insight-foot">peak day: May 7 (4 separate mentions)</div>
+      </div>
+      <div class="insight-card alert">
+        <div class="insight-num alert">3 weeks</div>
+        <div class="insight-text">since you last mentioned <strong>Mom</strong>. Promised to "call her tomorrow" 2× this period.</div>
+        <div class="insight-foot">last mentioned May 5, "I'll do it Sunday"</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-num">+23%</div>
+        <div class="insight-text">your meetings ran <strong>23% longer than scheduled</strong> on average (47 min vs 38 min planned).</div>
+        <div class="insight-foot">worst offender: May 7 Q3 review (90 min → 134 min)</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-num">2h 12m</div>
+        <div class="insight-text">average <strong>longest focus block per workday</strong> — well above your 3-month baseline of 1h 24m.</div>
+        <div class="insight-foot">best: May 6, 09:15 → 11:42 (2h 27m unbroken)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Days strip ─── -->
+  <section class="block">
+    <div class="section-head">
+      <h2>Day by day</h2>
+      <span class="meta">each row = 24h · color = activity · click a segment to play</span>
+    </div>
+    <div class="days" id="days"></div>
+    <div class="day-hour-axis">
+      <span>00</span><span>03</span><span>06</span><span>09</span><span>12</span>
+      <span>15</span><span>18</span><span>21</span><span>24</span>
+    </div>
+  </section>
+
+  <!-- ─── Activity breakdown ─── -->
+  <section class="block">
+    <div class="section-head"><h2>How you spent your speech time</h2></div>
+    <div class="breakdown">
+      <div class="breakdown-chart">
+        <svg width="160" height="160" viewBox="0 0 160 160" id="donut"></svg>
+      </div>
+      <div class="breakdown-list" id="breakdownList"></div>
+    </div>
+  </section>
+
+  <!-- ─── People + topics ─── -->
+  <section class="block">
+    <div class="two-col">
+      <div class="list-card">
+        <div class="section-head"><h2>People you talked with</h2></div>
+        <div id="peopleList"></div>
+      </div>
+      <div class="list-card">
+        <div class="section-head"><h2>Recurring topics</h2></div>
+        <div id="topicList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Action items ─── -->
+  <section class="block">
+    <div class="section-head">
+      <h2>Action items you committed to</h2>
+      <span class="meta">extracted from speech · click to jump to source</span>
+    </div>
+    <div class="actions" id="actionsList"></div>
+  </section>
+
+  <!-- ─── Search ─── -->
+  <section class="block">
+    <div class="section-head">
+      <h2>Search the whole archive</h2>
+      <span class="meta">try: "Q3", "Sarah", "dentist", "data export"</span>
+    </div>
+    <div class="search-row">
+      <input class="search-input" id="search" placeholder='e.g. "when did I commit to the Q3 deadline?"' />
+    </div>
+    <div class="search-result" id="searchResult">type to search across all 14 days · highlights appear in the day strip above</div>
+  </section>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════ RIGHT: TRANSCRIPT -->
+<aside class="panel">
+  <div class="panel-head">
+    <div class="when" id="pWhen">Tue May 12 · 14:00 — 15:15</div>
+    <div class="what" id="pWhat">Q3 planning meeting</div>
+    <div class="tags">
+      <span class="tag" id="pTag" style="background:var(--c-meeting);color:#fff">meeting</span>
+      <span class="tag" style="background:var(--panel-3);color:var(--muted)">87% confident</span>
+    </div>
+  </div>
+
+  <div class="panel-meta">
+    <div><strong>1h 15m</strong>duration</div>
+    <div><strong>1,247</strong>words</div>
+    <div><strong>3</strong>speakers</div>
+    <div><strong>3</strong>action items</div>
+  </div>
+
+  <div class="panel-controls">
+    <button class="play-btn">▶</button>
+    <span class="panel-time">24:13</span>
+    <div class="panel-progress"><div class="panel-progress-fill"></div></div>
+    <span class="panel-time">1:15:00</span>
+  </div>
+
+  <div class="transcript" id="transcript">
+    <span class="speaker">You</span>
+    <p><span class="ts">14:02</span>"OK so for Q3 we want to nail the GTM motion. Sarah, can you pull together the revised roadmap by Thursday? I'd like the design team to weigh in before we commit to dates."</p>
+
+    <span class="speaker b">Sarah</span>
+    <p><span class="ts">14:03</span>"Yeah I can do that. Are we looking at the same launch window as before or has that shifted?"</p>
+
+    <span class="speaker">You</span>
+    <p><span class="ts">14:04</span>"Still mid-September. The board wants something to point to before the next funding cycle, so we can't slip more than 2 weeks."</p>
+
+    <span class="speaker c">Mike</span>
+    <p><span class="ts">14:05</span>"Engineering-wise we're tight but doable. The data export piece is the long pole — Alex's team has been blocking on us for that."</p>
+
+    <span class="speaker">You</span>
+    <p><span class="ts">14:07</span>"Right. <span class="highlight">I'll get back to Alex by end of week with a hard date on the export endpoint.</span> Mike, can you scope it tomorrow so I have numbers?"</p>
+
+    <span class="speaker c">Mike</span>
+    <p><span class="ts">14:08</span>"Sure."</p>
+
+    <span class="speaker">You</span>
+    <p><span class="ts">14:34</span>"Last thing — pricing. <span class="highlight">We need a clear answer on tiers before the all-hands</span>. I don't want to wing that one again like last quarter."</p>
+
+    <span class="speaker b">Sarah</span>
+    <p><span class="ts">14:35</span>"Want me to set up a working session this week?"</p>
+
+    <span class="speaker">You</span>
+    <p><span class="ts">14:35</span>"Yeah, just you me and Emma. Thursday afternoon if you can swing it."</p>
+  </div>
+
+  <div class="panel-entities">
+    <div class="lbl">Detected in this segment</div>
+    <div class="entity-chips">
+      <span class="chip person">Sarah</span>
+      <span class="chip person">Mike</span>
+      <span class="chip person">Emma</span>
+      <span class="chip person">Alex</span>
+      <span class="chip topic">Q3 launch</span>
+      <span class="chip topic">GTM</span>
+      <span class="chip topic">data export</span>
+      <span class="chip topic">pricing tiers</span>
+      <span class="chip action">3 commitments</span>
+    </div>
+  </div>
+</aside>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+  // ════════ Synthetic data: 14 days of a software founder's life ════════
+  const COLORS = {
+    sleep: '#5e5ce6', work: '#30d158', meeting: '#0a84ff', oneonone: '#10a37f',
+    cooking: '#ff9f0a', commute: '#64d2ff', call: '#ff375f', tv: '#bf5af2', silence: '#2a2e3a',
+  };
+  const LABEL = {
+    sleep: 'Sleep', work: 'Focus work', meeting: 'Meeting', oneonone: 'One-on-one',
+    cooking: 'Cooking', commute: 'Commute', call: 'Phone call', tv: 'TV / leisure', silence: 'Silence',
+  };
+
+  // Generate 14 days of synthetic data
+  function gen(seed) {
+    let s = seed;
+    return () => { s = (s * 1664525 + 1013904223) | 0; return (s >>> 0) / 4294967295; };
+  }
+  const r = gen(42);
+
+  function makeDay(date, weekday, busyness) {
+    // busyness 0..1 controls how much speech vs silence
+    if (busyness < 0.05) return { date, weekday, segs: [], total: 0 };
+    const segs = [];
+    // Sleep block
+    segs.push({ s: 0, e: 390 + Math.floor(r() * 60), k: 'sleep' });
+    let t = segs[0].e;
+    const isWeekend = (weekday === 0 || weekday === 6);
+    if (isWeekend) {
+      // Weekend: cooking, family time, errands
+      t += Math.floor(r() * 60);
+      segs.push({ s: t, e: t + 30 + Math.floor(r() * 30), k: 'cooking' }); t = segs[segs.length - 1].e;
+      segs.push({ s: t, e: t + 45 + Math.floor(r() * 60), k: 'oneonone' }); t = segs[segs.length - 1].e;
+      if (r() > 0.5) { segs.push({ s: t, e: t + 60 + Math.floor(r() * 120), k: 'commute' }); t = segs[segs.length - 1].e; }
+      t += 120 + Math.floor(r() * 180);
+      segs.push({ s: t, e: t + 60 + Math.floor(r() * 90), k: 'oneonone' }); t = segs[segs.length - 1].e;
+      t += 60 + Math.floor(r() * 90);
+      segs.push({ s: t, e: t + 120 + Math.floor(r() * 60), k: 'tv' }); t = segs[segs.length - 1].e;
+    } else {
+      // Workday
+      t += 15;
+      segs.push({ s: t, e: t + 20 + Math.floor(r() * 15), k: 'cooking' }); t = segs[segs.length - 1].e;
+      segs.push({ s: t, e: t + 25 + Math.floor(r() * 15), k: 'oneonone' }); t = segs[segs.length - 1].e;
+      segs.push({ s: t, e: t + 30 + Math.floor(r() * 20), k: 'commute' }); t = segs[segs.length - 1].e;
+      t += 30;
+      segs.push({ s: t, e: t + 30 + Math.floor(r() * 15), k: 'meeting' }); t = segs[segs.length - 1].e; // standup
+      t += 30 + Math.floor(r() * 60);
+      segs.push({ s: t, e: t + 60 + Math.floor(r() * 90 * busyness), k: 'work' }); t = segs[segs.length - 1].e;
+      if (r() < 0.6 * busyness) { segs.push({ s: t, e: t + 30 + Math.floor(r() * 60), k: 'oneonone' }); t = segs[segs.length - 1].e; } // lunch
+      t += 30;
+      if (r() < 0.85 * busyness) { segs.push({ s: t, e: t + 45 + Math.floor(r() * 90), k: 'meeting' }); t = segs[segs.length - 1].e; }
+      if (r() < 0.4) { segs.push({ s: t, e: t + 10 + Math.floor(r() * 20), k: 'call' }); t = segs[segs.length - 1].e; }
+      t += 30 + Math.floor(r() * 60);
+      if (r() < 0.7 * busyness) { segs.push({ s: t, e: t + 30 + Math.floor(r() * 60), k: 'meeting' }); t = segs[segs.length - 1].e; }
+      t += 30;
+      segs.push({ s: t, e: t + 40 + Math.floor(r() * 20), k: 'commute' }); t = segs[segs.length - 1].e;
+      t += 15;
+      segs.push({ s: t, e: t + 30 + Math.floor(r() * 30), k: 'cooking' }); t = segs[segs.length - 1].e;
+      segs.push({ s: t, e: t + 30 + Math.floor(r() * 45), k: 'oneonone' }); t = segs[segs.length - 1].e;
+      t += 30 + Math.floor(r() * 60);
+      if (r() < 0.5) { segs.push({ s: t, e: Math.min(1380, t + 60 + Math.floor(r() * 60)), k: 'tv' }); t = segs[segs.length - 1].e; }
+    }
+    // Late sleep start
+    if (t < 1380) segs.push({ s: 1380, e: 1440, k: 'sleep' });
+
+    // Compute total speech (everything except sleep & silence)
+    const total = segs.filter(x => x.k !== 'sleep' && x.k !== 'silence').reduce((a, x) => a + (x.e - x.s), 0);
+    return { date, weekday, segs, total };
+  }
+
+  const DAYS_DATA = [
+    makeDay('Apr 29', 2, 0.9),  // Tue
+    makeDay('Apr 30', 3, 0.95), // Wed
+    makeDay('May 1',  4, 0.3),  // Thu - light
+    makeDay('May 2',  5, 0.95), // Fri
+    makeDay('May 3',  6, 0.2),  // Sat
+    makeDay('May 4',  0, 0),    // Sun - no recording
+    makeDay('May 5',  1, 0.85), // Mon
+    makeDay('May 6',  2, 0.95), // Tue
+    makeDay('May 7',  3, 1.0),  // Wed - busiest
+    makeDay('May 8',  4, 0.4),  // Thu - sick
+    makeDay('May 9',  5, 0.9),  // Fri
+    makeDay('May 10', 6, 0.25), // Sat
+    makeDay('May 11', 0, 0.15), // Sun
+    makeDay('May 12', 1, 0.95), // Mon (the report's "today" anchor)
+  ];
+
+  // ════════ Day strip rendering ════════
+  const daysEl = document.getElementById('days');
+  const tooltipEl = document.getElementById('tooltip');
+  const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  DAYS_DATA.forEach((d, dayIdx) => {
+    const row = document.createElement('div');
+    row.className = 'day-row' + (d.segs.length === 0 ? ' is-empty' : '');
+    const speech = d.segs.filter(x => x.k !== 'sleep' && x.k !== 'silence').reduce((a, x) => a + (x.e - x.s), 0);
+    const speechStr = d.segs.length === 0 ? '(no audio)' :
+      speech === 0 ? '0m speech' :
+      Math.floor(speech/60) > 0 ? `${Math.floor(speech/60)}h ${speech % 60}m` : `${speech}m`;
+    row.innerHTML = `
+      <div class="day-label"><span class="dow">${DOW[d.weekday]}</span>${d.date}</div>
+      <div class="day-bar" data-day="${dayIdx}"></div>
+      <div class="day-total">${speechStr}</div>
+    `;
+    const bar = row.querySelector('.day-bar');
+    d.segs.forEach((seg, si) => {
+      const s = document.createElement('div');
+      s.className = 'seg';
+      s.style.left = (seg.s / 1440 * 100) + '%';
+      s.style.width = ((seg.e - seg.s) / 1440 * 100) + '%';
+      s.style.background = COLORS[seg.k];
+      s.style.opacity = seg.k === 'silence' ? 0.3 : 0.85;
+      s.dataset.day = dayIdx;
+      s.dataset.idx = si;
+      s.dataset.kind = seg.k;
+      s.dataset.from = seg.s;
+      s.dataset.to = seg.e;
+      bar.appendChild(s);
+
+      s.addEventListener('mouseenter', () => {
+        tooltipEl.textContent = `${LABEL[seg.k]} · ${fmtHHMM(seg.s)}–${fmtHHMM(seg.e)} (${seg.e - seg.s}m)`;
+        tooltipEl.classList.add('is-visible');
+      });
+      s.addEventListener('mousemove', (e) => {
+        tooltipEl.style.left = (e.clientX + 12) + 'px';
+        tooltipEl.style.top = (e.clientY - 28) + 'px';
+      });
+      s.addEventListener('mouseleave', () => tooltipEl.classList.remove('is-visible'));
+      s.addEventListener('click', () => {
+        document.querySelectorAll('.seg').forEach(x => x.classList.remove('is-selected'));
+        s.classList.add('is-selected');
+        showSegment(d, seg, dayIdx);
+      });
+    });
+    daysEl.appendChild(row);
+  });
+
+  function fmtHHMM(mins) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  function fmtDur(mins) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    if (h === 0) return `${m}m`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${String(m).padStart(2,'0')}m`;
+  }
+
+  // ════════ Activity breakdown ════════
+  const totals = {};
+  DAYS_DATA.forEach(d => d.segs.forEach(s => {
+    if (s.k === 'silence') return;
+    totals[s.k] = (totals[s.k] || 0) + (s.e - s.s);
+  }));
+  const totalSum = Object.values(totals).reduce((a, b) => a + b, 0);
+
+  const breakdownEl = document.getElementById('breakdownList');
+  const order = ['sleep','work','meeting','oneonone','cooking','commute','call','tv'];
+  order.forEach(k => {
+    if (!totals[k]) return;
+    const pct = (totals[k] / totalSum * 100);
+    const row = document.createElement('div');
+    row.className = 'br-row';
+    row.innerHTML = `
+      <div class="br-swatch" style="background:${COLORS[k]}"></div>
+      <div>${LABEL[k]}</div>
+      <div class="br-time">${fmtDur(totals[k])}</div>
+      <div class="br-pct">${pct.toFixed(0)}%</div>
+    `;
+    breakdownEl.appendChild(row);
+  });
+
+  // Donut chart
+  const donut = document.getElementById('donut');
+  const cx = 80, cy = 80, rIn = 50, rOut = 75;
+  let cum = 0;
+  order.forEach(k => {
+    if (!totals[k]) return;
+    const frac = totals[k] / totalSum;
+    const a0 = cum * Math.PI * 2 - Math.PI / 2;
+    const a1 = (cum + frac) * Math.PI * 2 - Math.PI / 2;
+    cum += frac;
+    const x0o = cx + rOut * Math.cos(a0), y0o = cy + rOut * Math.sin(a0);
+    const x1o = cx + rOut * Math.cos(a1), y1o = cy + rOut * Math.sin(a1);
+    const x0i = cx + rIn * Math.cos(a0),  y0i = cy + rIn * Math.sin(a0);
+    const x1i = cx + rIn * Math.cos(a1),  y1i = cy + rIn * Math.sin(a1);
+    const large = (frac > 0.5) ? 1 : 0;
+    const d = `M ${x0o} ${y0o} A ${rOut} ${rOut} 0 ${large} 1 ${x1o} ${y1o} L ${x1i} ${y1i} A ${rIn} ${rIn} 0 ${large} 0 ${x0i} ${y0i} Z`;
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('fill', COLORS[k]);
+    donut.appendChild(p);
+  });
+  const center = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  center.setAttribute('x', cx); center.setAttribute('y', cy - 4);
+  center.setAttribute('text-anchor', 'middle'); center.setAttribute('fill', '#fff');
+  center.setAttribute('font-size', '18'); center.setAttribute('font-weight', '700');
+  center.textContent = fmtDur(totalSum);
+  donut.appendChild(center);
+  const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  sub.setAttribute('x', cx); sub.setAttribute('y', cy + 14);
+  sub.setAttribute('text-anchor', 'middle'); sub.setAttribute('fill', '#8a90a0');
+  sub.setAttribute('font-size', '10');
+  sub.textContent = 'analyzed';
+  donut.appendChild(sub);
+
+  // ════════ People list ════════
+  const PEOPLE = [
+    { name: 'Sarah',  role: 'manager',     time: 192, convs: 9, color: '#10a37f' },
+    { name: 'Mike',   role: 'engineering', time: 124, convs: 7, color: '#0a84ff' },
+    { name: 'Emma',   role: 'co-founder',  time:  98, convs: 6, color: '#bf5af2' },
+    { name: 'Alex',   role: 'vendor',      time:  47, convs: 4, color: '#ff9f0a' },
+    { name: 'David',  role: 'engineering', time:  38, convs: 3, color: '#64d2ff' },
+    { name: 'Olivia', role: 'family',      time:  88, convs: 11, color: '#ff375f' },
+    { name: 'Liam & Mia', role: 'kids',    time:  62, convs: 14, color: '#30d158' },
+  ];
+  const peopleEl = document.getElementById('peopleList');
+  PEOPLE.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="person-avatar" style="background:${p.color}">${p.name[0]}</div>
+      <div><div class="person-name">${p.name}</div><div class="person-meta">${p.role}</div></div>
+      <div class="person-time"><span class="big">${fmtDur(p.time)}</span>${p.convs} conversations</div>
+    `;
+    peopleEl.appendChild(row);
+  });
+
+  // ════════ Topics list ════════
+  const TOPICS = [
+    { name: 'Q3 launch',      mentions: 12, days: [0,1,2,3,4,5,6,7,8,9,10,11,12,13], peak: [1,2,3,2,1,0,2,4,3,1,2,1,0,2] },
+    { name: 'pricing tiers',  mentions: 8,  peak: [0,1,0,2,0,0,0,2,3,0,0,0,0,0] },
+    { name: 'hiring',         mentions: 6,  peak: [2,1,1,0,0,0,1,0,0,0,1,0,0,0] },
+    { name: 'data export',    mentions: 7,  peak: [0,1,0,1,0,0,2,1,0,0,1,0,0,1] },
+    { name: 'vacation plans', mentions: 5,  peak: [0,0,0,0,0,0,0,0,0,1,1,1,1,1] },
+    { name: 'dentist',        mentions: 3,  peak: [1,1,0,1,0,0,0,0,0,0,0,0,0,0] },
+    { name: 'school pickup',  mentions: 8,  peak: [1,1,0,1,0,0,1,1,1,0,1,0,0,1] },
+    { name: 'investor update',mentions: 4,  peak: [0,0,0,0,0,0,1,1,0,0,1,0,0,1] },
+  ];
+  const topicListEl = document.getElementById('topicList');
+  TOPICS.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'topic-row';
+    const maxP = Math.max(...t.peak);
+    const sparks = t.peak.map(v => `<span style="height:${maxP ? (v / maxP) * 100 : 0}%"></span>`).join('');
+    row.innerHTML = `
+      <div class="topic-name">${t.name} <span class="dim">· first ${getFirstDay(t.peak)} → last ${getLastDay(t.peak)}</span></div>
+      <div class="topic-spark">${sparks}</div>
+      <div class="topic-count">${t.mentions} mentions</div>
+    `;
+    topicListEl.appendChild(row);
+  });
+  function getFirstDay(peak) { for (let i = 0; i < peak.length; i++) if (peak[i] > 0) return DAYS_DATA[i].date; return '—'; }
+  function getLastDay(peak)  { for (let i = peak.length - 1; i >= 0; i--) if (peak[i] > 0) return DAYS_DATA[i].date; return '—'; }
+
+  // ════════ Action items ════════
+  const ACTIONS = [
+    { t: 'Send Q3 roadmap to Sarah by Thursday', done: true,  when: 'May 12 14:07', src: 'Q3 planning meeting' },
+    { t: 'Reply to Alex with data export ETA',   done: false, when: 'Apr 30 11:34', src: 'standup',  age: 12 },
+    { t: 'Finalize pricing tier doc before all-hands', done: false, when: 'May 7 14:34', src: 'Q3 planning' },
+    { t: 'Call Mom back',                         done: false, when: 'May 5 19:42', src: 'family dinner', age: 7 },
+    { t: 'Schedule 1:1 with new hire David',      done: true,  when: 'May 6 10:15', src: 'Mike conversation' },
+    { t: 'Book flights for July vacation',        done: false, when: 'May 9 21:03', src: 'evening with Olivia' },
+    { t: 'Review investor update doc by Friday',  done: false, when: 'May 8 16:22', src: 'Emma call' },
+    { t: 'Send dentist appointment to calendar',  done: true,  when: 'Apr 29 17:58', src: 'commute call' },
+    { t: 'Reply to Sarah about working session',  done: false, when: 'May 7 14:35', src: 'Q3 planning' },
+    { t: 'Confirm school pickup Thursday',        done: true,  when: 'May 1 07:22', src: 'breakfast chat' },
+    { t: 'Set up working session w/ Emma re pricing', done: false, when: 'May 7 14:35', src: 'Q3 planning' },
+    { t: 'Reschedule next week\'s 1:1 with Mike', done: false, when: 'May 11 20:15', src: 'phone with Olivia' },
+    { t: 'Pull together hiring loop feedback',    done: true,  when: 'Apr 29 14:02', src: 'Mike call' },
+    { t: 'Ask Alex about timeline by EOW',        done: false, when: 'Apr 30 11:34', src: 'standup' },
+  ];
+  const actionsEl = document.getElementById('actionsList');
+  ACTIONS.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'action' + (a.done ? ' done' : '');
+    el.innerHTML = `
+      <div class="action-check"></div>
+      <div>
+        <div class="action-text">${a.t}</div>
+        <div class="action-meta">from ${a.src}${a.age ? ` · <span style="color:var(--warning)">${a.age} days open</span>` : ''}</div>
+      </div>
+      <div class="action-time">${a.when}</div>
+    `;
+    actionsEl.appendChild(el);
+  });
+
+  // ════════ Segment-click handler — populate right panel ════════
+  function showSegment(day, seg, dayIdx) {
+    const pWhen = document.getElementById('pWhen');
+    const pWhat = document.getElementById('pWhat');
+    const pTag  = document.getElementById('pTag');
+    const tr = document.getElementById('transcript');
+
+    pWhen.textContent = `${DOW[day.weekday]} ${day.date} · ${fmtHHMM(seg.s)} — ${fmtHHMM(seg.e)}`;
+    pWhat.textContent = LABEL[seg.k];
+    pTag.textContent = seg.k.replace('oneonone','one-on-one');
+    pTag.style.background = COLORS[seg.k];
+
+    // Pull a synthetic transcript for this segment kind
+    const t = TRANSCRIPTS[seg.k] || ['<p style="color:var(--muted)">(no transcript available for this segment kind)</p>'];
+    tr.innerHTML = t.join('');
+  }
+
+  const TRANSCRIPTS = {
+    meeting: [
+      '<span class="speaker">You</span><p><span class="ts">00:42</span>"Let\'s go around — quick updates, then I have one ask at the end."</p>',
+      '<span class="speaker b">Sarah</span><p><span class="ts">01:10</span>"Design review went well. We\'re aligned on the new onboarding flow. <span class="highlight">I\'ll have v2 mocks Wednesday</span>."</p>',
+      '<span class="speaker c">Mike</span><p><span class="ts">02:55</span>"Backend\'s on track. The migration ran clean last night, zero errors in prod."</p>',
+      '<span class="speaker">You</span><p><span class="ts">04:20</span>"Good. Last thing — <span class="highlight">we need to lock pricing tiers before the all-hands</span>, can someone own that?"</p>',
+      '<span class="speaker b">Sarah</span><p><span class="ts">04:32</span>"I\'ll take it. Working session this week."</p>',
+    ],
+    work: [
+      '<span class="speaker" style="color:var(--muted)">— ambient —</span>',
+      '<p><span class="ts">00:15</span><em style="color:var(--muted)">(typing · ~7 words spoken across 1h 23m)</em></p>',
+      '<span class="speaker">You</span><p><span class="ts">22:14</span>"…ugh, that should not be NaN."</p>',
+      '<span class="speaker">You</span><p><span class="ts">47:08</span>"OK, that fixed it."</p>',
+    ],
+    oneonone: [
+      '<span class="speaker">You</span><p><span class="ts">00:30</span>"How was your day?"</p>',
+      '<span class="speaker b">Olivia</span><p><span class="ts">00:33</span>"Long. Liam had a meltdown about homework again."</p>',
+      '<span class="speaker">You</span><p><span class="ts">00:40</span>"I\'ll talk to him tonight. <span class="highlight">Also — we should book flights for July, I keep forgetting.</span>"</p>',
+      '<span class="speaker b">Olivia</span><p><span class="ts">00:48</span>"Yes please. I sent you that link last week."</p>',
+    ],
+    cooking: [
+      '<span class="speaker" style="color:var(--muted)">— ambient —</span>',
+      '<p><span class="ts">00:10</span><em style="color:var(--muted)">(pan sizzling · cabinets · running water)</em></p>',
+      '<span class="speaker">You</span><p><span class="ts">12:22</span>"Honey, can you grab the kids?"</p>',
+    ],
+    commute: [
+      '<span class="speaker" style="color:var(--muted)">— ambient —</span>',
+      '<p><span class="ts">00:00</span><em style="color:var(--muted)">(car · podcast in background)</em></p>',
+      '<span class="speaker">You</span><p><span class="ts">04:18</span><em>(on phone)</em> "Hey, just calling about the dentist appointment — can we move it to Tuesday?"</p>',
+    ],
+    call: [
+      '<span class="speaker">You</span><p><span class="ts">00:02</span>"Hey Alex, thanks for jumping on."</p>',
+      '<span class="speaker b">Alex</span><p><span class="ts">00:04</span>"No problem. What\'s up?"</p>',
+      '<span class="speaker">You</span><p><span class="ts">00:08</span>"When can we expect the data export endpoint? <span class="highlight">My customer is blocking on this.</span>"</p>',
+      '<span class="speaker b">Alex</span><p><span class="ts">00:12</span>"Realistically? Two weeks."</p>',
+    ],
+    tv: [
+      '<p style="color:var(--muted)"><span class="ts">00:00</span><em>(TV audio in background · sparse speech)</em></p>',
+      '<span class="speaker b">Olivia</span><p><span class="ts">14:22</span>"Did you call your mom back yet?"</p>',
+      '<span class="speaker">You</span><p><span class="ts">14:24</span>"…no. I\'ll do it Sunday."</p>',
+    ],
+    sleep: ['<p style="color:var(--muted)">(no speech detected)</p>'],
+    silence: ['<p style="color:var(--muted)">(no speech detected)</p>'],
+  };
+
+  // ════════ Search ════════
+  document.getElementById('search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    const segs = document.querySelectorAll('.seg');
+    segs.forEach(s => s.classList.remove('is-search-hit'));
+    const out = document.getElementById('searchResult');
+    if (!q) { out.innerHTML = 'type to search across all 14 days · highlights appear in the day strip above'; return; }
+    const hits = {
+      'q3':       { count: 12, kinds: ['meeting'], txt: '"Q3 launch" found in 12 meetings · most recent: May 12 14:02' },
+      'sarah':    { count: 9,  kinds: ['meeting','oneonone'], txt: '"Sarah" mentioned in 9 conversations · 3h 12m total' },
+      'alex':     { count: 4,  kinds: ['call','meeting'], txt: '"Alex" — 4 mentions · last commitment open since Apr 30 (12 days)' },
+      'dentist':  { count: 3,  kinds: ['commute','oneonone'], txt: '"dentist" — 3 mentions Apr 29–May 1 · marked done May 1' },
+      'data':     { count: 7,  kinds: ['meeting','call'], txt: '"data export" — 7 mentions, 4 commitments to Alex' },
+      'mom':      { count: 4,  kinds: ['tv','oneonone'], txt: '"Mom" — 4 mentions · "call her tomorrow" said 2× · still uncalled' },
+      'pricing':  { count: 8,  kinds: ['meeting'], txt: '"pricing tiers" — 8 mentions concentrated May 6–8' },
+      'vacation': { count: 5,  kinds: ['oneonone'], txt: '"vacation plans" — 5 mentions, all with Olivia, May 9 onward' },
+    };
+    const key = Object.keys(hits).find(k => q.includes(k));
+    if (!key) { out.innerHTML = `<strong>0 results</strong> — try: Q3, Sarah, dentist, Alex, mom, vacation`; return; }
+    const h = hits[key];
+    out.innerHTML = `<strong>${h.count} results</strong> — ${h.txt}`;
+    document.querySelectorAll('.seg').forEach(s => {
+      if (h.kinds.includes(s.dataset.kind)) s.classList.add('is-search-hit');
+    });
+  });
+
+  // Auto-select something interesting on load: the May 7 Q3 review (busiest day)
+  setTimeout(() => {
+    const day7segs = document.querySelectorAll('.day-bar[data-day="8"] .seg');
+    for (const s of day7segs) {
+      if (s.dataset.kind === 'meeting' && parseInt(s.dataset.from) > 600) {
+        s.click();
+        s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        break;
+      }
+    }
+  }, 200);
+</script>
+</body>
+</html>
