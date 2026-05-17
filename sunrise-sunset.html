@@ -191,12 +191,15 @@
     return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
   }
 
-  // 找下一次未来事件（地平线时刻在未来），返回该事件当天的 4 个角度时刻
+  // 找下一次未来事件，返回该事件当天的 4 个角度时刻
+  // 锚点用「时间序列上的最后一个角度」：日出最后是 horizon，日落最后是 astro
+  // 这样如果还在某次日落/日出的中间段，会保留显示这一次（而不是跳到下一次）
   function findNextEvent(now, lat, lng, which) {
+    const anchorAlt = which === 'rise' ? -0.833 : -18;
     for (const off of [0, 1, 2, 3]) {
       const d = new Date(now.getTime() + off * dayMs);
-      const horizT = getSunTimes(d, lat, lng, -0.833)[which];
-      if (horizT && horizT >= now) {
+      const anchorT = getSunTimes(d, lat, lng, anchorAlt)[which];
+      if (anchorT && anchorT >= now) {
         return ANGLES.map(angle => {
           const t = getSunTimes(d, lat, lng, angle.alt)[which];
           return { angle, time: t, passed: t && t < now };
@@ -226,12 +229,13 @@
   function currentPhase(date, lat, lng) {
     const altRad = getSunAltitudeRad(date, lat, lng);
     const altDeg = altRad / rad;
-    // 升降方向
+    // 升降速率（度/分钟，正=上升，负=下降）
     const altSoon = getSunAltitudeRad(new Date(date.getTime() + 60000), lat, lng) / rad;
-    const rising = altSoon > altDeg;
+    const rateDegPerMin = altSoon - altDeg;
+    const rising = rateDegPerMin > 0;
 
-    if (altDeg > -0.833) return { kind: 'day', altDeg, rising };
-    if (altDeg < -18)    return { kind: 'night', altDeg, rising };
+    if (altDeg > -0.833) return { kind: 'day', altDeg, rising, rateDegPerMin };
+    if (altDeg < -18)    return { kind: 'night', altDeg, rising, rateDegPerMin };
 
     // 处于某个 twilight 段
     const seg = PHASES.find(p => altDeg > p.low && altDeg <= p.high) || PHASES[0];
@@ -246,7 +250,8 @@
       : (-0.833 - altDeg) / (-0.833 - (-18));
     return {
       kind: rising ? 'dawn' : 'dusk',
-      altDeg, rising, segName: seg.name, segLow: seg.low, segHigh: seg.high,
+      altDeg, rising, rateDegPerMin,
+      segName: seg.name, segLow: seg.low, segHigh: seg.high,
       pct: Math.max(0, Math.min(1, segPct)),
       overallPct: Math.max(0, Math.min(1, overallPct)),
     };
@@ -388,7 +393,10 @@
     catch (_) { $('tz').textContent = '—'; }
 
     const phase = currentPhase(now, state.lat, state.lng);
-    $('sun-alt').textContent = phase.altDeg.toFixed(2) + '°  ' + (phase.rising ? '↑ 上升' : '↓ 下降');
+    const rateAbs = Math.abs(phase.rateDegPerMin);
+    const rateStr = rateAbs.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + '°/分';
+    $('sun-alt').textContent =
+      phase.altDeg.toFixed(2) + '°  ' + (phase.rising ? '↑' : '↓') + ' ' + rateStr;
 
     // 当前相位卡片
     const np = $('now-phase');
@@ -423,12 +431,17 @@
     const riseItems = riseRaw.slice().sort((a, b) => a.angle.alt - b.angle.alt);
     const setItems  = setRaw.slice().sort((a, b) => b.angle.alt - a.angle.alt);
 
-    // 用 horizon 时间比较谁先到
-    const riseHoriz = riseItems.find(i => i.angle.key === 'horiz').time;
-    const setHoriz  = setItems.find(i => i.angle.key === 'horiz').time;
-    const riseTtl = riseHoriz ? (riseHoriz - now) : Infinity;
-    const setTtl  = setHoriz  ? (setHoriz  - now) : Infinity;
-    const riseFirst = riseTtl <= setTtl;
+    // 排序：正在经历的事件优先放前面；否则按 horizon 谁先到排
+    let riseFirst;
+    if (phase.kind === 'dawn')      riseFirst = true;
+    else if (phase.kind === 'dusk') riseFirst = false;
+    else {
+      const riseHoriz = riseItems.find(i => i.angle.key === 'horiz').time;
+      const setHoriz  = setItems.find(i => i.angle.key === 'horiz').time;
+      const riseTtl = riseHoriz ? (riseHoriz - now) : Infinity;
+      const setTtl  = setHoriz  ? (setHoriz  - now) : Infinity;
+      riseFirst = riseTtl <= setTtl;
+    }
 
     const html = riseFirst
       ? buildGroupHTML('rise', riseItems, phase) + buildGroupHTML('set', setItems, phase)
