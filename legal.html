@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>质证决策树 · 律师交互式分析</title>
+<link rel="stylesheet" href="legal.css" />
+</head>
+<body>
+  <header class="top">
+    <h1>质证决策树</h1>
+    <p class="sub">按证据类型逐项审查三性，交互式得出质证策略。所有条文以中国大陆现行《民诉法》《刑诉法》《行政诉讼法》及最高院证据规定为基础。</p>
+  </header>
+
+  <main class="app">
+    <!-- 左：进度 + 路径 -->
+    <aside class="side">
+      <div class="step-block">
+        <div class="step-title">流程进度</div>
+        <ol class="steps" id="steps">
+          <li data-step="type">① 证据类型</li>
+          <li data-step="auth">② 真实性</li>
+          <li data-step="legal">③ 合法性</li>
+          <li data-step="rel">④ 关联性</li>
+          <li data-step="extra">⑤ 程序事项</li>
+          <li data-step="result">⑥ 策略输出</li>
+        </ol>
+      </div>
+
+      <div class="step-block">
+        <div class="step-title">已记录的质证发现</div>
+        <ul class="findings" id="findings">
+          <li class="empty">尚无记录</li>
+        </ul>
+      </div>
+
+      <div class="step-block actions">
+        <button id="backBtn" class="btn ghost" disabled>← 上一题</button>
+        <button id="restartBtn" class="btn ghost">⟲ 重新开始</button>
+      </div>
+    </aside>
+
+    <!-- 右：问答区 -->
+    <section class="main">
+      <div id="caseMetaCard" class="card meta">
+        <div class="meta-row">
+          <label>案件类型</label>
+          <select id="caseType">
+            <option value="civil">民事</option>
+            <option value="criminal">刑事</option>
+            <option value="admin">行政</option>
+          </select>
+        </div>
+        <div class="meta-row">
+          <label>当事人身份</label>
+          <select id="party">
+            <option value="own">己方证据</option>
+            <option value="opp">对方证据（我方质证）</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="qCard" class="card">
+        <div class="q-head">
+          <span class="q-tag" id="qTag">证据类型</span>
+          <span class="q-basis" id="qBasis"></span>
+        </div>
+        <h2 class="q-text" id="qText">请选择本次质证针对的证据种类</h2>
+        <p class="q-help" id="qHelp"></p>
+        <div class="options" id="options"></div>
+      </div>
+
+      <div id="resultCard" class="card result hidden">
+        <div class="verdict" id="verdict"></div>
+        <h3 class="section-title">关键质证要点</h3>
+        <ul class="result-list" id="keyPoints"></ul>
+        <h3 class="section-title">法律依据</h3>
+        <ul class="result-list" id="legalBasis"></ul>
+        <h3 class="section-title">建议程序动作</h3>
+        <ul class="result-list" id="moves"></ul>
+        <h3 class="section-title">风险提示（未考虑到的情形）</h3>
+        <ul class="result-list" id="risks"></ul>
+        <div class="result-actions">
+          <button id="exportBtn" class="btn">复制质证意见到剪贴板</button>
+          <button id="againBtn" class="btn ghost">再走一遍</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bot">
+    <span>本工具用于辅助质证准备，不替代律师判断。庭审中应结合在卷证据综合主张。</span>
+  </footer>
+
+  <script src="legal.js"></script>
+</body>
+</html>
