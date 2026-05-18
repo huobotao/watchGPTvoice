@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="质证" />
+<meta name="theme-color" content="#0f1218" />
+<title>质证决策树 · 律师交互式分析</title>
+<style>
+:root {
+  --bg: #0f1218;
+  --panel: #161b25;
+  --panel-2: #1d2330;
+  --line: #2a3142;
+  --text: #e8ecf3;
+  --muted: #8b95a7;
+  --accent: #4f8cff;
+  --accent-2: #6aa3ff;
+  --good: #2bb673;
+  --warn: #e0a82e;
+  --bad: #e0533d;
+  --tag: #2a3a5c;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #0b0e14 0%, #0f1218 100%);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.top {
+  padding: 24px 32px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.top h1 { margin: 0 0 4px; font-size: 22px; letter-spacing: 0.5px; }
+.top .sub { margin: 0; color: var(--muted); font-size: 13px; }
+
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  padding: 24px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.side {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.step-block {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.step-title {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.steps {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.steps li {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed transparent;
+}
+.steps li.active {
+  color: var(--text);
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+.steps li.done {
+  color: var(--accent-2);
+}
+
+.findings {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow: auto;
+}
+.findings li {
+  font-size: 12.5px;
+  padding: 6px 8px;
+  border-left: 3px solid var(--line);
+  background: var(--panel-2);
+  border-radius: 6px;
+  color: var(--text);
+}
+.findings li.empty {
+  color: var(--muted);
+  border-left-color: transparent;
+  background: transparent;
+  padding-left: 0;
+  font-size: 12px;
+}
+.findings li.fatal { border-left-color: var(--bad); }
+.findings li.major { border-left-color: var(--warn); }
+.findings li.minor { border-left-color: var(--accent); }
+.findings li.good { border-left-color: var(--good); }
+
+.actions { display: flex; gap: 8px; }
+.btn {
+  appearance: none;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn.ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+}
+.btn.ghost:hover { background: var(--panel-2); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.main { display: flex; flex-direction: column; gap: 16px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.card.meta {
+  display: flex;
+  gap: 16px;
+  padding: 14px 18px;
+  flex-wrap: wrap;
+}
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meta-row label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.meta-row select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.q-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.q-tag {
+  font-size: 11px;
+  background: var(--tag);
+  color: #cfe0ff;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+}
+.q-basis {
+  font-size: 11px;
+  color: var(--muted);
+}
+.q-text {
+  font-size: 17px;
+  margin: 4px 0 6px;
+  line-height: 1.5;
+}
+.q-help {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.option {
+  appearance: none;
+  text-align: left;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.option:hover {
+  border-color: var(--accent);
+  background: #20283a;
+}
+.option .opt-label { display: block; font-weight: 500; }
+.option .opt-hint { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.option.severity-fatal { border-left: 4px solid var(--bad); }
+.option.severity-major { border-left: 4px solid var(--warn); }
+.option.severity-minor { border-left: 4px solid var(--accent); }
+.option.severity-good  { border-left: 4px solid var(--good); }
+.option.severity-none  { border-left: 4px solid transparent; }
+
+/* Result */
+.result.hidden { display: none; }
+.verdict {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.verdict.bad { background: rgba(224, 83, 61, 0.12); color: #ffb1a3; border: 1px solid rgba(224, 83, 61, 0.4); }
+.verdict.mid { background: rgba(224, 168, 46, 0.12); color: #ffd789; border: 1px solid rgba(224, 168, 46, 0.4); }
+.verdict.good { background: rgba(43, 182, 115, 0.12); color: #9be8c2; border: 1px solid rgba(43, 182, 115, 0.4); }
+.section-title {
+  font-size: 13px;
+  margin: 16px 0 8px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.result-list {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.result-list li {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+}
+.result-list li.fatal { border-left: 3px solid var(--bad); }
+.result-list li.major { border-left: 3px solid var(--warn); }
+.result-list li.minor { border-left: 3px solid var(--accent); }
+.result-list li.good  { border-left: 3px solid var(--good); }
+.result-list li.empty { color: var(--muted); font-size: 12px; }
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.bot {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 16px 32px 32px;
+}
+
+@media (max-width: 880px) {
+  .app { grid-template-columns: 1fr; }
+  .side { position: static; }
+}
+/* iOS Safari 安全区 + 触控高亮 */
+body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+button, a, .option { -webkit-tap-highlight-color: rgba(79,140,255,0.15); }
+.option { min-height: 48px; } /* iOS 推荐触控目标 */
+</style>
+</head>
+<body>
+  <header class="top">
+    <h1>质证决策树</h1>
+    <p class="sub">按证据类型逐项审查三性，交互式得出质证策略。所有条文以中国大陆现行《民诉法》《刑诉法》《行政诉讼法》及最高院证据规定为基础。</p>
+  </header>
+
+  <main class="app">
+    <aside class="side">
+      <div class="step-block">
+        <div class="step-title">流程进度</div>
+        <ol class="steps" id="steps">
+          <li data-step="type">① 证据类型</li>
+          <li data-step="auth">② 真实性</li>
+          <li data-step="legal">③ 合法性</li>
+          <li data-step="rel">④ 关联性</li>
+          <li data-step="extra">⑤ 程序事项</li>
+          <li data-step="result">⑥ 策略输出</li>
+        </ol>
+      </div>
+
+      <div class="step-block">
+        <div class="step-title">已记录的质证发现</div>
+        <ul class="findings" id="findings">
+          <li class="empty">尚无记录</li>
+        </ul>
+      </div>
+
+      <div class="step-block actions">
+        <button id="backBtn" class="btn ghost" disabled>← 上一题</button>
+        <button id="restartBtn" class="btn ghost">⟲ 重新开始</button>
+      </div>
+    </aside>
+
+    <section class="main">
+      <div id="caseMetaCard" class="card meta">
+        <div class="meta-row">
+          <label>案件类型</label>
+          <select id="caseType">
+            <option value="civil">民事</option>
+            <option value="criminal">刑事</option>
+            <option value="admin">行政</option>
+          </select>
+        </div>
+        <div class="meta-row">
+          <label>当事人身份</label>
+          <select id="party">
+            <option value="own">己方证据</option>
+            <option value="opp">对方证据（我方质证）</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="qCard" class="card">
+        <div class="q-head">
+          <span class="q-tag" id="qTag">证据类型</span>
+          <span class="q-basis" id="qBasis"></span>
+        </div>
+        <h2 class="q-text" id="qText">请选择本次质证针对的证据种类</h2>
+        <p class="q-help" id="qHelp"></p>
+        <div class="options" id="options"></div>
+      </div>
+
+      <div id="resultCard" class="card result hidden">
+        <div class="verdict" id="verdict"></div>
+        <h3 class="section-title">关键质证要点</h3>
+        <ul class="result-list" id="keyPoints"></ul>
+        <h3 class="section-title">法律依据</h3>
+        <ul class="result-list" id="legalBasis"></ul>
+        <h3 class="section-title">建议程序动作</h3>
+        <ul class="result-list" id="moves"></ul>
+        <h3 class="section-title">风险提示（未考虑到的情形）</h3>
+        <ul class="result-list" id="risks"></ul>
+        <div class="result-actions">
+          <button id="exportBtn" class="btn">复制质证意见到剪贴板</button>
+          <button id="againBtn" class="btn ghost">再走一遍</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bot">
+    <span>本工具用于辅助质证准备，不替代律师判断。庭审中应结合在卷证据综合主张。</span>
+  </footer>
+
+<script>
+/* ============================================================
+ * 质证决策树（中国大陆诉讼）
+ * 入口：选证据类型 → 真实性 → 合法性 → 关联性 → 程序事项 → 策略
+ * 数据结构：每个 option 携带 impact 元信息 { dim, weight, fatal, tag, detail, basis, moves }
+ * 终态策略由累积的 findings 综合计算
+ * ============================================================ */
+
+/* ---------- 1) 证据类型 ---------- */
+const EVIDENCE_TYPES = [
+  { id: 'doc',    label: '书证',          hint: '合同、票据、函件、记录、公文等以文字、符号承载内容的证据' },
+  { id: 'phys',   label: '物证',          hint: '以其外部特征、物质属性证明案件事实的实物' },
+  { id: 'av',     label: '视听资料',      hint: '录音、录像、影像等' },
+  { id: 'ed',     label: '电子数据',      hint: '微信/QQ 聊天、邮件、网页、短信、区块链存证等' },
+  { id: 'wit',    label: '证人证言',      hint: '案外第三人对其感知事实的陈述' },
+  { id: 'party',  label: '当事人陈述',    hint: '当事人本人就案件事实的陈述、自认' },
+  { id: 'expert', label: '鉴定意见',      hint: '伤情、笔迹、亲子、价格、文检、电子数据等鉴定结论' },
+  { id: 'insp',   label: '勘验/检查笔录', hint: '现场勘验、人身/物品检查等程序性书面记录' }
+];
+
+/* 通用法条简写 */
+const LAW = {
+  civil_evid_15:  '《民事诉讼证据规定》第15条（书证原件优先）',
+  civil_evid_16:  '《民事诉讼证据规定》第16条（境外形成证据公证认证）',
+  civil_evid_22:  '《民事诉讼证据规定》第22条（书证原件、原物核对）',
+  civil_evid_23:  '《民事诉讼证据规定》第23条（电子数据范围）',
+  civil_evid_93:  '《民事诉讼证据规定》第93条（电子数据真实性审查）',
+  civil_evid_94:  '《民事诉讼证据规定》第94条（电子数据真实性推定）',
+  civil_evid_95:  '《民事诉讼证据规定》第95条（一方持有证据无正当理由不提交）',
+  civil_evid_106: '《民事诉讼证据规定》第106条（非法证据排除：严重侵害他人合法权益、违反法律禁止性规定、严重违背公序良俗）',
+  civil_evid_36:  '《民事诉讼证据规定》第36条（鉴定意见审查）',
+  civil_evid_85:  '《民事诉讼证据规定》第85条（综合审查判断证据）',
+  civil_evid_87:  '《民事诉讼证据规定》第87条（孤证不能定案）',
+  civil_evid_90:  '《民事诉讼证据规定》第90条（不能单独作为定案依据的证据）',
+  civil_pl_73:    '《民事诉讼法》第73条（证人应出庭作证，例外情形）',
+  civil_pl_75:    '《民事诉讼法》第75条（证人证言不得作为定案根据之情形）',
+  civil_pl_81:    '《民事诉讼法》第81条（鉴定人出庭）',
+  criminal_pl_50: '《刑事诉讼法》第50条（证据种类与查证属实）',
+  criminal_pl_56: '《刑事诉讼法》第56条（非法证据排除规则）',
+  criminal_pl_192:'《刑事诉讼法》第192条（鉴定人、证人出庭）',
+  admin_pl_43:    '《行政诉讼法》第43条（证据须经庭审质证）',
+  scc_evid_69:    '《最高法关于民诉法适用解释》第114条/115条（机关公文与单方记录）',
+  cyber_2018:     '《人民法院在线诉讼规则》第16~19条（区块链等电子数据真实性）'
+};
+
+/* 严重程度颜色 */
+function sev(w, fatal) {
+  if (fatal) return 'fatal';
+  if (w <= -3) return 'fatal';
+  if (w === -2) return 'major';
+  if (w === -1) return 'minor';
+  if (w >= 1) return 'good';
+  return 'none';
+}
+
+/* ---------- 2) 各证据类型的问题序列 ---------- */
+/* 每个 question: { id, category, text, help, basis, options[] }
+   每个 option: { label, hint?, weight, dim, fatal?, tag, detail, basis?, moves? } */
+
+const QUESTIONS = {
+
+  /* =========== 书证 =========== */
+  doc: [
+    {
+      id: 'doc-orig', category: 'auth', text: '提交的是原件还是复印件？',
+      help: '原件优先；复印件需与原件核对，否则单独不能作为定案依据。', basis: [LAW.civil_evid_15, LAW.civil_evid_22, LAW.civil_evid_90],
+      options: [
+        { label: '原件', weight: 0, dim: 'auth', tag: '原件', detail: '提交的为原件' },
+        { label: '复印件，对方持有原件且可核对', weight: -1, dim: 'auth', tag: '复印件待核对',
+          detail: '复印件，应要求出示原件核对', moves: ['当庭要求出示原件核对'], basis: [LAW.civil_evid_22] },
+        { label: '复印件，原件灭失但能合理说明灭失原因', weight: -2, dim: 'auth', tag: '原件灭失',
+          detail: '原件灭失，真实性须借助其他证据印证', moves: ['要求补充与其他证据相互印证'], basis: [LAW.civil_evid_90] },
+        { label: '复印件，原件下落不明且无法说明', weight: -3, dim: 'auth', fatal: true, tag: '原件不明',
+          detail: '复印件且原件下落不明，单独不能作为定案依据',
+          moves: ['主张该证据不能单独作为定案依据', '请求依法不予采纳'], basis: [LAW.civil_evid_90] }
+      ]
+    },
+    {
+      id: 'doc-form', category: 'auth', text: '形式要件是否完整（签字、盖章、日期、抬头）？',
+      help: '形式要件缺失影响真实性认定。',
+      options: [
+        { label: '完整', weight: 0, dim: 'auth', tag: '形式完整', detail: '签章、日期等形式要件齐全' },
+        { label: '缺签字或盖章', weight: -2, dim: 'auth', tag: '缺签章', detail: '关键形式要件缺失，难以确认意思表示主体' },
+        { label: '日期缺失或可疑（疑似倒签）', weight: -2, dim: 'auth', tag: '日期可疑',
+          detail: '形成时间存疑，可能影响法律关系成立时点',
+          moves: ['必要时申请形成时间鉴定（如墨迹/打印时间鉴定）'] },
+        { label: '存在涂改、添加且未签字确认', weight: -2, dim: 'auth', tag: '存在涂改',
+          detail: '涂改处未经签字确认，单独不能作为定案依据', basis: [LAW.civil_evid_90] }
+      ]
+    },
+    {
+      id: 'doc-sig', category: 'auth', text: '对签字/盖章/印鉴的真伪是否有异议？',
+      help: '有异议可申请笔迹/印章鉴定。',
+      options: [
+        { label: '无异议', weight: 0, dim: 'auth', tag: '签章无异议', detail: '签章真实性无异议' },
+        { label: '有异议，主张不是本人签字', weight: -2, dim: 'auth', tag: '否认签字',
+          detail: '否认签字真实性，应由举证方申请鉴定',
+          moves: ['若对方申请鉴定，配合鉴定；若不申请，主张由其承担举证不能后果'] },
+        { label: '有异议，主张印章非己方', weight: -2, dim: 'auth', tag: '否认用章',
+          detail: '否认印章为己方所留，可申请印鉴鉴定',
+          moves: ['申请印鉴鉴定', '调取印章备案样本'] }
+      ]
+    },
+    {
+      id: 'doc-source', category: 'legal', text: '该书证取得方式是否合法？',
+      help: '严重侵害他人合法权益、违反禁止性规定或严重违背公序良俗取得的证据应予排除。', basis: [LAW.civil_evid_106, LAW.criminal_pl_56],
+      options: [
+        { label: '合法取得（公开/对方提供/调查令）', weight: 0, dim: 'legal', tag: '取得合法', detail: '取得方式合法' },
+        { label: '通过私自侵入对方住宅、电脑等取得', weight: -3, dim: 'legal', fatal: true, tag: '侵权取得',
+          detail: '严重侵害他人合法权益取得，应排除',
+          moves: ['主张非法证据排除'], basis: [LAW.civil_evid_106] },
+        { label: '以胁迫、欺诈、贿赂方式取得', weight: -3, dim: 'legal', fatal: true, tag: '胁迫/欺诈',
+          detail: '违反法律禁止性规定，应排除', moves: ['主张非法证据排除'], basis: [LAW.civil_evid_106, LAW.criminal_pl_56] }
+      ]
+    },
+    {
+      id: 'doc-foreign', category: 'legal', text: '是否为境外形成的书证？',
+      help: '境外书证一般需公证认证或履行条约规定的证明手续。', basis: [LAW.civil_evid_16],
+      options: [
+        { label: '非境外形成', weight: 0, dim: 'legal', tag: '境内形成', detail: '非境外证据' },
+        { label: '境外形成，已完成公证认证（或经海牙附加证明书）', weight: 0, dim: 'legal', tag: '已认证', detail: '已履行公证认证手续' },
+        { label: '境外形成，未办理公证认证', weight: -2, dim: 'legal', tag: '未认证境外证据',
+          detail: '未办理公证认证手续，形式要件不完备',
+          moves: ['要求对方补办公证认证，否则主张不予采纳'], basis: [LAW.civil_evid_16] }
+      ]
+    },
+    {
+      id: 'doc-rel', category: 'rel', text: '与本案待证事实的关联性如何？',
+      options: [
+        { label: '直接证明待证事实', weight: 1, dim: 'rel', tag: '关联性强', detail: '与待证事实有直接关联' },
+        { label: '只能间接证明，需与其他证据结合', weight: -1, dim: 'rel', tag: '间接关联',
+          detail: '间接证据，需与其他证据形成证据链',
+          moves: ['强调单独不足以证明，要求对方补充印证证据'] },
+        { label: '与待证事实无关联', weight: -3, dim: 'rel', fatal: true, tag: '无关联',
+          detail: '所证明事项与本案争议焦点无关联',
+          moves: ['主张关联性不成立，请求不予采纳'] }
+      ]
+    }
+  ],
+
+  /* =========== 物证 =========== */
+  phys: [
+    {
+      id: 'phys-orig', category: 'auth', text: '提交的是原物、复制品还是照片？',
+      basis: [LAW.civil_evid_15, LAW.civil_evid_22, LAW.civil_evid_90],
+      options: [
+        { label: '原物', weight: 0, dim: 'auth', tag: '原物', detail: '系原物' },
+        { label: '复制品/照片，原物在举证方处', weight: -1, dim: 'auth', tag: '复制品',
+          detail: '应要求出示原物核对', moves: ['当庭要求出示原物核对'] },
+        { label: '复制品/照片，原物灭失或无法取得', weight: -3, dim: 'auth', fatal: true, tag: '原物缺失',
+          detail: '原物缺失，单独不能作为定案依据', basis: [LAW.civil_evid_90] }
+      ]
+    },
+    {
+      id: 'phys-chain', category: 'auth', text: '物证的保管链是否清楚完整？',
+      help: '提取→封存→保管→送鉴→开拆全过程应有连续记录与签字。',
+      options: [
+        { label: '提取、保管、移送有连续记录', weight: 0, dim: 'auth', tag: '保管链完整', detail: '保管链完整' },
+        { label: '环节缺失但可通过其他材料补强', weight: -1, dim: 'auth', tag: '保管链残缺', detail: '部分环节缺失' },
+        { label: '保管链断裂，可能被掉包或污染', weight: -3, dim: 'auth', fatal: true, tag: '保管链断裂',
+          detail: '保管链断裂，真实性、同一性存疑',
+          moves: ['主张同一性不能确认，请求不予采纳'] }
+      ]
+    },
+    {
+      id: 'phys-link', category: 'rel', text: '物证与本案当事人/事实的关联如何确定？',
+      options: [
+        { label: '有指纹/DNA/编号等唯一性特征锁定', weight: 1, dim: 'rel', tag: '可锁定', detail: '具有唯一性识别特征' },
+        { label: '只有目击或一般推断，无客观锁定', weight: -2, dim: 'rel', tag: '关联薄弱',
+          detail: '与当事人之间缺少客观锁定证据',
+          moves: ['要求补充鉴定意见、监控视频等锁定证据'] },
+        { label: '完全无法锁定与当事人关联', weight: -3, dim: 'rel', fatal: true, tag: '无法锁定',
+          detail: '与当事人之间无可识别关联',
+          moves: ['主张关联性不成立，请求不予采纳'] }
+      ]
+    },
+    {
+      id: 'phys-legal', category: 'legal', text: '取得物证是否经法定程序（搜查、扣押、勘验）？',
+      basis: [LAW.criminal_pl_56, LAW.civil_evid_106],
+      options: [
+        { label: '依法收集，手续齐全', weight: 0, dim: 'legal', tag: '收集合法', detail: '收集程序合法' },
+        { label: '收集手续瑕疵但可补正', weight: -1, dim: 'legal', tag: '程序瑕疵',
+          detail: '存在程序瑕疵，要求补正或合理解释',
+          moves: ['当庭要求补正、作出说明'] },
+        { label: '违反法定程序且无法补正', weight: -3, dim: 'legal', fatal: true, tag: '违法收集',
+          detail: '违反法定程序，且不能补正，应予排除',
+          moves: ['提出非法证据排除申请'], basis: [LAW.criminal_pl_56, LAW.civil_evid_106] }
+      ]
+    }
+  ],
+
+  /* =========== 视听资料 =========== */
+  av: [
+    {
+      id: 'av-orig', category: 'auth', text: '是否为原始载体（最初录制的设备/介质）？',
+      help: '原始载体真实性显著更高；非原始载体应说明复制过程。',
+      options: [
+        { label: '原始载体（手机/录音笔/摄像头）', weight: 0, dim: 'auth', tag: '原始载体', detail: '为原始载体' },
+        { label: '复制件，复制过程清楚', weight: -1, dim: 'auth', tag: '复制件可追溯', detail: '复制件，但复制过程清楚' },
+        { label: '复制件，无法说明来源', weight: -3, dim: 'auth', fatal: true, tag: '来源不明',
+          detail: '无法说明载体来源', moves: ['主张真实性无法确认'] }
+      ]
+    },
+    {
+      id: 'av-edit', category: 'auth', text: '是否存在剪辑、合成、消音、改变时序的可能？',
+      options: [
+        { label: '内容连贯、无剪辑迹象', weight: 0, dim: 'auth', tag: '完整连续', detail: '内容连续未剪辑' },
+        { label: '存在中断、跳跃，对方未释明', weight: -2, dim: 'auth', tag: '存在剪辑迹象',
+          detail: '存在剪辑/中断且未释明',
+          moves: ['申请对录音录像进行真实性、是否剪辑鉴定'] },
+        { label: '明显剪辑、合成或断章取义', weight: -3, dim: 'auth', fatal: true, tag: '明显剪辑',
+          detail: '明显剪辑或合成', moves: ['申请鉴定并主张真实性不成立'] }
+      ]
+    },
+    {
+      id: 'av-identify', category: 'auth', text: '能否清楚识别对话人、时间、地点？',
+      options: [
+        { label: '声音、人物、时间地点可识别', weight: 0, dim: 'auth', tag: '可识别', detail: '关键信息可识别' },
+        { label: '对话人身份存疑', weight: -2, dim: 'auth', tag: '人物存疑',
+          detail: '关键对话人身份不能确定',
+          moves: ['申请声纹鉴定或要求对方举证识别依据'] }
+      ]
+    },
+    {
+      id: 'av-legal', category: 'legal', text: '录制方式是否合法？',
+      help: '私自录音不必然违法，但严重侵害他人合法权益或违反禁止性规定的应排除。', basis: [LAW.civil_evid_106],
+      options: [
+        { label: '公开场合，或己方为对话一方', weight: 0, dim: 'legal', tag: '录制合法', detail: '录制方式合法' },
+        { label: '私自进入他人住宅/办公区域录制', weight: -3, dim: 'legal', fatal: true, tag: '侵入录制',
+          detail: '严重侵害他人合法权益，应予排除', moves: ['主张非法证据排除'], basis: [LAW.civil_evid_106] },
+        { label: '设置窃听设备长期监录', weight: -3, dim: 'legal', fatal: true, tag: '窃听录制',
+          detail: '违反法律禁止性规定，应予排除', moves: ['主张非法证据排除'], basis: [LAW.civil_evid_106] }
+      ]
+    },
+    {
+      id: 'av-rel', category: 'rel', text: '内容与待证事实关联性？',
+      options: [
+        { label: '直接体现待证事实（如自认、违法行为）', weight: 1, dim: 'rel', tag: '关联性强', detail: '直接体现待证事实' },
+        { label: '只能侧面反映，需结合其他证据', weight: -1, dim: 'rel', tag: '间接关联', detail: '间接关联，需印证' },
+        { label: '与争议焦点无关', weight: -3, dim: 'rel', fatal: true, tag: '无关联', detail: '与争议焦点无关' }
+      ]
+    }
+  ],
+
+  /* =========== 电子数据 =========== */
+  ed: [
+    {
+      id: 'ed-form', category: 'auth', text: '电子数据的提取与固定方式？',
+      help: '原始载体勘验、公证、可信时间戳、区块链是真实性最强的固定方式。', basis: [LAW.civil_evid_93, LAW.civil_evid_94, LAW.cyber_2018],
+      options: [
+        { label: '区块链/可信时间戳/公证固定', weight: 1, dim: 'auth', tag: '可信存证',
+          detail: '可信第三方固定，真实性推定较强', basis: [LAW.civil_evid_94, LAW.cyber_2018] },
+        { label: '当庭演示原始载体', weight: 0, dim: 'auth', tag: '原始载体演示', detail: '原始载体当庭演示' },
+        { label: '截屏/截图无原始数据', weight: -2, dim: 'auth', tag: '仅截图',
+          detail: '仅有截图，无原始载体核验',
+          moves: ['要求对方出示原始载体（手机、邮箱后台）当庭核对'] },
+        { label: '来源不明的导出文件', weight: -3, dim: 'auth', fatal: true, tag: '来源不明',
+          detail: '电子数据来源不明，无法验证真实性' }
+      ]
+    },
+    {
+      id: 'ed-integrity', category: 'auth', text: '数据完整性是否可验证（哈希值、镜像、原始时间戳）？',
+      basis: [LAW.civil_evid_93],
+      options: [
+        { label: '有哈希校验/镜像/完整元数据', weight: 0, dim: 'auth', tag: '完整性可验', detail: '完整性可验证' },
+        { label: '无完整性校验手段', weight: -2, dim: 'auth', tag: '完整性不可验',
+          detail: '缺乏完整性校验，存在篡改可能',
+          moves: ['申请电子数据鉴定'] }
+      ]
+    },
+    {
+      id: 'ed-identity', category: 'auth', text: '聊天/账号能否锁定到对方本人？',
+      options: [
+        { label: '账号实名/绑定手机号一致/含本人头像签名', weight: 0, dim: 'auth', tag: '账号可锁定', detail: '能锁定到对方本人' },
+        { label: '账号身份无法确认', weight: -2, dim: 'auth', tag: '账号身份存疑',
+          detail: '账号无法对应到对方本人',
+          moves: ['调取账号实名信息（通过法院调查令）'] }
+      ]
+    },
+    {
+      id: 'ed-legal', category: 'legal', text: '收集是否合法？',
+      basis: [LAW.civil_evid_106, LAW.criminal_pl_56],
+      options: [
+        { label: '己方持有/对方共享/公开渠道', weight: 0, dim: 'legal', tag: '取得合法', detail: '取得方式合法' },
+        { label: '通过破解、入侵他人账号取得', weight: -3, dim: 'legal', fatal: true, tag: '入侵取得',
+          detail: '严重侵害他人合法权益、违反禁止性规定', moves: ['主张非法证据排除'], basis: [LAW.civil_evid_106] }
+      ]
+    },
+    {
+      id: 'ed-rel', category: 'rel', text: '与待证事实关联性？',
+      options: [
+        { label: '直接表达意思表示/事实陈述', weight: 1, dim: 'rel', tag: '关联性强', detail: '直接表达意思表示或事实' },
+        { label: '上下文不全，需结合其他记录', weight: -1, dim: 'rel', tag: '上下文不全',
+          detail: '聊天/邮件上下文不完整',
+          moves: ['要求对方提交完整聊天记录或邮件往来'] },
+        { label: '无关聊天/无关业务往来', weight: -3, dim: 'rel', fatal: true, tag: '无关联', detail: '与待证事实无关联' }
+      ]
+    }
+  ],
+
+  /* =========== 证人证言 =========== */
+  wit: [
+    {
+      id: 'wit-court', category: 'extra', text: '证人是否出庭作证？',
+      help: '应当出庭；不出庭的，须符合法定情形，否则证言不得作为定案依据。',
+      basis: [LAW.civil_pl_73, LAW.civil_pl_75, LAW.criminal_pl_192],
+      options: [
+        { label: '已出庭作证并接受质询', weight: 0, dim: 'extra', tag: '已出庭', detail: '证人到庭质询' },
+        { label: '未出庭，但属法定不出庭情形（重病/路远/不可抗力等）', weight: -1, dim: 'extra', tag: '法定不出庭',
+          detail: '法定不出庭情形，需结合其他证据', basis: [LAW.civil_pl_73] },
+        { label: '未出庭，无法定理由', weight: -3, dim: 'extra', fatal: true, tag: '未出庭无理由',
+          detail: '未出庭且无法定理由，证言不得作为定案根据',
+          moves: ['主张证言不得作为定案根据，请求不予采纳'], basis: [LAW.civil_pl_75] }
+      ]
+    },
+    {
+      id: 'wit-cap', category: 'auth', text: '证人作证能力（年龄、精神状态、感知能力）？',
+      options: [
+        { label: '具备完全作证能力', weight: 0, dim: 'auth', tag: '具备作证能力', detail: '作证能力具备' },
+        { label: '未成年/认知障碍，与证言内容明显不符', weight: -3, dim: 'auth', fatal: true, tag: '不具备作证能力',
+          detail: '不具备相应作证能力',
+          moves: ['主张证人不具备作证能力，要求排除'] }
+      ]
+    },
+    {
+      id: 'wit-source', category: 'auth', text: '证言来源——亲身感知还是听他人转述？',
+      options: [
+        { label: '亲身经历、亲眼所见', weight: 0, dim: 'auth', tag: '亲历感知', detail: '亲身感知' },
+        { label: '听他人转述（传闻）', weight: -2, dim: 'auth', tag: '传闻证据',
+          detail: '传闻证据，证明力受限', moves: ['要求出示信息来源者出庭'] }
+      ]
+    },
+    {
+      id: 'wit-bias', category: 'rel', text: '证人与当事人有无利害关系？',
+      options: [
+        { label: '无利害关系', weight: 1, dim: 'rel', tag: '无利害关系', detail: '与当事人无利害关系' },
+        { label: '与一方有亲属、雇佣、利益关系', weight: -2, dim: 'rel', tag: '有利害关系',
+          detail: '存在利害关系，证明力降低',
+          moves: ['主张证言可信度降低，不能单独定案'], basis: [LAW.civil_evid_90] }
+      ]
+    },
+    {
+      id: 'wit-cons', category: 'auth', text: '证言内部是否前后矛盾、与其他证据是否冲突？',
+      options: [
+        { label: '前后一致，与其他证据印证', weight: 1, dim: 'auth', tag: '前后一致', detail: '一致且能印证' },
+        { label: '前后矛盾或与在卷证据冲突', weight: -2, dim: 'auth', tag: '前后矛盾',
+          detail: '前后矛盾或与其他证据冲突',
+          moves: ['当庭围绕矛盾点重点交叉询问', '请求结合在卷证据综合判断'] }
+      ]
+    },
+    {
+      id: 'wit-legal', category: 'legal', text: '证言取得是否合法（有无威胁、引诱、欺骗）？',
+      basis: [LAW.criminal_pl_56],
+      options: [
+        { label: '合法获取', weight: 0, dim: 'legal', tag: '取得合法', detail: '取证程序合法' },
+        { label: '存在威胁/引诱/欺骗', weight: -3, dim: 'legal', fatal: true, tag: '违法取证',
+          detail: '违法取证，应予排除', moves: ['主张非法证据排除'], basis: [LAW.criminal_pl_56] }
+      ]
+    }
+  ],
+
+  /* =========== 当事人陈述 =========== */
+  party: [
+    {
+      id: 'party-self', category: 'auth', text: '陈述是否构成对己不利事实的自认？',
+      options: [
+        { label: '是，对对方主张的事实予以承认', weight: -1, dim: 'auth', tag: '存在自认',
+          detail: '自认事实，对方无需举证（除涉身份、公益等不适用自认）',
+          moves: ['对方可主张以自认事项免除举证'] },
+        { label: '否，只是己方陈述', weight: 0, dim: 'auth', tag: '一般陈述', detail: '为当事人单方陈述' }
+      ]
+    },
+    {
+      id: 'party-cons', category: 'auth', text: '陈述前后是否矛盾，是否有相反证据？',
+      options: [
+        { label: '一致且与证据印证', weight: 0, dim: 'auth', tag: '陈述稳定', detail: '陈述稳定' },
+        { label: '前后矛盾或有相反证据', weight: -2, dim: 'auth', tag: '陈述矛盾',
+          detail: '前后矛盾，可信度低',
+          moves: ['以矛盾点交叉询问', '主张以书证、客观证据为准'] }
+      ]
+    },
+    {
+      id: 'party-rel', category: 'rel', text: '与待证事实关联性？',
+      options: [
+        { label: '直接涉及待证事实', weight: 0, dim: 'rel', tag: '关联', detail: '与待证事实关联' },
+        { label: '与争议焦点无关', weight: -2, dim: 'rel', tag: '无关', detail: '与待证事实无关' }
+      ]
+    }
+  ],
+
+  /* =========== 鉴定意见 =========== */
+  expert: [
+    {
+      id: 'exp-org', category: 'auth', text: '鉴定机构是否具有相应鉴定资质（业务范围）？',
+      basis: [LAW.civil_evid_36],
+      options: [
+        { label: '有资质且在业务范围内', weight: 0, dim: 'auth', tag: '机构合规', detail: '机构资质合规' },
+        { label: '资质过期或超出业务范围', weight: -3, dim: 'auth', fatal: true, tag: '机构无资质',
+          detail: '鉴定机构无相应资质或超范围鉴定',
+          moves: ['主张鉴定意见不得作为定案依据，申请重新鉴定'], basis: [LAW.civil_evid_36] }
+      ]
+    },
+    {
+      id: 'exp-person', category: 'auth', text: '鉴定人是否具备执业资格、是否应回避？',
+      options: [
+        { label: '执业资格齐全，无回避情形', weight: 0, dim: 'auth', tag: '鉴定人合格', detail: '鉴定人合格' },
+        { label: '鉴定人无执业资格', weight: -3, dim: 'auth', fatal: true, tag: '鉴定人无资格',
+          detail: '鉴定人无资格', moves: ['申请重新鉴定'], basis: [LAW.civil_evid_36] },
+        { label: '鉴定人存在应回避情形', weight: -2, dim: 'auth', tag: '应回避',
+          detail: '鉴定人应回避而未回避',
+          moves: ['提出回避申请', '必要时申请重新鉴定'] }
+      ]
+    },
+    {
+      id: 'exp-mat', category: 'auth', text: '鉴定材料来源、取得是否合法、充分？',
+      options: [
+        { label: '材料来源清楚、充分', weight: 0, dim: 'auth', tag: '检材充分', detail: '检材充分合法' },
+        { label: '检材不充分/不具有代表性', weight: -2, dim: 'auth', tag: '检材不足',
+          detail: '检材不足以支撑结论',
+          moves: ['主张鉴定结论缺乏检材基础，申请重新鉴定'] },
+        { label: '检材来源不合法或可能被污染', weight: -3, dim: 'auth', fatal: true, tag: '检材违法',
+          detail: '检材来源不合法或被污染', moves: ['主张排除并申请重新鉴定'] }
+      ]
+    },
+    {
+      id: 'exp-method', category: 'auth', text: '鉴定方法、标准是否科学、为国家或行业认可？',
+      options: [
+        { label: '方法科学、有国家/行业标准', weight: 0, dim: 'auth', tag: '方法科学', detail: '鉴定方法科学' },
+        { label: '方法与适用对象不匹配/标准过时', weight: -2, dim: 'auth', tag: '方法不当',
+          detail: '方法不当或标准过时',
+          moves: ['申请鉴定人出庭说明方法依据', '必要时申请重新鉴定'] }
+      ]
+    },
+    {
+      id: 'exp-proc', category: 'legal', text: '鉴定程序是否合法（委托、勘验、记录、签名）？',
+      options: [
+        { label: '程序合法、记录完整', weight: 0, dim: 'legal', tag: '程序合法', detail: '鉴定程序合法' },
+        { label: '程序瑕疵（缺签名、记录不全）', weight: -1, dim: 'legal', tag: '程序瑕疵',
+          detail: '程序瑕疵', moves: ['要求鉴定人作出说明、补正'] },
+        { label: '严重违反程序', weight: -3, dim: 'legal', fatal: true, tag: '严重违程',
+          detail: '严重违反鉴定程序', moves: ['申请重新鉴定'] }
+      ]
+    },
+    {
+      id: 'exp-court', category: 'extra', text: '当事人对鉴定意见有异议，鉴定人是否出庭？',
+      basis: [LAW.civil_pl_81, LAW.criminal_pl_192],
+      options: [
+        { label: '已申请且鉴定人出庭', weight: 0, dim: 'extra', tag: '鉴定人到庭', detail: '鉴定人出庭质询' },
+        { label: '经通知未出庭', weight: -3, dim: 'extra', fatal: true, tag: '鉴定人未到庭',
+          detail: '经通知拒不出庭，鉴定意见不得作为定案根据',
+          moves: ['主张鉴定意见不得作为定案根据'], basis: [LAW.civil_pl_81] }
+      ]
+    },
+    {
+      id: 'exp-rel', category: 'rel', text: '鉴定意见结论与待证事实关联？是否与在卷证据冲突？',
+      options: [
+        { label: '直接证明待证事实，与其他证据印证', weight: 1, dim: 'rel', tag: '关联印证', detail: '与待证事实直接关联' },
+        { label: '与在卷其他证据明显矛盾', weight: -2, dim: 'rel', tag: '与证据冲突',
+          detail: '与在卷证据冲突',
+          moves: ['请求结合全案证据综合判断', '必要时申请补充或重新鉴定'] }
+      ]
+    }
+  ],
+
+  /* =========== 勘验/检查笔录 =========== */
+  insp: [
+    {
+      id: 'insp-sign', category: 'auth', text: '笔录是否有勘验人员、当事人/见证人签名？',
+      options: [
+        { label: '签名齐全', weight: 0, dim: 'auth', tag: '签名齐全', detail: '签名齐全' },
+        { label: '缺当事人/见证人签名且无说明', weight: -2, dim: 'auth', tag: '签名缺失',
+          detail: '关键签名缺失', moves: ['要求承办人出庭说明'] }
+      ]
+    },
+    {
+      id: 'insp-proc', category: 'legal', text: '勘验/检查程序是否合法？',
+      options: [
+        { label: '依法定程序进行', weight: 0, dim: 'legal', tag: '程序合法', detail: '程序合法' },
+        { label: '程序严重瑕疵（如未邀请见证人、未告知权利）', weight: -3, dim: 'legal', fatal: true, tag: '程序违法',
+          detail: '严重违程', moves: ['主张笔录不应采纳，必要时申请重新勘验'] }
+      ]
+    },
+    {
+      id: 'insp-cont', category: 'auth', text: '笔录内容是否清楚、与照片/录像等附件一致？',
+      options: [
+        { label: '内容清楚、与附件一致', weight: 0, dim: 'auth', tag: '记录清楚', detail: '内容清楚' },
+        { label: '内容含糊或与附件不一致', weight: -2, dim: 'auth', tag: '记录矛盾',
+          detail: '内容矛盾或不清', moves: ['要求承办人出庭释明，结合附件审查'] }
+      ]
+    },
+    {
+      id: 'insp-rel', category: 'rel', text: '笔录所记载事项与待证事实关联？',
+      options: [
+        { label: '直接相关', weight: 1, dim: 'rel', tag: '关联性强', detail: '直接相关' },
+        { label: '关联薄弱', weight: -2, dim: 'rel', tag: '关联薄弱', detail: '关联薄弱' }
+      ]
+    }
+  ]
+};
+
+/* 通用风险提示（未考虑到的情形） */
+const COMMON_RISKS = [
+  '若对方在庭后补强（如补办公证、提供原件、申请鉴定人出庭），相关质证意见的效果会被削弱',
+  '法院有权依职权调取证据；本工具仅基于当事人提交的证据形态分析',
+  '若本案另有"自认""免证事实"或司法解释规定，可能直接影响举证责任分配',
+  '不同审级、不同法院对相同瑕疵的容忍度不同，必要时结合裁判文书检索本院类案'
+];
+
+/* ============================================================
+ * 应用状态与渲染
+ * ============================================================ */
+
+const state = {
+  caseType: 'civil',
+  party: 'opp',
+  step: 'type',           // type | running | done
+  evidence: null,         // 选定的证据类型 id
+  qIndex: 0,
+  history: [],            // 每条 { qid, optIndex, impact }
+};
+
+const els = {
+  steps: document.getElementById('steps'),
+  findings: document.getElementById('findings'),
+  qTag: document.getElementById('qTag'),
+  qBasis: document.getElementById('qBasis'),
+  qText: document.getElementById('qText'),
+  qHelp: document.getElementById('qHelp'),
+  options: document.getElementById('options'),
+  qCard: document.getElementById('qCard'),
+  resultCard: document.getElementById('resultCard'),
+  verdict: document.getElementById('verdict'),
+  keyPoints: document.getElementById('keyPoints'),
+  legalBasis: document.getElementById('legalBasis'),
+  moves: document.getElementById('moves'),
+  risks: document.getElementById('risks'),
+  backBtn: document.getElementById('backBtn'),
+  restartBtn: document.getElementById('restartBtn'),
+  exportBtn: document.getElementById('exportBtn'),
+  againBtn: document.getElementById('againBtn'),
+  caseType: document.getElementById('caseType'),
+  party: document.getElementById('party')
+};
+
+els.caseType.addEventListener('change', e => { state.caseType = e.target.value; });
+els.party.addEventListener('change', e => { state.party = e.target.value; });
+els.backBtn.addEventListener('click', goBack);
+els.restartBtn.addEventListener('click', restart);
+els.againBtn.addEventListener('click', restart);
+els.exportBtn.addEventListener('click', copyOpinion);
+
+function setStep(step) {
+  state.step = step;
+  els.steps.querySelectorAll('li').forEach(li => {
+    li.classList.remove('active', 'done');
+  });
+  const order = ['type', 'auth', 'legal', 'rel', 'extra', 'result'];
+  const idx = order.indexOf(step);
+  order.forEach((s, i) => {
+    const li = els.steps.querySelector(`[data-step="${s}"]`);
+    if (!li) return;
+    if (i < idx) li.classList.add('done');
+    else if (i === idx) li.classList.add('active');
+  });
+}
+
+function renderFindings() {
+  if (state.history.length === 0) {
+    els.findings.innerHTML = '<li class="empty">尚无记录</li>';
+    return;
+  }
+  els.findings.innerHTML = state.history
+    .map(h => {
+      const sevClass = sev(h.impact.weight, h.impact.fatal);
+      const dimLabel = { auth: '真实性', legal: '合法性', rel: '关联性', extra: '程序' }[h.impact.dim] || '';
+      return `<li class="${sevClass}"><strong>[${dimLabel}] ${escapeHtml(h.impact.tag)}</strong><br><span style="color:var(--muted)">${escapeHtml(h.impact.detail)}</span></li>`;
+    })
+    .join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderTypeSelection() {
+  setStep('type');
+  els.qTag.textContent = '证据类型';
+  els.qBasis.textContent = '';
+  els.qText.textContent = '请选择本次质证针对的证据种类';
+  els.qHelp.textContent = '不同证据种类的审查路径不同。';
+  els.options.innerHTML = '';
+  EVIDENCE_TYPES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'option severity-none';
+    btn.innerHTML = `<span class="opt-label">${escapeHtml(t.label)}</span><span class="opt-hint">${escapeHtml(t.hint)}</span>`;
+    btn.addEventListener('click', () => {
+      state.evidence = t.id;
+      state.qIndex = 0;
+      state.history = [];
+      renderFindings();
+      renderQuestion();
+    });
+    els.options.appendChild(btn);
+  });
+  els.resultCard.classList.add('hidden');
+  els.qCard.classList.remove('hidden');
+  els.backBtn.disabled = true;
+}
+
+function renderQuestion() {
+  const qs = QUESTIONS[state.evidence];
+  if (state.qIndex >= qs.length) {
+    renderResult();
+    return;
+  }
+  const q = qs[state.qIndex];
+  setStep(q.category);
+  els.qTag.textContent = { auth: '真实性审查', legal: '合法性审查', rel: '关联性审查', extra: '程序事项' }[q.category] || '审查';
+  els.qBasis.textContent = (q.basis || []).join('  ·  ');
+  els.qText.textContent = q.text;
+  els.qHelp.textContent = q.help || '';
+  els.options.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = `option severity-${sev(opt.weight, opt.fatal)}`;
+    btn.innerHTML = `<span class="opt-label">${escapeHtml(opt.label)}</span>${opt.hint ? `<span class="opt-hint">${escapeHtml(opt.hint)}</span>` : ''}`;
+    btn.addEventListener('click', () => {
+      state.history.push({
+        qid: q.id, optIndex: i,
+        impact: {
+          dim: opt.dim, weight: opt.weight, fatal: !!opt.fatal,
+          tag: opt.tag, detail: opt.detail,
+          basis: opt.basis || q.basis || [],
+          moves: opt.moves || []
+        }
+      });
+      state.qIndex++;
+      renderFindings();
+      els.backBtn.disabled = false;
+      renderQuestion();
+    });
+    els.options.appendChild(btn);
+  });
+  els.resultCard.classList.add('hidden');
+  els.qCard.classList.remove('hidden');
+}
+
+function goBack() {
+  if (state.history.length === 0) {
+    state.evidence = null;
+    renderTypeSelection();
+    return;
+  }
+  state.history.pop();
+  state.qIndex = Math.max(0, state.qIndex - 1);
+  renderFindings();
+  els.backBtn.disabled = state.history.length === 0;
+  els.resultCard.classList.add('hidden');
+  renderQuestion();
+}
+
+function restart() {
+  state.evidence = null;
+  state.qIndex = 0;
+  state.history = [];
+  renderFindings();
+  renderTypeSelection();
+}
+
+/* 综合策略计算 */
+function buildStrategy() {
+  const fatal = state.history.filter(h => h.impact.fatal);
+  const score = state.history.reduce((s, h) => s + (h.impact.fatal ? -4 : h.impact.weight), 0);
+
+  let verdict, klass;
+  if (fatal.length > 0 || score <= -6) {
+    verdict = '不予认可（建议主张不予采纳 / 非法证据排除）';
+    klass = 'bad';
+  } else if (score <= -2) {
+    verdict = '部分认可：认可形式存在，但对证明力提出异议';
+    klass = 'mid';
+  } else {
+    verdict = '认可：未发现重大瑕疵，宜从证明事项与证明力大小展开抗辩';
+    klass = 'good';
+  }
+
+  /* 关键质证要点：按权重排序，去除完全无影响的 */
+  const points = state.history
+    .filter(h => h.impact.weight !== 0 || h.impact.fatal)
+    .sort((a, b) => (a.impact.fatal === b.impact.fatal ? a.impact.weight - b.impact.weight : (a.impact.fatal ? -1 : 1)))
+    .map(h => ({
+      sev: sev(h.impact.weight, h.impact.fatal),
+      text: `[${({auth:'真实性',legal:'合法性',rel:'关联性',extra:'程序'}[h.impact.dim])}] ${h.impact.tag} — ${h.impact.detail}`
+    }));
+
+  /* 法律依据去重 */
+  const basisSet = new Set();
+  state.history.forEach(h => (h.impact.basis || []).forEach(b => basisSet.add(b)));
+  /* 评议加入综合审查依据 */
+  basisSet.add(LAW.civil_evid_85);
+  if (state.caseType === 'criminal') basisSet.add(LAW.criminal_pl_50);
+  if (state.caseType === 'admin') basisSet.add(LAW.admin_pl_43);
+
+  /* 建议程序动作去重 */
+  const moveSet = new Set();
+  state.history.forEach(h => (h.impact.moves || []).forEach(m => moveSet.add(m)));
+  if (fatal.length > 0) moveSet.add('在质证笔录中明确请求不予采纳，必要时书面提交《质证意见》');
+  if (state.history.some(h => h.impact.dim === 'auth' && (h.impact.weight <= -2))) {
+    moveSet.add('对真实性争议焦点，建议申请鉴定或要求出示原件/原物核对');
+  }
+  if (state.evidence === 'expert' && !state.history.some(h => h.qid === 'exp-court' && h.optIndex === 0)) {
+    moveSet.add('依法书面申请鉴定人出庭，附异议事项');
+  }
+  if (state.evidence === 'wit' && !state.history.some(h => h.qid === 'wit-court' && h.optIndex === 0)) {
+    moveSet.add('依法书面申请证人出庭，附待证事项');
+  }
+
+  /* 风险提示 */
+  const risks = [...COMMON_RISKS];
+  if (state.party === 'own') {
+    risks.unshift('本次走查针对己方证据：以上瑕疵将被对方利用，应在举证前先行补强（补办原件、公证、鉴定预约）');
+  }
+
+  return { verdict, klass, points, basis: [...basisSet], moves: [...moveSet], risks };
+}
+
+function renderResult() {
+  setStep('result');
+  const s = buildStrategy();
+  els.verdict.className = `verdict ${s.klass}`;
+  els.verdict.textContent = s.verdict;
+
+  els.keyPoints.innerHTML = s.points.length
+    ? s.points.map(p => `<li class="${p.sev}">${escapeHtml(p.text)}</li>`).join('')
+    : '<li class="empty">未发现影响认定的瑕疵</li>';
+
+  els.legalBasis.innerHTML = s.basis.length
+    ? s.basis.map(b => `<li>${escapeHtml(b)}</li>`).join('')
+    : '<li class="empty">无</li>';
+
+  els.moves.innerHTML = s.moves.length
+    ? s.moves.map(m => `<li>${escapeHtml(m)}</li>`).join('')
+    : '<li class="empty">本次质证无须特别程序动作</li>';
+
+  els.risks.innerHTML = s.risks.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+
+  els.qCard.classList.add('hidden');
+  els.resultCard.classList.remove('hidden');
+}
+
+function copyOpinion() {
+  const s = buildStrategy();
+  const evidence = EVIDENCE_TYPES.find(t => t.id === state.evidence)?.label || '';
+  const text =
+`【质证意见】
+
+针对：${evidence}
+
+结论：${s.verdict}
+
+关键质证要点：
+${s.points.map((p, i) => `${i + 1}. ${p.text}`).join('\n') || '（无）'}
+
+法律依据：
+${s.basis.map((b, i) => `${i + 1}. ${b}`).join('\n')}
+
+建议程序动作：
+${s.moves.map((m, i) => `${i + 1}. ${m}`).join('\n') || '（无）'}
+
+风险提示：
+${s.risks.map((r, i) => `${i + 1}. ${r}`).join('\n')}`;
+
+  navigator.clipboard.writeText(text).then(
+    () => { els.exportBtn.textContent = '已复制 ✓'; setTimeout(() => els.exportBtn.textContent = '复制质证意见到剪贴板', 1600); },
+    () => { els.exportBtn.textContent = '复制失败，请手动选择'; }
+  );
+}
+
+/* 初始化 */
+renderTypeSelection();
+</script>
+</body>
+</html>
