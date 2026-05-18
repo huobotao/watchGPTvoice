@@ -347,3 +347,18 @@ body.is-recording .mic-btn .send-icon { opacity: 1; transform: scale(1); }
   margin: 0;
   text-align: center;
 }
+.caption.tools { margin-top: 4px; }
+.tool-link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(16, 163, 127, 0.4);
+  border-radius: 999px;
+  font-size: 12px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tool-link:hover {
+  background: rgba(16, 163, 127, 0.12);
+  border-color: var(--accent);
+}
