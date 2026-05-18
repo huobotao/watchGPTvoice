@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="elevation-preview sample" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>香山样例路线 (Beijing Xiangshan sample)</name>
+    <desc>北京香山公园附近的徒步样例，约 3 公里，覆盖明显爬升用于测试。</desc>
+  </metadata>
+  <trk>
+    <name>香山徒步</name>
+    <trkseg>
+      <trkpt lat="39.9930" lon="116.1894"></trkpt>
+      <trkpt lat="39.9938" lon="116.1903"></trkpt>
+      <trkpt lat="39.9946" lon="116.1915"></trkpt>
+      <trkpt lat="39.9954" lon="116.1928"></trkpt>
+      <trkpt lat="39.9961" lon="116.1940"></trkpt>
+      <trkpt lat="39.9967" lon="116.1953"></trkpt>
+      <trkpt lat="39.9972" lon="116.1965"></trkpt>
+      <trkpt lat="39.9976" lon="116.1978"></trkpt>
+      <trkpt lat="39.9980" lon="116.1990"></trkpt>
+      <trkpt lat="39.9983" lon="116.2002"></trkpt>
+      <trkpt lat="39.9985" lon="116.2014"></trkpt>
+      <trkpt lat="39.9986" lon="116.2026"></trkpt>
+      <trkpt lat="39.9986" lon="116.2038"></trkpt>
+      <trkpt lat="39.9985" lon="116.2050"></trkpt>
+      <trkpt lat="39.9983" lon="116.2061"></trkpt>
+      <trkpt lat="39.9980" lon="116.2072"></trkpt>
+      <trkpt lat="39.9976" lon="116.2083"></trkpt>
+      <trkpt lat="39.9971" lon="116.2093"></trkpt>
+      <trkpt lat="39.9965" lon="116.2102"></trkpt>
+      <trkpt lat="39.9958" lon="116.2110"></trkpt>
+      <trkpt lat="39.9950" lon="116.2117"></trkpt>
+      <trkpt lat="39.9942" lon="116.2123"></trkpt>
+      <trkpt lat="39.9933" lon="116.2127"></trkpt>
+      <trkpt lat="39.9924" lon="116.2130"></trkpt>
+      <trkpt lat="39.9914" lon="116.2131"></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

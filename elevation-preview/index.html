@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>未来海拔预览 · Elevation Preview</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>未来海拔预览</h1>
+      <div class="controls">
+        <div class="input-group">
+          <button id="mode-click" class="mode-btn active" type="button">地图点击画线</button>
+          <label class="mode-btn" for="gpx-input">
+            上传 GPX/KML
+            <input id="gpx-input" type="file" accept=".gpx,.kml,application/gpx+xml,application/vnd.google-earth.kml+xml" hidden />
+          </label>
+          <button id="mode-route" class="mode-btn" type="button" disabled title="Phase 3">起点+终点（Phase 3）</button>
+        </div>
+        <div class="actions">
+          <button id="undo-btn" type="button">撤销点</button>
+          <button id="clear-btn" type="button">清空</button>
+          <button id="compute-btn" class="primary" type="button">查海拔</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section id="map" class="map-pane" aria-label="地图"></section>
+      <section class="side-pane">
+        <div id="stats" class="stats-bar"></div>
+        <div id="chart" class="chart-pane" aria-label="海拔曲线"></div>
+        <div id="status" class="status" role="status" aria-live="polite">点击地图添加路径点，或上传 GPX 文件。</div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
