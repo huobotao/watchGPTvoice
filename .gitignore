@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# wechat_analysis runtime artifacts (local-only by design)
+*.db
+profiles_out/
