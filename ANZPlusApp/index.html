@@ -3,23 +3,619 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>ANZ Plus · iPhone UI Shell</title>
-<link rel="stylesheet" href="styles.css" />
+<title>ANZ Plus · iPhone UI</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #161616;
+    --panel-2: #1f1f1f;
+    --panel-3: #2a2a2a;
+    --text: #f4f4f4;
+    --muted: #8e8e8e;
+    --muted-2: #6a6a6a;
+    --accent: #dafe51;        /* ANZ Plus lime */
+    --accent-2: #c4e63d;
+    --accent-text: #0a0a0a;
+    --positive: #6ee7a8;
+    --negative: #ff7373;
+    --line: rgba(255,255,255,0.06);
+    --line-2: rgba(255,255,255,0.1);
+    --tab-h: 84px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at 30% 0%, #1c1f25 0%, #0a0c10 60%), #0a0c10;
+    min-height: 100vh;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  input { font: inherit; color: inherit; background: transparent; border: 0; outline: none; }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px 48px;
+  }
+
+  /* ============ iPhone frame ============ */
+  .phone {
+    position: relative;
+    width: 390px;
+    height: 820px;
+    border-radius: 58px;
+    background:
+      linear-gradient(135deg, #2a2e36 0%, #15171c 50%, #2a2e36 100%);
+    padding: 12px;
+    box-shadow:
+      0 0 0 2px #0a0a0a inset,
+      0 0 0 3px #3a3f48 inset,
+      0 35px 80px rgba(0,0,0,0.7),
+      0 8px 18px rgba(0,0,0,0.5);
+  }
+  .phone-side {
+    position: absolute;
+    width: 3px;
+    background: linear-gradient(90deg, #1a1d22, #3a3f48 50%, #1a1d22);
+    border-radius: 2px;
+  }
+  .phone-side.silent  { left: -3px; top: 110px; height: 30px; }
+  .phone-side.vol-up  { left: -3px; top: 158px; height: 56px; }
+  .phone-side.vol-dn  { left: -3px; top: 226px; height: 56px; }
+  .phone-side.power   { right: -3px; top: 180px; height: 96px; }
+
+  .bezel {
+    position: relative;
+    width: 100%; height: 100%;
+    border-radius: 46px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .island {
+    position: absolute;
+    top: 11px; left: 50%;
+    transform: translateX(-50%);
+    width: 122px; height: 35px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 60;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%; height: 100%;
+    background: var(--bg);
+  }
+
+  /* ============ Status bar ============ */
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 30px 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    z-index: 40;
+    color: var(--text);
+  }
+  .status-time { padding-left: 4px; }
+  .status-cluster { display:inline-flex; align-items:center; gap:6px; }
+  .signal { display:inline-flex; align-items:flex-end; gap: 2px; height: 10px; }
+  .signal i { display:block; width:3px; background: currentColor; border-radius:1px; }
+  .signal i:nth-child(1){ height: 4px; }
+  .signal i:nth-child(2){ height: 6px; }
+  .signal i:nth-child(3){ height: 8px; }
+  .signal i:nth-child(4){ height: 10px; }
+  .wifi { width: 16px; height: 11px; }
+  .battery {
+    position: relative;
+    width: 26px; height: 12px;
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 3px;
+    padding: 1.5px;
+  }
+  .battery::after {
+    content:""; position:absolute; top:3px; right:-3px;
+    width: 2px; height: 6px; background: rgba(255,255,255,0.55); border-radius: 1px;
+  }
+  .battery-fill { display:block; width: 82%; height: 100%; background:#fff; border-radius:1.5px; }
+
+  /* ============ Views ============ */
+  .view {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    flex-direction: column;
+    padding-top: 54px;
+    background: var(--bg);
+    animation: fade 0.22s ease-out;
+  }
+  .view.is-active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .page-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 20px calc(var(--tab-h) + 28px);
+    scrollbar-width: none;
+  }
+  .page-scroll::-webkit-scrollbar { display: none; }
+  .footer-space { height: 16px; }
+
+  /* ============ Login ============ */
+  .view-login { padding: 80px 32px 28px; }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .plus-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px;
+    color: var(--accent);
+    font-size: 64px; font-weight: 300; line-height: 1;
+  }
+  .logo-word {
+    display: block;
+    font-size: 22px; font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+  .login-greet { text-align:center; font-size: 24px; font-weight: 500; margin: 8px 0 4px; letter-spacing: -0.3px; }
+  .login-hint { text-align:center; color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+
+  .pin-dots { display:flex; justify-content:center; gap: 18px; margin-bottom: 36px; }
+  .pin-dots .dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+  .pin-dots .dot.filled { background: var(--accent); border-color: var(--accent); transform: scale(1.1); }
+  .pin-dots .dot.error  { background: var(--negative); border-color: var(--negative); animation: shake 0.4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px 28px;
+    margin-bottom: 14px;
+  }
+  .key {
+    height: 62px;
+    border-radius: 31px;
+    background: var(--panel);
+    color: var(--text);
+    font-size: 28px;
+    font-weight: 400;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s, transform 0.05s;
+  }
+  .key:active { background: var(--panel-3); transform: scale(0.96); }
+  .key-face { background: transparent; color: var(--accent); }
+  .key-face svg { width: 30px; height: 30px; }
+  .key-del { background: transparent; color: var(--muted); font-size: 22px; }
+  .link-btn {
+    display: block;
+    margin: 4px auto 0;
+    color: var(--accent);
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  /* ============ Common ============ */
+  .page-title { font-size: 28px; font-weight: 600; margin: 8px 0 2px; letter-spacing: -0.5px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+  .section-title {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 24px 2px 12px;
+    font-weight: 500;
+  }
+  .section-row {
+    display:flex; align-items:center; justify-content: space-between;
+    margin: 24px 2px 12px;
+  }
+  .section-row .section-title { margin: 0; }
+  .section-row .link { color: var(--accent); font-size: 13px; font-weight: 500; }
+
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-text);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 16px;
+  }
+  .avatar.small { width: 34px; height: 34px; font-size: 14px; }
+  .avatar.big   { width: 80px; height: 80px; font-size: 30px; margin-bottom: 14px; }
+
+  .icon-btn {
+    position: relative;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--panel);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .dot-red { position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; background: #ff4d4d; border-radius: 50%; border: 2px solid var(--panel); }
+
+  /* ============ Home ============ */
+  .home-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 4px 2px 18px;
+  }
+  .head-greet { flex: 1; }
+  .head-hello { color: var(--muted); font-size: 13px; }
+  .head-name  { font-size: 18px; font-weight: 500; letter-spacing: -0.2px; }
+
+  /* Big money summary card */
+  .summary-card {
+    background: var(--panel);
+    border-radius: 24px;
+    padding: 22px 22px 18px;
+    border: 1px solid var(--line);
+  }
+  .sum-row { display: flex; align-items: flex-start; gap: 18px; }
+  .sum-col { flex: 1; }
+  .sum-label { display:flex; align-items:center; gap:6px; color: var(--muted); font-size: 12px; font-weight: 500; }
+  .sum-label .arrow { display:inline-flex; width:14px; height:14px; border-radius:50%; align-items:center; justify-content:center; font-size: 10px; font-weight: 700; }
+  .arrow.in  { background: rgba(110,231,168,0.18); color: var(--positive); }
+  .arrow.out { background: rgba(255,115,115,0.18); color: var(--negative); }
+  .sum-amt { font-size: 22px; font-weight: 600; margin-top: 4px; letter-spacing: -0.4px; }
+  .sum-amt .c { color: var(--muted); font-weight: 500; font-size: 16px; }
+  .sum-sep { width: 1px; align-self: stretch; background: var(--line-2); }
+  .sum-foot {
+    display:flex; align-items:center; justify-content: space-between;
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line);
+  }
+  .month-pill {
+    background: var(--panel-2);
+    color: var(--muted); font-size: 12px; font-weight: 500;
+    padding: 6px 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .month-pill .chev { font-size: 9px; opacity: 0.7; }
+  .more-link { color: var(--accent); font-size: 13px; font-weight: 500; }
+
+  /* Round-ups pill */
+  .roundup-strip {
+    margin-top: 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .roundup-ico {
+    width: 40px; height: 40px;
+    border-radius: 14px;
+    background: rgba(218,254,81,0.16);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .roundup-text { flex: 1; }
+  .roundup-title { font-size: 14px; font-weight: 500; }
+  .roundup-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .roundup-amt { font-size: 15px; font-weight: 600; color: var(--accent); }
+
+  /* Account cards */
+  .acct-card {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 14px;
+    text-align: left;
+    transition: background 0.1s, transform 0.05s;
+  }
+  .acct-card:active { background: var(--panel-2); transform: scale(0.995); }
+  .acct-ico {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .acct-ico.spend { background: rgba(255,255,255,0.06); }
+  .acct-ico.save  { background: rgba(218,254,81,0.16); color: var(--accent); }
+  .acct-ico.goal  { background: rgba(110,231,168,0.16); color: var(--positive); }
+  .acct-body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .acct-name { font-size: 15px; font-weight: 500; }
+  .acct-meta { font-size: 11px; color: var(--muted); letter-spacing: 0.2px; }
+  .acct-right { text-align: right; display:flex; flex-direction:column; gap:2px; }
+  .acct-amt { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+  .acct-amt .c { color: var(--muted); font-weight: 500; font-size: 13px; }
+  .acct-tag { font-size: 10px; color: var(--accent); font-weight: 500; }
+
+  /* Transactions */
+  .tx {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tx:last-of-type { border-bottom: 0; }
+  .tx-ico {
+    width: 38px; height: 38px;
+    background: var(--panel);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .tx-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tx-name { font-size: 14px; font-weight: 500; overflow:hidden; text-overflow:ellipsis; white-space: nowrap; }
+  .tx-time { font-size: 11px; color: var(--muted); }
+  .tx-amt { font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+  .tx-out { color: var(--text); }
+  .tx-in  { color: var(--positive); }
+
+  /* ============ Pay (Money) ============ */
+  .search-box {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 13px 14px;
+    margin: 6px 0 6px;
+    border: 1px solid var(--line);
+  }
+  .search-box svg { width: 16px; height: 16px; color: var(--muted); }
+  .search-box input { flex:1; color: var(--text); font-size: 14px; }
+  .search-box input::placeholder { color: var(--muted-2); }
+
+  .quick-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  }
+  .quick {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; font-weight: 500;
+    text-align: left;
+    transition: background 0.1s;
+  }
+  .quick:active { background: var(--panel-2); }
+  .quick-ico {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: rgba(218,254,81,0.16);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600;
+  }
+  .quick-ico svg { width: 18px; height: 18px; }
+
+  .contact-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--line);
+  }
+  .contact-name { flex: 1; font-size: 14px; }
+  .payid { font-size: 12px; color: var(--muted); }
+
+  /* ============ Save ============ */
+  .goal-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .goal-head { display: flex; align-items: center; gap: 12px; }
+  .goal-emoji {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--panel-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .goal-name { font-size: 15px; font-weight: 500; }
+  .goal-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .progress {
+    width: 100%; height: 6px;
+    background: var(--panel-2);
+    border-radius: 999px;
+    margin: 16px 0 10px;
+    overflow: hidden;
+  }
+  .progress span { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.4s; }
+  .goal-amt { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; }
+  .new-goal {
+    width: 100%;
+    padding: 16px;
+    border: 1.5px dashed rgba(218,254,81,0.4);
+    border-radius: 18px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-top: 8px;
+  }
+
+  /* ============ Grow ============ */
+  .insight-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .insight-title { color: var(--muted); font-size: 12px; }
+  .insight-amt { font-size: 30px; font-weight: 600; margin-top: 4px; letter-spacing: -0.5px; }
+  .insight-sub { color: var(--positive); font-size: 12px; margin-bottom: 16px; font-weight: 500; }
+  .bars {
+    display: flex; align-items: flex-end; gap: 8px;
+    height: 90px;
+  }
+  .bars span {
+    flex: 1;
+    background: var(--panel-2);
+    border-radius: 6px 6px 2px 2px;
+    display: block;
+    transition: height 0.4s;
+  }
+  .bars span.hi { background: var(--accent); }
+  .bar-labels { display: flex; gap: 8px; margin-top: 8px; }
+  .bar-labels span { flex: 1; text-align: center; font-size: 10px; color: var(--muted); }
+
+  .cat-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .cat-name { flex: 1; font-size: 14px; }
+  .cat-amt { font-size: 14px; font-weight: 500; }
+
+  /* ============ Profile ============ */
+  .profile-head { display: flex; flex-direction: column; align-items: center; padding: 24px 0 18px; }
+  .profile-name { font-size: 18px; font-weight: 500; }
+  .profile-id { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+  .setting-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 2px;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.1s;
+    border-radius: 8px;
+  }
+  .setting-row:active { background: var(--panel-2); }
+  .set-ico {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--panel);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .set-name { flex: 1; font-size: 15px; }
+  .chev { color: var(--muted); font-size: 18px; }
+
+  .logout {
+    width: 100%;
+    padding: 15px;
+    background: var(--panel);
+    border-radius: 16px;
+    color: var(--negative);
+    font-weight: 500;
+    margin-top: 20px;
+  }
+
+  /* ============ Account detail ============ */
+  .sub-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 20px 8px;
+    height: 50px;
+  }
+  .back-btn {
+    font-size: 26px; color: var(--text); line-height: 1;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--panel);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 400;
+  }
+  .sub-title { font-size: 16px; font-weight: 500; }
+
+  .acct-hero {
+    background: linear-gradient(150deg, #1f232b 0%, #14171c 100%);
+    border-radius: 24px;
+    padding: 24px 22px 20px;
+    margin: 2px 0 6px;
+    border: 1px solid var(--line);
+  }
+  .hero-label { color: var(--muted); font-size: 12px; }
+  .hero-amt   { font-size: 36px; font-weight: 600; margin-top: 6px; letter-spacing: -0.6px; }
+  .hero-amt .c { color: var(--muted); font-size: 22px; font-weight: 500; }
+  .hero-bsb   { color: var(--muted); font-size: 12px; margin-top: 6px; letter-spacing: 0.3px; }
+  .hero-actions { display:flex; gap:10px; margin-top: 18px; }
+  .chip {
+    flex:1;
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 13px;
+    text-align: center;
+  }
+  .chip.primary { background: var(--accent); color: var(--accent-text); }
+  .chip:active { opacity: 0.78; }
+
+  /* ============ Tab bar ============ */
+  .tab-bar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: var(--tab-h);
+    background: rgba(14,15,18, 0.88);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 18px;
+    z-index: 30;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--muted-2);
+    font-size: 10px;
+    font-weight: 500;
+    flex: 1;
+    padding: 6px 0;
+    transition: color 0.1s;
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab.is-active { color: var(--accent); }
+  .tab-bar.hidden { display: none; }
+
+  .home-indicator {
+    position: absolute;
+    bottom: 7px; left: 50%;
+    transform: translateX(-50%);
+    width: 134px; height: 5px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 3px;
+    z-index: 35;
+  }
+
+  /* ============ Caption ============ */
+  .caption {
+    margin-top: 24px;
+    color: #6f7682;
+    font-size: 13px;
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.55;
+  }
+  .caption b { color: #a8b0bd; font-weight: 500; }
+
+  /* ============ Small screens ============ */
+  @media (max-width: 420px) {
+    .phone { width: 100%; max-width: 360px; height: 740px; border-radius: 48px; }
+    .bezel { border-radius: 38px; }
+  }
+</style>
 </head>
 <body>
 <main class="stage">
   <div class="phone" role="application" aria-label="ANZ Plus iPhone">
-    <div class="phone-side phone-side-left" aria-hidden="true">
-      <span class="silent"></span>
-      <span class="vol vol-up"></span>
-      <span class="vol vol-down"></span>
-    </div>
-    <div class="phone-side phone-side-right" aria-hidden="true">
-      <span class="power"></span>
-    </div>
+    <span class="phone-side silent" aria-hidden="true"></span>
+    <span class="phone-side vol-up" aria-hidden="true"></span>
+    <span class="phone-side vol-dn" aria-hidden="true"></span>
+    <span class="phone-side power" aria-hidden="true"></span>
 
     <div class="bezel">
-      <div class="notch" aria-hidden="true"></div>
+      <div class="island" aria-hidden="true"></div>
 
       <div class="screen" id="screen">
 
@@ -27,19 +623,19 @@
         <header class="status-bar">
           <span class="status-time" id="statusTime">9:41</span>
           <span class="status-cluster" aria-hidden="true">
-            <svg class="status-ico" viewBox="0 0 18 12"><path fill="currentColor" d="M1 9h2v2H1zm4-2h2v4H5zm4-2h2v6H9zm4-2h2v8h-2zm4-2h2v10h-2z"/></svg>
-            <svg class="status-ico" viewBox="0 0 18 12"><path fill="currentColor" d="M9 2C5 2 2 4 1 5l1 1c1-1 4-3 7-3s6 2 7 3l1-1c-1-1-4-3-8-3zm0 3C6 5 4 7 3 8l1 1c1-1 3-2 5-2s4 1 5 2l1-1c-1-1-3-3-6-3zm0 3a3 3 0 0 0-2 1l2 2 2-2a3 3 0 0 0-2-1z"/></svg>
+            <span class="signal"><i></i><i></i><i></i><i></i></span>
+            <svg class="wifi" viewBox="0 0 16 11"><path fill="currentColor" d="M8 1.5C5 1.5 2.5 2.7 1 4l1 1c1.3-1 3.6-2 6-2s4.7 1 6 2l1-1C13.5 2.7 11 1.5 8 1.5zm0 3c-1.8 0-3.5.7-4.5 1.7l1 1A4.7 4.7 0 0 1 8 5.7c1.3 0 2.5.5 3.5 1.5l1-1C11.5 5.2 9.8 4.5 8 4.5zm0 3a2.7 2.7 0 0 0-2 .8l2 2 2-2A2.7 2.7 0 0 0 8 7.5z"/></svg>
             <span class="battery"><span class="battery-fill"></span></span>
           </span>
         </header>
 
         <!-- ===== Login view ===== -->
-        <section class="view view-login is-active" id="viewLogin" aria-label="登录">
+        <section class="view view-login is-active" id="viewLogin">
           <div class="login-logo">
-            <span class="logo-plus">ANZ<sup>+</sup></span>
-            <span class="logo-sub">Plus</span>
+            <span class="plus-mark">+</span>
+            <span class="logo-word">ANZ plus</span>
           </div>
-          <p class="login-greet">你好,<br/>Tao</p>
+          <p class="login-greet">你好,Tao</p>
           <p class="login-hint">输入 6 位 PIN 登录</p>
 
           <div class="pin-dots" id="pinDots">
@@ -48,21 +644,21 @@
           </div>
 
           <div class="keypad" id="keypad">
-            <button class="key">1</button><button class="key">2</button><button class="key">3</button>
-            <button class="key">4</button><button class="key">5</button><button class="key">6</button>
-            <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+            <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+            <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+            <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
             <button class="key key-face" id="faceId" aria-label="Face ID">
-              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h5V2H2v7h2zm11-2v2h5v5h2V2zM4 15H2v7h7v-2H4zm16 5h-5v2h7v-7h-2zM9 9H7v3h2zm8 0h-2v3h2zm-8 6c1 2 5 2 6 0H9z"/></svg>
+              <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M4 16v3a1 1 0 0 0 1 1h3M16 20h3a1 1 0 0 0 1-1v-3M9 9v2M15 9v2M12 9v4l-1 1M9 16c1 1 4 1 6 0"/></svg>
             </button>
-            <button class="key">0</button>
+            <button class="key" data-k="0">0</button>
             <button class="key key-del" id="pinDel" aria-label="删除">⌫</button>
           </div>
 
           <button class="link-btn">忘记 PIN?</button>
         </section>
 
-        <!-- ===== Home view (Wallet) ===== -->
-        <section class="view view-home" id="viewHome" aria-label="首页">
+        <!-- ===== Home view ===== -->
+        <section class="view view-home" id="viewHome">
           <div class="page-scroll">
             <header class="home-head">
               <div class="avatar">T</div>
@@ -76,97 +672,104 @@
               </button>
             </header>
 
-            <div class="balance-card">
-              <div class="balance-label">总余额</div>
-              <div class="balance-value">$ 12,840<span>.57</span></div>
-              <div class="balance-sub">+ $128.40 本月</div>
-              <div class="card-actions">
-                <button class="chip">转账</button>
-                <button class="chip">BPAY</button>
-                <button class="chip">充值</button>
-                <button class="chip">更多</button>
+            <div class="summary-card">
+              <div class="sum-row">
+                <div class="sum-col">
+                  <div class="sum-label">
+                    <span class="arrow in">↓</span> Money in
+                  </div>
+                  <div class="sum-amt">$3,250<span class="c">.00</span></div>
+                </div>
+                <div class="sum-sep"></div>
+                <div class="sum-col">
+                  <div class="sum-label">
+                    <span class="arrow out">↑</span> Money out
+                  </div>
+                  <div class="sum-amt">$1,842<span class="c">.30</span></div>
+                </div>
+              </div>
+              <div class="sum-foot">
+                <span class="month-pill">5 月 <span class="chev">▾</span></span>
+                <a class="more-link">查看详情 ›</a>
               </div>
             </div>
 
-            <h3 class="section-title">账户</h3>
+            <div class="roundup-strip">
+              <div class="roundup-ico">🐷</div>
+              <div class="roundup-text">
+                <div class="roundup-title">Round ups</div>
+                <div class="roundup-sub">本月已攒下的零钱</div>
+              </div>
+              <div class="roundup-amt">+ $8.62</div>
+            </div>
 
-            <button class="account-row" data-account="spend">
-              <span class="acc-icon acc-spend">💳</span>
-              <span class="acc-text">
-                <span class="acc-name">日常 Spend</span>
-                <span class="acc-bsb">012-345 · 1234 5678</span>
+            <div class="section-row">
+              <div class="section-title">账户</div>
+              <a class="link">管理</a>
+            </div>
+
+            <button class="acct-card" data-account="spend" data-amt="$2,154.90" data-bsb="BSB 012-345 · ACC 1234 5678">
+              <span class="acct-ico spend">💳</span>
+              <span class="acct-body">
+                <span class="acct-name">Spend</span>
+                <span class="acct-meta">日常账户 · ··· 5678</span>
               </span>
-              <span class="acc-amt">$ 2,154.90</span>
+              <span class="acct-right">
+                <span class="acct-amt">$2,154<span class="c">.90</span></span>
+                <span class="acct-tag">Visa Debit</span>
+              </span>
             </button>
 
-            <button class="account-row" data-account="save">
-              <span class="acc-icon acc-save">🌱</span>
-              <span class="acc-text">
-                <span class="acc-name">Save</span>
-                <span class="acc-bsb">012-345 · 9876 5432</span>
+            <button class="acct-card" data-account="save" data-amt="$8,600.00" data-bsb="BSB 012-345 · ACC 9876 5432">
+              <span class="acct-ico save">✦</span>
+              <span class="acct-body">
+                <span class="acct-name">Save</span>
+                <span class="acct-meta">高息储蓄 · 4.65% p.a.</span>
               </span>
-              <span class="acc-amt">$ 8,600.00</span>
+              <span class="acct-right">
+                <span class="acct-amt">$8,600<span class="c">.00</span></span>
+                <span class="acct-tag">+ $12.40 利息</span>
+              </span>
             </button>
 
-            <button class="account-row" data-account="goal">
-              <span class="acc-icon acc-goal">✈️</span>
-              <span class="acc-text">
-                <span class="acc-name">日本旅行</span>
-                <span class="acc-bsb">目标 $5,000</span>
+            <button class="acct-card" data-account="goal" data-amt="$2,085.67" data-bsb="目标账户 · 日本旅行">
+              <span class="acct-ico goal">✈️</span>
+              <span class="acct-body">
+                <span class="acct-name">日本旅行</span>
+                <span class="acct-meta">目标 $5,000 · 42%</span>
               </span>
-              <span class="acc-amt">$ 2,085.67</span>
+              <span class="acct-right">
+                <span class="acct-amt">$2,085<span class="c">.67</span></span>
+                <span class="acct-tag">还差 $2,914</span>
+              </span>
             </button>
 
-            <h3 class="section-title">最近交易</h3>
+            <div class="section-row">
+              <div class="section-title">最近交易</div>
+              <a class="link">全部</a>
+            </div>
 
-            <div class="tx">
-              <span class="tx-icon">☕</span>
-              <span class="tx-text">
-                <span class="tx-name">Industry Beans</span>
-                <span class="tx-time">今天 · 9:12</span>
-              </span>
-              <span class="tx-amt tx-out">-$ 6.50</span>
-            </div>
-            <div class="tx">
-              <span class="tx-icon">🛒</span>
-              <span class="tx-text">
-                <span class="tx-name">Coles Carlton</span>
-                <span class="tx-time">昨天 · 18:42</span>
-              </span>
-              <span class="tx-amt tx-out">-$ 42.18</span>
-            </div>
-            <div class="tx">
-              <span class="tx-icon">💼</span>
-              <span class="tx-text">
-                <span class="tx-name">Salary · Acme Pty</span>
-                <span class="tx-time">5 月 15 · 周四</span>
-              </span>
-              <span class="tx-amt tx-in">+$ 3,250.00</span>
-            </div>
-            <div class="tx">
-              <span class="tx-icon">🚇</span>
-              <span class="tx-text">
-                <span class="tx-name">PTV Myki</span>
-                <span class="tx-time">5 月 14</span>
-              </span>
-              <span class="tx-amt tx-out">-$ 10.00</span>
-            </div>
+            <div class="tx"><span class="tx-ico">☕</span><span class="tx-text"><span class="tx-name">Industry Beans</span><span class="tx-time">今天 · 9:12</span></span><span class="tx-amt tx-out">-$6.50</span></div>
+            <div class="tx"><span class="tx-ico">🛒</span><span class="tx-text"><span class="tx-name">Coles Carlton</span><span class="tx-time">昨天 · 18:42</span></span><span class="tx-amt tx-out">-$42.18</span></div>
+            <div class="tx"><span class="tx-ico">💼</span><span class="tx-text"><span class="tx-name">Salary · Acme Pty</span><span class="tx-time">5 月 15 · 周四</span></span><span class="tx-amt tx-in">+$3,250.00</span></div>
+            <div class="tx"><span class="tx-ico">🚇</span><span class="tx-text"><span class="tx-name">PTV Myki</span><span class="tx-time">5 月 14</span></span><span class="tx-amt tx-out">-$10.00</span></div>
 
             <div class="footer-space"></div>
           </div>
         </section>
 
         <!-- ===== Pay view ===== -->
-        <section class="view view-pay" id="viewPay" aria-label="支付">
+        <section class="view view-pay" id="viewPay">
           <div class="page-scroll">
-            <h2 class="page-title">转账与支付</h2>
+            <h2 class="page-title">Money</h2>
+            <p class="page-sub">转账与支付</p>
 
             <div class="search-box">
               <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 2a8 8 0 1 0 5 14l5 5 1-1-5-5A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
               <input type="text" placeholder="搜索联系人、BSB、PayID" />
             </div>
 
-            <h3 class="section-title">快捷</h3>
+            <div class="section-title">快捷</div>
             <div class="quick-grid">
               <button class="quick">
                 <span class="quick-ico">⇄</span><span>账户互转</span>
@@ -182,18 +785,22 @@
               </button>
             </div>
 
-            <h3 class="section-title">联系人</h3>
+            <div class="section-row">
+              <div class="section-title">联系人</div>
+              <a class="link">+ 新建</a>
+            </div>
             <div class="contact-row"><span class="avatar small">M</span><span class="contact-name">Mum</span><span class="payid">@mum</span></div>
             <div class="contact-row"><span class="avatar small">L</span><span class="contact-name">Lily Chen</span><span class="payid">0412 ··· 998</span></div>
             <div class="contact-row"><span class="avatar small">W</span><span class="contact-name">Will Zhao</span><span class="payid">@willz</span></div>
             <div class="contact-row"><span class="avatar small">R</span><span class="contact-name">Rent · Inner Group</span><span class="payid">BSB 083 ···</span></div>
+            <div class="contact-row"><span class="avatar small">J</span><span class="contact-name">Jason Park</span><span class="payid">@jp</span></div>
 
             <div class="footer-space"></div>
           </div>
         </section>
 
         <!-- ===== Save view ===== -->
-        <section class="view view-save" id="viewSave" aria-label="存钱">
+        <section class="view view-save" id="viewSave">
           <div class="page-scroll">
             <h2 class="page-title">Save</h2>
             <p class="page-sub">把零钱变成目标</p>
@@ -207,7 +814,7 @@
                 </div>
               </div>
               <div class="progress"><span style="width:42%"></span></div>
-              <div class="goal-amt">$ 2,085.67</div>
+              <div class="goal-amt">$2,085<span style="color:var(--muted); font-weight:500; font-size:16px">.67</span></div>
             </div>
 
             <div class="goal-card">
@@ -215,11 +822,23 @@
                 <span class="goal-emoji">🏠</span>
                 <div>
                   <div class="goal-name">首付</div>
-                  <div class="goal-meta">目标 $80,000</div>
+                  <div class="goal-meta">目标 $80,000 · 18%</div>
                 </div>
               </div>
               <div class="progress"><span style="width:18%"></span></div>
-              <div class="goal-amt">$ 14,400.00</div>
+              <div class="goal-amt">$14,400<span style="color:var(--muted); font-weight:500; font-size:16px">.00</span></div>
+            </div>
+
+            <div class="goal-card">
+              <div class="goal-head">
+                <span class="goal-emoji">🚗</span>
+                <div>
+                  <div class="goal-name">新车</div>
+                  <div class="goal-meta">目标 $25,000 · 30%</div>
+                </div>
+              </div>
+              <div class="progress"><span style="width:30%"></span></div>
+              <div class="goal-amt">$7,500<span style="color:var(--muted); font-weight:500; font-size:16px">.00</span></div>
             </div>
 
             <button class="new-goal">+ 新建存钱目标</button>
@@ -229,14 +848,14 @@
         </section>
 
         <!-- ===== Grow view ===== -->
-        <section class="view view-grow" id="viewGrow" aria-label="增长">
+        <section class="view view-grow" id="viewGrow">
           <div class="page-scroll">
             <h2 class="page-title">Grow</h2>
             <p class="page-sub">本月开支洞察</p>
 
             <div class="insight-card">
               <div class="insight-title">本月开支</div>
-              <div class="insight-amt">$ 1,842.30</div>
+              <div class="insight-amt">$1,842.30</div>
               <div class="insight-sub">比上月 ↓ 8%</div>
               <div class="bars">
                 <span style="height:30%"></span>
@@ -244,24 +863,26 @@
                 <span style="height:42%"></span>
                 <span style="height:70%"></span>
                 <span style="height:60%"></span>
-                <span style="height:80% ;background:var(--accent)"></span>
+                <span class="hi" style="height:88%"></span>
                 <span style="height:48%"></span>
               </div>
               <div class="bar-labels"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
             </div>
 
-            <h3 class="section-title">类别分布</h3>
-            <div class="cat-row"><span class="cat-dot" style="background:#ff8a00"></span><span class="cat-name">餐饮</span><span class="cat-amt">$ 482.10</span></div>
-            <div class="cat-row"><span class="cat-dot" style="background:#3ddc97"></span><span class="cat-name">交通</span><span class="cat-amt">$ 168.40</span></div>
-            <div class="cat-row"><span class="cat-dot" style="background:#7aa8ff"></span><span class="cat-name">购物</span><span class="cat-amt">$ 621.00</span></div>
-            <div class="cat-row"><span class="cat-dot" style="background:#c084ff"></span><span class="cat-name">订阅</span><span class="cat-amt">$ 84.99</span></div>
+            <div class="section-title">类别分布</div>
+            <div class="cat-row"><span class="cat-dot" style="background:#ff8a00"></span><span class="cat-name">餐饮</span><span class="cat-amt">$482.10</span></div>
+            <div class="cat-row"><span class="cat-dot" style="background:#3ddc97"></span><span class="cat-name">交通</span><span class="cat-amt">$168.40</span></div>
+            <div class="cat-row"><span class="cat-dot" style="background:#7aa8ff"></span><span class="cat-name">购物</span><span class="cat-amt">$621.00</span></div>
+            <div class="cat-row"><span class="cat-dot" style="background:#c084ff"></span><span class="cat-name">订阅</span><span class="cat-amt">$84.99</span></div>
+            <div class="cat-row"><span class="cat-dot" style="background:#ff7373"></span><span class="cat-name">娱乐</span><span class="cat-amt">$148.50</span></div>
+            <div class="cat-row"><span class="cat-dot" style="background:#dafe51"></span><span class="cat-name">其他</span><span class="cat-amt">$337.31</span></div>
 
             <div class="footer-space"></div>
           </div>
         </section>
 
         <!-- ===== Profile view ===== -->
-        <section class="view view-profile" id="viewProfile" aria-label="我的">
+        <section class="view view-profile" id="viewProfile">
           <div class="page-scroll">
             <div class="profile-head">
               <div class="avatar big">T</div>
@@ -284,46 +905,47 @@
         </section>
 
         <!-- ===== Account detail view ===== -->
-        <section class="view view-account" id="viewAccount" aria-label="账户详情">
+        <section class="view view-account" id="viewAccount">
           <header class="sub-head">
             <button class="back-btn" id="backFromAccount" aria-label="返回">‹</button>
-            <span class="sub-title" id="accountTitle">日常 Spend</span>
-            <button class="icon-btn"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+            <span class="sub-title" id="accountTitle">Spend</span>
+            <button class="icon-btn"><svg viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" d="M12 5v14M5 12h14"/></svg></button>
           </header>
           <div class="page-scroll">
-            <div class="account-hero">
-              <div class="acc-hero-label">可用余额</div>
-              <div class="acc-hero-amt" id="accountAmt">$ 2,154.90</div>
-              <div class="acc-hero-bsb">BSB 012-345 · ACC 1234 5678</div>
-              <div class="card-actions">
-                <button class="chip">转出</button>
+            <div class="acct-hero">
+              <div class="hero-label">可用余额</div>
+              <div class="hero-amt" id="accountAmt">$2,154<span class="c">.90</span></div>
+              <div class="hero-bsb" id="accountBsb">BSB 012-345 · ACC 1234 5678</div>
+              <div class="hero-actions">
+                <button class="chip primary">转出</button>
                 <button class="chip">转入</button>
                 <button class="chip">详情</button>
               </div>
             </div>
 
-            <h3 class="section-title">交易</h3>
-            <div class="tx"><span class="tx-icon">☕</span><span class="tx-text"><span class="tx-name">Industry Beans</span><span class="tx-time">今天 · 9:12</span></span><span class="tx-amt tx-out">-$ 6.50</span></div>
-            <div class="tx"><span class="tx-icon">🛒</span><span class="tx-text"><span class="tx-name">Coles Carlton</span><span class="tx-time">昨天 · 18:42</span></span><span class="tx-amt tx-out">-$ 42.18</span></div>
-            <div class="tx"><span class="tx-icon">⛽</span><span class="tx-text"><span class="tx-name">7-Eleven Fuel</span><span class="tx-time">5 月 16</span></span><span class="tx-amt tx-out">-$ 58.30</span></div>
-            <div class="tx"><span class="tx-icon">💼</span><span class="tx-text"><span class="tx-name">Salary · Acme Pty</span><span class="tx-time">5 月 15</span></span><span class="tx-amt tx-in">+$ 3,250.00</span></div>
-            <div class="tx"><span class="tx-icon">🍣</span><span class="tx-text"><span class="tx-name">Sushi Hub QV</span><span class="tx-time">5 月 14</span></span><span class="tx-amt tx-out">-$ 18.90</span></div>
-            <div class="tx"><span class="tx-icon">🚇</span><span class="tx-text"><span class="tx-name">PTV Myki</span><span class="tx-time">5 月 14</span></span><span class="tx-amt tx-out">-$ 10.00</span></div>
-            <div class="tx"><span class="tx-icon">📺</span><span class="tx-text"><span class="tx-name">Netflix</span><span class="tx-time">5 月 12</span></span><span class="tx-amt tx-out">-$ 16.99</span></div>
+            <div class="section-title">交易</div>
+            <div class="tx"><span class="tx-ico">☕</span><span class="tx-text"><span class="tx-name">Industry Beans</span><span class="tx-time">今天 · 9:12</span></span><span class="tx-amt tx-out">-$6.50</span></div>
+            <div class="tx"><span class="tx-ico">🛒</span><span class="tx-text"><span class="tx-name">Coles Carlton</span><span class="tx-time">昨天 · 18:42</span></span><span class="tx-amt tx-out">-$42.18</span></div>
+            <div class="tx"><span class="tx-ico">⛽</span><span class="tx-text"><span class="tx-name">7-Eleven Fuel</span><span class="tx-time">5 月 16</span></span><span class="tx-amt tx-out">-$58.30</span></div>
+            <div class="tx"><span class="tx-ico">💼</span><span class="tx-text"><span class="tx-name">Salary · Acme Pty</span><span class="tx-time">5 月 15</span></span><span class="tx-amt tx-in">+$3,250.00</span></div>
+            <div class="tx"><span class="tx-ico">🍣</span><span class="tx-text"><span class="tx-name">Sushi Hub QV</span><span class="tx-time">5 月 14</span></span><span class="tx-amt tx-out">-$18.90</span></div>
+            <div class="tx"><span class="tx-ico">🚇</span><span class="tx-text"><span class="tx-name">PTV Myki</span><span class="tx-time">5 月 14</span></span><span class="tx-amt tx-out">-$10.00</span></div>
+            <div class="tx"><span class="tx-ico">📺</span><span class="tx-text"><span class="tx-name">Netflix</span><span class="tx-time">5 月 12</span></span><span class="tx-amt tx-out">-$16.99</span></div>
+            <div class="tx"><span class="tx-ico">🏋️</span><span class="tx-text"><span class="tx-name">Anytime Fitness</span><span class="tx-time">5 月 10</span></span><span class="tx-amt tx-out">-$26.00</span></div>
 
             <div class="footer-space"></div>
           </div>
         </section>
 
-        <!-- ===== Tab bar (hidden on login & account) ===== -->
-        <nav class="tab-bar" id="tabBar">
+        <!-- ===== Tab bar ===== -->
+        <nav class="tab-bar hidden" id="tabBar">
           <button class="tab is-active" data-target="viewHome">
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3z"/></svg>
             <span>首页</span>
           </button>
           <button class="tab" data-target="viewPay">
-            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 6h18v2H3zm0 4h18v8H3z"/></svg>
-            <span>Pay</span>
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 7h18v2H3zm0 4h18v8H3z"/></svg>
+            <span>Money</span>
           </button>
           <button class="tab" data-target="viewSave">
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9h-9z"/></svg>
@@ -339,15 +961,147 @@
           </button>
         </nav>
 
-        <!-- ===== Home indicator ===== -->
         <div class="home-indicator" aria-hidden="true"></div>
       </div>
     </div>
   </div>
 
-  <p class="caption">输入任意 6 位 PIN 或点 Face ID 登录 → 切换底部 tab → 点账户可查看详情</p>
+  <p class="caption">
+    <b>任意输入 6 位数字</b> 或点 Face ID 即可登录,然后用底部 tab 切换页面,点首页账户卡片可查看交易详情。
+  </p>
 </main>
 
-<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function tickClock() {
+    var el = document.getElementById('statusTime');
+    if (!el) return;
+    var d = new Date();
+    var hh = d.getHours();
+    var mm = d.getMinutes();
+    el.textContent = hh + ':' + (mm < 10 ? '0' + mm : mm);
+  }
+  tickClock();
+  setInterval(tickClock, 30000);
+
+  var views = document.querySelectorAll('.view');
+  var tabBar = document.getElementById('tabBar');
+  var tabs = document.querySelectorAll('.tab');
+
+  function showView(id, opts) {
+    opts = opts || {};
+    views.forEach(function (v) { v.classList.toggle('is-active', v.id === id); });
+
+    var mainViews = ['viewHome', 'viewPay', 'viewSave', 'viewGrow', 'viewProfile'];
+    var isMain = mainViews.indexOf(id) >= 0;
+    var loginish = id === 'viewLogin';
+    tabBar.classList.toggle('hidden', loginish || !!opts.hideTab);
+
+    if (isMain) {
+      tabs.forEach(function (t) {
+        t.classList.toggle('is-active', t.getAttribute('data-target') === id);
+      });
+    }
+
+    var v = document.getElementById(id);
+    if (v) {
+      var scroll = v.querySelector('.page-scroll');
+      if (scroll) scroll.scrollTop = 0;
+    }
+  }
+
+  var pin = '';
+  var dots = document.querySelectorAll('#pinDots .dot');
+  var keypad = document.getElementById('keypad');
+  var pinDel = document.getElementById('pinDel');
+  var faceId = document.getElementById('faceId');
+
+  function renderDots() {
+    dots.forEach(function (d, i) {
+      d.classList.toggle('filled', i < pin.length);
+      d.classList.remove('error');
+    });
+  }
+
+  function onLogin() {
+    showView('viewHome');
+    pin = '';
+    renderDots();
+  }
+
+  if (keypad) {
+    keypad.addEventListener('click', function (e) {
+      var btn = e.target.closest('.key');
+      if (!btn) return;
+      if (btn === pinDel) {
+        pin = pin.slice(0, -1);
+      } else if (btn === faceId) {
+        onLogin();
+        return;
+      } else {
+        var k = btn.getAttribute('data-k');
+        if (k != null && pin.length < 6) pin += k;
+      }
+      renderDots();
+      if (pin.length === 6) setTimeout(onLogin, 200);
+    });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      var target = t.getAttribute('data-target');
+      if (target) showView(target);
+    });
+  });
+
+  var accountTitleEl = document.getElementById('accountTitle');
+  var accountAmtEl   = document.getElementById('accountAmt');
+  var accountBsbEl   = document.getElementById('accountBsb');
+  document.querySelectorAll('.acct-card').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var name = row.querySelector('.acct-name');
+      var amtRaw = row.getAttribute('data-amt') || '';
+      var bsbRaw = row.getAttribute('data-bsb') || '';
+      if (accountTitleEl && name) accountTitleEl.textContent = name.textContent;
+      if (accountAmtEl) {
+        var m = amtRaw.match(/^(\$[\d,]+)(\.\d+)?$/);
+        accountAmtEl.innerHTML = m
+          ? m[1] + '<span class="c">' + (m[2] || '') + '</span>'
+          : amtRaw;
+      }
+      if (accountBsbEl) accountBsbEl.textContent = bsbRaw;
+      showView('viewAccount', { hideTab: true });
+    });
+  });
+
+  var backFromAccount = document.getElementById('backFromAccount');
+  if (backFromAccount) {
+    backFromAccount.addEventListener('click', function () { showView('viewHome'); });
+  }
+
+  var logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () { showView('viewLogin'); });
+  }
+
+  // Keyboard support for desktop testing
+  document.addEventListener('keydown', function (e) {
+    var loginActive = document.getElementById('viewLogin').classList.contains('is-active');
+    if (!loginActive) return;
+    if (e.key >= '0' && e.key <= '9' && pin.length < 6) {
+      pin += e.key;
+      renderDots();
+      if (pin.length === 6) setTimeout(onLogin, 200);
+    } else if (e.key === 'Backspace') {
+      pin = pin.slice(0, -1);
+      renderDots();
+    } else if (e.key === 'Enter') {
+      onLogin();
+    }
+  });
+})();
+</script>
 </body>
 </html>

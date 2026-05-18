@@ -1,47 +1,48 @@
 # ANZ Plus · iPhone UI 空壳
 
-只是一个用 HTML/CSS/JS 模拟 ANZ Plus iPhone 应用的视觉空壳,**没有任何真实银行逻辑**,仅供 UI 预览 / 截图 / 后续切到原生 SwiftUI 时的样式参考。
+单文件、零依赖的 ANZ Plus iPhone 应用 UI 模拟。仅作视觉/交互预览,不含真实银行逻辑。
 
-## 预览
+## 一键打开测试
 
-直接双击 `index.html` 在浏览器打开即可。也可以起个本地静态服务器:
+只需 **双击 `index.html`**,默认浏览器即可打开。无需服务器、无需安装任何东西。
+
+如果你在终端里:
 
 ```
-cd ANZPlusApp
-python3 -m http.server 8080
-# 然后访问 http://localhost:8080
+# macOS
+open ANZPlusApp/index.html
+
+# Linux
+xdg-open ANZPlusApp/index.html
+
+# Windows
+start ANZPlusApp\index.html
 ```
 
-## 包含的页面
+## 怎么用
 
-- **登录页**:6 位 PIN 键盘 + Face ID 假按钮(任意输入 6 位即跳到首页)
-- **首页 (Home)**:总余额卡片、Spend/Save/目标账户列表、最近交易
-- **Pay**:搜索框 + 4 个快捷入口 + 联系人列表
-- **Save**:存钱目标卡片 + 进度条 + 新建目标按钮
-- **Grow**:本月开支柱状图 + 类别分布
-- **我的 (Profile)**:头像 + 设置项 + 退出登录
-- **账户详情**:点首页任一账户进入,显示交易流水
+1. 进来先是 **PIN 登录页**:任意按 6 位数字,或点 Face ID 图标,或直接按键盘 0–9 输入,Enter 登录
+2. 登录后进入 **首页**:看到 Money in / Money out 卡片、Round-ups、账户列表、最近交易
+3. 底部 5 个 tab 切换:**首页 / Money / Save / Grow / 我的**
+4. 首页点任一**账户卡**进入账户详情(交易流水)
+5. **我的** → 退出登录,回到 PIN 页
 
-底部 5 个 tab(首页 / Pay / Save / Grow / 我的)可切换。
+## 设计参考
 
-## 设计要点
+- 深色主题 `#0a0a0a` + ANZ Plus 标志性柠檬绿 `#dafe51`
+- iPhone 15/16 外观:Dynamic Island、圆角金属边框、实体侧键、Home Indicator
+- 状态栏时钟实时刷新
 
-- 配色仿 ANZ Plus 实机:深色背景 `#0b0e12` + 柠檬绿主色 `#c8ff00`
-- iPhone 外框 + 刘海 + Home Indicator,纯 CSS 绘制
-- 状态栏时间实时显示
-- 无任何外部依赖,纯静态 3 个文件
-
-## 文件
+## 文件结构
 
 ```
 ANZPlusApp/
-├── index.html    # 所有视图都在一个文件里,用 .is-active 控制显隐
-├── styles.css    # 全部样式
-└── app.js        # 视图切换 + PIN 键盘 + 账户跳转
+├── index.html    # 所有 HTML/CSS/JS 都在这一个文件里
+└── README.md     # 你正在读
 ```
 
-## 不包含
+## 已知"不一模一样"
 
-- 真实登录 / API 调用
-- 真实数据持久化
-- 原生 SwiftUI 工程(如需,可参考根目录 `WatchApp/` 的结构后续补)
+- ANZ Plus 真实 logo 字体未授权,这里用通用衬线模拟
+- 真机的某些细节(如卡片堆叠动画、可拖动账户排序、活体 Face ID 动效)未实现
+- 不含任何后端交互
