@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>庭审转写比对</title>
+<link rel="stylesheet" href="/viewer.css">
+<script src="https://unpkg.com/wavesurfer.js@7"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">⚖️</span>
+    <h1>庭审转写比对</h1>
+  </div>
+  <div class="topmeta">
+    <span id="durationLabel">--:--:--</span>
+    <span class="dot"></span>
+    <span id="engineLabel">—</span>
+    <span class="dot"></span>
+    <span id="reviewLabel">—</span>
+  </div>
+</header>
+
+<section class="player">
+  <div id="waveform"></div>
+  <div class="controls">
+    <button id="playPause" class="primary">▶</button>
+    <button id="back5" title="后退 5 秒">⏪ 5s</button>
+    <button id="fwd5" title="前进 5 秒">5s ⏩</button>
+    <span id="timeLabel" class="mono">00:00 / 00:00</span>
+    <label class="ctl">速度
+      <select id="speed">
+        <option value="0.5">0.5x</option>
+        <option value="0.75">0.75x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+      </select>
+    </label>
+    <label class="ctl"><input type="checkbox" id="toggleLowConf" checked> 低置信度</label>
+    <label class="ctl"><input type="checkbox" id="toggleDiff" checked> 引擎分歧</label>
+    <label class="ctl"><input type="checkbox" id="toggleAutoscroll" checked> 跟随滚动</label>
+  </div>
+</section>
+
+<div class="main">
+  <aside class="sidebar">
+    <h2>说话人</h2>
+    <div id="speakerList" class="speaker-list"></div>
+    <h2>跳转</h2>
+    <div id="reviewJump" class="jumplist"></div>
+  </aside>
+
+  <main id="transcript" class="transcript"></main>
+</div>
+
+<div id="popover" class="popover hidden" role="dialog">
+  <header>
+    <span class="pop-title">单词候选</span>
+    <button class="close" data-target="popover">×</button>
+  </header>
+  <div class="pop-current"></div>
+  <div class="pop-alts"></div>
+  <footer>
+    <button class="pop-play">⏵ 回听此词</button>
+  </footer>
+</div>
+
+<div id="translatePanel" class="translate-panel hidden">
+  <header>
+    <span class="tp-title">翻译比对</span>
+    <span class="tp-range mono"></span>
+    <button class="close" data-target="translatePanel">×</button>
+  </header>
+  <div class="tp-original">
+    <h3>英文原文</h3>
+    <div class="tp-en"></div>
+  </div>
+  <div class="tp-grid">
+    <article class="tcard" data-engine="human">
+      <h3>🎙️ 法庭翻译员</h3>
+      <div class="tcard-body"></div>
+    </article>
+    <article class="tcard" data-engine="claude">
+      <h3>🟠 Claude</h3>
+      <div class="tcard-body loading">翻译中…</div>
+    </article>
+    <article class="tcard" data-engine="gpt">
+      <h3>🟢 GPT</h3>
+      <div class="tcard-body loading">翻译中…</div>
+    </article>
+    <article class="tcard" data-engine="gemini">
+      <h3>🔵 Gemini</h3>
+      <div class="tcard-body loading">翻译中…</div>
+    </article>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/viewer.js"></script>
+</body>
+</html>
