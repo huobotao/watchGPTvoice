@@ -1,0 +1,3 @@
+Pillow>=10.0
+pillow-heif>=0.16   # HEIC/HEIF 支持，iPhone 默认格式
+anthropic>=0.40
