@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · 庭审转写</title>
+<link rel="stylesheet" href="/viewer.css">
+</head>
+<body class="login-body">
+<div class="login-card">
+  <div class="logo-big">⚖️</div>
+  <h1>庭审转写比对</h1>
+  <p>输入访问口令</p>
+  <input type="password" id="pw" autocomplete="current-password" autofocus>
+  <button id="loginBtn" class="primary big">进入</button>
+  <div id="loginErr" class="login-err hidden"></div>
+</div>
+<script>
+  const pw = document.getElementById("pw");
+  const btn = document.getElementById("loginBtn");
+  const err = document.getElementById("loginErr");
+  async function go() {
+    err.classList.add("hidden");
+    btn.disabled = true;
+    btn.textContent = "验证中…";
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({password: pw.value}),
+      });
+      if (r.ok) { location.href = "/"; }
+      else { err.textContent = "口令错误"; err.classList.remove("hidden"); }
+    } catch (e) {
+      err.textContent = "连接失败：" + e.message;
+      err.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "进入";
+    }
+  }
+  btn.onclick = go;
+  pw.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+</script>
+</body>
+</html>

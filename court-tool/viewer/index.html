@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>庭审转写比对</title>
 <link rel="stylesheet" href="/viewer.css">
 <script src="https://unpkg.com/wavesurfer.js@7"></script>
@@ -20,44 +21,109 @@
     <span id="engineLabel">—</span>
     <span class="dot"></span>
     <span id="reviewLabel">—</span>
+    <button id="newJobBtn" class="link-btn">＋ 新任务</button>
   </div>
 </header>
 
-<section class="player">
-  <div id="waveform"></div>
-  <div class="controls">
-    <button id="playPause" class="primary">▶</button>
-    <button id="back5" title="后退 5 秒">⏪ 5s</button>
-    <button id="fwd5" title="前进 5 秒">5s ⏩</button>
-    <span id="timeLabel" class="mono">00:00 / 00:00</span>
-    <label class="ctl">速度
-      <select id="speed">
-        <option value="0.5">0.5x</option>
-        <option value="0.75">0.75x</option>
-        <option value="1" selected>1x</option>
-        <option value="1.25">1.25x</option>
-        <option value="1.5">1.5x</option>
-        <option value="2">2x</option>
-      </select>
+<section id="uploadScreen" class="upload-screen">
+  <div class="upload-card">
+    <h2>上传庭审录音</h2>
+    <p class="hint">支持 mp3 / m4a / wav / mp4 / aac。建议 < 100MB；超过先切片。</p>
+
+    <label class="file-drop" id="fileDrop">
+      <input type="file" id="fileInput" accept="audio/*,video/*">
+      <div class="drop-inner">
+        <div class="drop-icon">📁</div>
+        <div class="drop-text">点击选择文件 / 拖拽到这里</div>
+        <div id="fileName" class="file-name hidden"></div>
+      </div>
     </label>
-    <label class="ctl"><input type="checkbox" id="toggleLowConf" checked> 低置信度</label>
-    <label class="ctl"><input type="checkbox" id="toggleDiff" checked> 引擎分歧</label>
-    <label class="ctl"><input type="checkbox" id="toggleAutoscroll" checked> 跟随滚动</label>
+
+    <h3>选择转写引擎（勾选多个做交叉对照）</h3>
+    <div class="engine-grid" id="engineGrid">
+      <label class="engine-row" data-engine="deepgram">
+        <input type="checkbox" value="deepgram" checked>
+        <div class="engine-info">
+          <div class="engine-name">Deepgram Nova-3 <span class="badge primary">主</span></div>
+          <div class="engine-desc">原生中英混说 + diarization + 词置信度</div>
+        </div>
+      </label>
+      <label class="engine-row" data-engine="assemblyai">
+        <input type="checkbox" value="assemblyai" checked>
+        <div class="engine-info">
+          <div class="engine-name">AssemblyAI Universal</div>
+          <div class="engine-desc">不同模型族，cross-check 信号最干净</div>
+        </div>
+      </label>
+      <label class="engine-row" data-engine="groq">
+        <input type="checkbox" value="groq" checked>
+        <div class="engine-info">
+          <div class="engine-name">Groq Whisper-large-v3 <span class="badge fast">⚡ 5s</span></div>
+          <div class="engine-desc">最快最便宜，但无 diarization</div>
+        </div>
+      </label>
+      <label class="engine-row" data-engine="replicate">
+        <input type="checkbox" value="replicate">
+        <div class="engine-info">
+          <div class="engine-name">Replicate WhisperX</div>
+          <div class="engine-desc">托管的 WhisperX，词级对齐质量高</div>
+        </div>
+      </label>
+    </div>
+
+    <button id="startBtn" class="primary big">开始转写</button>
+
+    <div id="recentJobs" class="recent-jobs"></div>
+
+    <div id="healthInfo" class="health"></div>
   </div>
 </section>
 
-<div class="main">
-  <aside class="sidebar">
-    <h2>说话人</h2>
-    <div id="speakerList" class="speaker-list"></div>
-    <h2>跳转</h2>
-    <div id="reviewJump" class="jumplist"></div>
-  </aside>
+<section id="progressScreen" class="progress-screen hidden">
+  <div class="upload-card">
+    <h2 id="progressTitle">转写中…</h2>
+    <div id="engineProgress" class="engine-progress"></div>
+    <div id="jobLog" class="job-log"></div>
+    <button id="cancelBtn" class="link-btn">取消并返回</button>
+  </div>
+</section>
 
-  <main id="transcript" class="transcript"></main>
-</div>
+<section id="viewerScreen" class="viewer-screen hidden">
+  <section class="player">
+    <div id="waveform"></div>
+    <div class="controls">
+      <button id="playPause" class="primary">▶</button>
+      <button id="back5">⏪ 5s</button>
+      <button id="fwd5">5s ⏩</button>
+      <span id="timeLabel" class="mono">00:00 / 00:00</span>
+      <label class="ctl">速度
+        <select id="speed">
+          <option value="0.5">0.5x</option>
+          <option value="0.75">0.75x</option>
+          <option value="1" selected>1x</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2x</option>
+        </select>
+      </label>
+      <label class="ctl"><input type="checkbox" id="toggleLowConf" checked> 低置信度</label>
+      <label class="ctl"><input type="checkbox" id="toggleDiff" checked> 引擎分歧</label>
+      <label class="ctl"><input type="checkbox" id="toggleAutoscroll" checked> 跟随</label>
+    </div>
+  </section>
 
-<div id="popover" class="popover hidden" role="dialog">
+  <div class="main">
+    <aside class="sidebar">
+      <h2>说话人</h2>
+      <div id="speakerList" class="speaker-list"></div>
+      <h2>跳转到待核</h2>
+      <div id="reviewJump" class="jumplist"></div>
+    </aside>
+    <main id="transcript" class="transcript"></main>
+  </div>
+</section>
+
+<div id="popover" class="popover hidden">
   <header>
     <span class="pop-title">单词候选</span>
     <button class="close" data-target="popover">×</button>
@@ -65,7 +131,7 @@
   <div class="pop-current"></div>
   <div class="pop-alts"></div>
   <footer>
-    <button class="pop-play">⏵ 回听此词</button>
+    <button class="pop-play">⏵ 回听</button>
   </footer>
 </div>
 
