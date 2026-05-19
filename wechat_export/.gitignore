@@ -1,0 +1,16 @@
+# Secrets — NEVER commit
+.wechat_key
+*.key
+
+# Decrypted databases — these are plaintext copies of your private chats
+*.plain.db
+.discovered_accounts.json
+
+# Exported data
+out/
+restored/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
