@@ -1,70 +1,94 @@
 # 日出日落 · iOS 原生壳
 
-WKWebView 包一层网页，跑在 iPhone 上变成真正的 App。最低 iOS 15，建议 iOS 17+（WebView 定位最稳）。
+Xcode 项目已经做好了。**不用自己新建项目**，直接打开 `.xcodeproj` 就能 Run。
 
-## 在 Mac 上跑起来（10 分钟）
+## Mac 上要做的事（首次约 5 分钟）
 
-1. 打开 Xcode → `File` → `New` → `Project…` → 选 `iOS` 下的 `App` → `Next`
-   - Product Name：`SunriseSunset`
-   - Team：选你自己的 Apple ID（没有的话点 Add Account 用免费的个人开发者账号登录）
-   - Interface：**SwiftUI**
-   - Language：**Swift**
-   - 取消勾选 "Include Tests"（可选）
-   - 点 `Next` → 选个本地文件夹保存 → `Create`
+### 0. 把仓库拉到 Mac 上
 
-2. Xcode 会自动生成 `SunriseSunsetApp.swift` 和 `ContentView.swift`。把它们删掉（左侧栏右键 `Delete` → `Move to Trash`）。
+如果还没拉过：
+```bash
+cd ~/Desktop                                            # 或别的位置
+git clone https://github.com/huobotao/watchGPTvoice.git
+cd watchGPTvoice
+```
+已经拉过的话：
+```bash
+cd /path/to/watchGPTvoice
+git pull origin main
+```
 
-3. 把这个仓库的 `iOSApp/Sources/` 文件夹下三个 `.swift` 文件拖到 Xcode 左侧栏的项目根目录里：
-   - `SunriseSunsetApp.swift`
-   - `ContentView.swift`
-   - `WebView.swift`
+### 1. 打开项目
 
-   拖进时勾选 "Copy items if needed" 和你的 target，点 `Finish`。
+```bash
+open iOSApp/SunriseSunset.xcodeproj
+```
 
-4. 加定位权限说明（**必须**，否则不弹定位窗口）：
-   - 左侧栏点项目根（最上面那个蓝色图标）
-   - 中间选 target → `Info` 标签
-   - 右边 `Custom iOS Target Properties` 列表，鼠标移上去会出来 `+`
-   - 点 `+`，Key 输入：`NSLocationWhenInUseUsageDescription`
-   - Value 输入：`需要你的位置来计算所在地的日出日落、光照与气温`
+Xcode 会自动启动，左侧栏看到三个 Swift 文件 + Assets.xcassets。
 
-5. （可选）改 App 显示名：
-   - 同样在 `Info` 里加一个 `CFBundleDisplayName`，Value：`日出日落`
+### 2. 设置签名团队（**关键**，否则装不到手机上）
 
-6. 选好顶部工具栏的目标设备：
-   - 想跑模拟器：选个 iPhone 模拟器型号，点左上角 ▶ Run
-   - 想跑真机：iPhone 用数据线连上 Mac，信任电脑；Xcode 顶部设备选你的 iPhone，▶ Run。第一次会要求你在 iPhone 上设置 → 隐私 → 描述文件 → 信任开发者证书。
+1. 左侧栏点最上面那个蓝色的 `SunriseSunset` 项目图标
+2. 中间面板顶部选 `SunriseSunset` 这个 Target
+3. 切到 **Signing & Capabilities** 标签
+4. **Team** 下拉框 → 选你的 Apple ID
+   - 没列出来？点 `Add an Account…` → 用 Apple ID 登录，回来后能选了
+   - 不需要付费 Developer Program；免费 Apple ID 就能装到自己手机上
+5. **Bundle Identifier** 如果显示红色错误（"已被占用"），把 `com.example.SunriseSunset` 改成 `com.<你随便起的名>.SunriseSunset`，比如 `com.huobotao.SunriseSunset`
 
-第一次启动会弹两次系统弹窗：定位权限（点允许），然后网页本身的定位权限（也点允许）。之后就跟网页版一模一样了，只不过没有 Safari 地址栏，全屏沉浸。
+### 3. 连手机 + 打开开发者模式
 
-## 默认行为
+1. 数据线连 iPhone 到 Mac
+2. iPhone 屏幕会问 "信任此电脑？" → 信任
+3. iPhone：设置 → 隐私与安全性 → **开发者模式** → 打开 → 重启手机
+   （iOS 16 以下叫别的名字，自动跳过这步）
 
-- App 启动后从 GitHub Pages 加载 `https://huobotao.github.io/watchGPTvoice/sunrise-sunset.html`
-- 这意味着以后改网页推到 main 分支，App 自动跑最新版，**不用重新打包**
-- 缺点：每次打开需要联网（不过反向地理编码和气温本来就要联网）
+### 4. Run
 
-## 想用 App 内置 HTML（离线可用）
+1. Xcode 顶部工具栏，设备选择器（▶ 旁边）现在能看到你的 iPhone 名字。选它。
+2. 点 **▶ Run**（或 `Cmd+R`）
+3. 第一次会编译一两分钟，然后 Xcode 自动把 App 装到手机上、自动启动
 
-1. 把 `sunrise-sunset.html` 也拖进 Xcode 项目（同样勾 Copy items + target）
-2. 编辑 `ContentView.swift`，把这一行：
+### 5. 信任开发者证书（**第一次必须，否则 App 闪退**）
+
+第一次 Run 完，手机上会出现"日出日落"图标但点开会报"开发者未受信任"。
+
+去手机：**设置 → 通用 → VPN 与设备管理 → 开发者 App** → 找到你的 Apple ID → **信任**
+
+然后回桌面点图标打开。这一步只用做一次。
+
+### 6. 允许定位
+
+App 启动后会弹两次：
+- 系统的 "允许"日出日落"使用你的位置？" → 允许
+- 一两秒后网页内自己再弹一次（WKWebView 自己的弹窗） → 允许
+
+之后就能用了，跟网页版一模一样，但是是真 App，桌面图标可以放 Dock，全屏没浏览器地址栏。
+
+## 后续
+
+- 改网页推到 main 后，**App 自动跑最新版**，不用重新装。因为它默认从 GitHub Pages 加载。
+- 免费 Apple ID 装的 App **每 7 天**会失效，要重新插线 Run 一次刷新证书。
+- 想永久驻留 + 不插线 + 上架 App Store？需要 99 美元/年的 Apple Developer Program。
+
+## 想换成内置离线 HTML
+
+1. 把仓库根目录的 `sunrise-sunset.html` 拖到 Xcode 左侧栏的 `SunriseSunset` 文件夹里（勾 Copy items + Target Membership）
+2. 打开 `ContentView.swift`，把
    ```swift
-   private static let remoteURL: URL? = URL(string: "...")
+   private static let remoteURL: URL? = URL(string: "https://...")
    ```
-   改成：
+   改成
    ```swift
    private static let remoteURL: URL? = nil
    ```
-3. 重新 Run
+3. 重新 Run。即使断网，主功能也能用（反向地理编码和气温会暂时不可用，等连网恢复）。
 
-注意：离线时反向地理编码（Nominatim）和气温（Open-Meteo）会失败，但日出日落、3D 轨迹、光照曲线都还能算。
+## 卡住了？
 
-## 装到自己手机上长期用
+报错截图发给我。常见坑：
 
-免费 Apple ID 装的 App 7 天就会失效，要重新插线 Run 一次刷新。
-要永久驻留，需要 99 美元/年的 Apple Developer Program 帐号 → Archive → 上传 TestFlight 或 App Store。
-
-## 发布到 App Store
-
-- App 图标：在项目里 `Assets.xcassets` → `AppIcon` → 拖一张 1024×1024 PNG 进去（多种尺寸 Xcode 会自动生成）
-- 隐私清单：因为用了系统定位，App Store 提交时会问数据用途，照实勾选"App 功能 - 不与你关联"
-- 由于内容本质是 WebView，App Store 审核可能会问"为什么不直接做成网站"。回答里强调：原生权限管理（定位）、离线缓存、家长控制、桌面图标
+- **"Failed to register bundle identifier"**：Bundle ID 跟别人撞了，改成独一无二的（带你自己的姓拼音之类的）
+- **"Could not launch SunriseSunset"** 在手机上：忘了信任开发者证书，看第 5 步
+- **白屏不动**：网络问题，或 GitHub Pages 没部署完。打开 Safari 试 https://huobotao.github.io/watchGPTvoice/sunrise-sunset.html 能不能开
+- **定位永远转圈**：第一次系统弹窗时点了"不允许"。设置 → 日出日落 → 位置 → 改成"使用 App 期间"
