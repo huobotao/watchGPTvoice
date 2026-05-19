@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微信记录查看器</title>
+<script>
+/* @license
+Papa Parse
+v5.4.1
+https://github.com/mholt/PapaParse
+License: MIT
+*/
+!function(e,t){"function"==typeof define&&define.amd?define([],t):"object"==typeof module&&"undefined"!=typeof exports?module.exports=t():e.Papa=t()}(this,function s(){"use strict";var f="undefined"!=typeof self?self:"undefined"!=typeof window?window:void 0!==f?f:{};var n=!f.document&&!!f.postMessage,o=f.IS_PAPA_WORKER||!1,a={},u=0,b={parse:function(e,t){var r=(t=t||{}).dynamicTyping||!1;J(r)&&(t.dynamicTypingFunction=r,r={});if(t.dynamicTyping=r,t.transform=!!J(t.transform)&&t.transform,t.worker&&b.WORKERS_SUPPORTED){var i=function(){if(!b.WORKERS_SUPPORTED)return!1;var e=(r=f.URL||f.webkitURL||null,i=s.toString(),b.BLOB_URL||(b.BLOB_URL=r.createObjectURL(new Blob(["var global = (function() { if (typeof self !== 'undefined') { return self; } if (typeof window !== 'undefined') { return window; } if (typeof global !== 'undefined') { return global; } return {}; })(); global.IS_PAPA_WORKER=true; ","(",i,")();"],{type:"text/javascript"})))),t=new f.Worker(e);var r,i;return t.onmessage=_,t.id=u++,a[t.id]=t}();return i.userStep=t.step,i.userChunk=t.chunk,i.userComplete=t.complete,i.userError=t.error,t.step=J(t.step),t.chunk=J(t.chunk),t.complete=J(t.complete),t.error=J(t.error),delete t.worker,void i.postMessage({input:e,config:t,workerId:i.id})}var n=null;b.NODE_STREAM_INPUT,"string"==typeof e?(e=function(e){if(65279===e.charCodeAt(0))return e.slice(1);return e}(e),n=t.download?new l(t):new p(t)):!0===e.readable&&J(e.read)&&J(e.on)?n=new g(t):(f.File&&e instanceof File||e instanceof Object)&&(n=new c(t));return n.stream(e)},unparse:function(e,t){var n=!1,_=!0,m=",",y="\r\n",s='"',a=s+s,r=!1,i=null,o=!1;!function(){if("object"!=typeof t)return;"string"!=typeof t.delimiter||b.BAD_DELIMITERS.filter(function(e){return-1!==t.delimiter.indexOf(e)}).length||(m=t.delimiter);("boolean"==typeof t.quotes||"function"==typeof t.quotes||Array.isArray(t.quotes))&&(n=t.quotes);"boolean"!=typeof t.skipEmptyLines&&"string"!=typeof t.skipEmptyLines||(r=t.skipEmptyLines);"string"==typeof t.newline&&(y=t.newline);"string"==typeof t.quoteChar&&(s=t.quoteChar);"boolean"==typeof t.header&&(_=t.header);if(Array.isArray(t.columns)){if(0===t.columns.length)throw new Error("Option columns is empty");i=t.columns}void 0!==t.escapeChar&&(a=t.escapeChar+s);("boolean"==typeof t.escapeFormulae||t.escapeFormulae instanceof RegExp)&&(o=t.escapeFormulae instanceof RegExp?t.escapeFormulae:/^[=+\-@\t\r].*$/)}();var u=new RegExp(Q(s),"g");"string"==typeof e&&(e=JSON.parse(e));if(Array.isArray(e)){if(!e.length||Array.isArray(e[0]))return h(null,e,r);if("object"==typeof e[0])return h(i||Object.keys(e[0]),e,r)}else if("object"==typeof e)return"string"==typeof e.data&&(e.data=JSON.parse(e.data)),Array.isArray(e.data)&&(e.fields||(e.fields=e.meta&&e.meta.fields||i),e.fields||(e.fields=Array.isArray(e.data[0])?e.fields:"object"==typeof e.data[0]?Object.keys(e.data[0]):[]),Array.isArray(e.data[0])||"object"==typeof e.data[0]||(e.data=[e.data])),h(e.fields||[],e.data||[],r);throw new Error("Unable to serialize unrecognized input");function h(e,t,r){var i="";"string"==typeof e&&(e=JSON.parse(e)),"string"==typeof t&&(t=JSON.parse(t));var n=Array.isArray(e)&&0<e.length,s=!Array.isArray(t[0]);if(n&&_){for(var a=0;a<e.length;a++)0<a&&(i+=m),i+=v(e[a],a);0<t.length&&(i+=y)}for(var o=0;o<t.length;o++){var u=n?e.length:t[o].length,h=!1,f=n?0===Object.keys(t[o]).length:0===t[o].length;if(r&&!n&&(h="greedy"===r?""===t[o].join("").trim():1===t[o].length&&0===t[o][0].length),"greedy"===r&&n){for(var d=[],l=0;l<u;l++){var c=s?e[l]:l;d.push(t[o][c])}h=""===d.join("").trim()}if(!h){for(var p=0;p<u;p++){0<p&&!f&&(i+=m);var g=n&&s?e[p]:p;i+=v(t[o][g],p)}o<t.length-1&&(!r||0<u&&!f)&&(i+=y)}}return i}function v(e,t){if(null==e)return"";if(e.constructor===Date)return JSON.stringify(e).slice(1,25);var r=!1;o&&"string"==typeof e&&o.test(e)&&(e="'"+e,r=!0);var i=e.toString().replace(u,a);return(r=r||!0===n||"function"==typeof n&&n(e,t)||Array.isArray(n)&&n[t]||function(e,t){for(var r=0;r<t.length;r++)if(-1<e.indexOf(t[r]))return!0;return!1}(i,b.BAD_DELIMITERS)||-1<i.indexOf(m)||" "===i.charAt(0)||" "===i.charAt(i.length-1))?s+i+s:i}}};if(b.RECORD_SEP=String.fromCharCode(30),b.UNIT_SEP=String.fromCharCode(31),b.BYTE_ORDER_MARK="\ufeff",b.BAD_DELIMITERS=["\r","\n",'"',b.BYTE_ORDER_MARK],b.WORKERS_SUPPORTED=!n&&!!f.Worker,b.NODE_STREAM_INPUT=1,b.LocalChunkSize=10485760,b.RemoteChunkSize=5242880,b.DefaultDelimiter=",",b.Parser=E,b.ParserHandle=r,b.NetworkStreamer=l,b.FileStreamer=c,b.StringStreamer=p,b.ReadableStreamStreamer=g,f.jQuery){var d=f.jQuery;d.fn.parse=function(o){var r=o.config||{},u=[];return this.each(function(e){if(!("INPUT"===d(this).prop("tagName").toUpperCase()&&"file"===d(this).attr("type").toLowerCase()&&f.FileReader)||!this.files||0===this.files.length)return!0;for(var t=0;t<this.files.length;t++)u.push({file:this.files[t],inputElem:this,instanceConfig:d.extend({},r)})}),e(),this;function e(){if(0!==u.length){var e,t,r,i,n=u[0];if(J(o.before)){var s=o.before(n.file,n.inputElem);if("object"==typeof s){if("abort"===s.action)return e="AbortError",t=n.file,r=n.inputElem,i=s.reason,void(J(o.error)&&o.error({name:e},t,r,i));if("skip"===s.action)return void h();"object"==typeof s.config&&(n.instanceConfig=d.extend(n.instanceConfig,s.config))}else if("skip"===s)return void h()}var a=n.instanceConfig.complete;n.instanceConfig.complete=function(e){J(a)&&a(e,n.file,n.inputElem),h()},b.parse(n.file,n.instanceConfig)}else J(o.complete)&&o.complete()}function h(){u.splice(0,1),e()}}}function h(e){this._handle=null,this._finished=!1,this._completed=!1,this._halted=!1,this._input=null,this._baseIndex=0,this._partialLine="",this._rowCount=0,this._start=0,this._nextChunk=null,this.isFirstChunk=!0,this._completeResults={data:[],errors:[],meta:{}},function(e){var t=w(e);t.chunkSize=parseInt(t.chunkSize),e.step||e.chunk||(t.chunkSize=null);this._handle=new r(t),(this._handle.streamer=this)._config=t}.call(this,e),this.parseChunk=function(e,t){if(this.isFirstChunk&&J(this._config.beforeFirstChunk)){var r=this._config.beforeFirstChunk(e);void 0!==r&&(e=r)}this.isFirstChunk=!1,this._halted=!1;var i=this._partialLine+e;this._partialLine="";var n=this._handle.parse(i,this._baseIndex,!this._finished);if(!this._handle.paused()&&!this._handle.aborted()){var s=n.meta.cursor;this._finished||(this._partialLine=i.substring(s-this._baseIndex),this._baseIndex=s),n&&n.data&&(this._rowCount+=n.data.length);var a=this._finished||this._config.preview&&this._rowCount>=this._config.preview;if(o)f.postMessage({results:n,workerId:b.WORKER_ID,finished:a});else if(J(this._config.chunk)&&!t){if(this._config.chunk(n,this._handle),this._handle.paused()||this._handle.aborted())return void(this._halted=!0);n=void 0,this._completeResults=void 0}return this._config.step||this._config.chunk||(this._completeResults.data=this._completeResults.data.concat(n.data),this._completeResults.errors=this._completeResults.errors.concat(n.errors),this._completeResults.meta=n.meta),this._completed||!a||!J(this._config.complete)||n&&n.meta.aborted||(this._config.complete(this._completeResults,this._input),this._completed=!0),a||n&&n.meta.paused||this._nextChunk(),n}this._halted=!0},this._sendError=function(e){J(this._config.error)?this._config.error(e):o&&this._config.error&&f.postMessage({workerId:b.WORKER_ID,error:e,finished:!1})}}function l(e){var i;(e=e||{}).chunkSize||(e.chunkSize=b.RemoteChunkSize),h.call(this,e),this._nextChunk=n?function(){this._readChunk(),this._chunkLoaded()}:function(){this._readChunk()},this.stream=function(e){this._input=e,this._nextChunk()},this._readChunk=function(){if(this._finished)this._chunkLoaded();else{if(i=new XMLHttpRequest,this._config.withCredentials&&(i.withCredentials=this._config.withCredentials),n||(i.onload=v(this._chunkLoaded,this),i.onerror=v(this._chunkError,this)),i.open(this._config.downloadRequestBody?"POST":"GET",this._input,!n),this._config.downloadRequestHeaders){var e=this._config.downloadRequestHeaders;for(var t in e)i.setRequestHeader(t,e[t])}if(this._config.chunkSize){var r=this._start+this._config.chunkSize-1;i.setRequestHeader("Range","bytes="+this._start+"-"+r)}try{i.send(this._config.downloadRequestBody)}catch(e){this._chunkError(e.message)}n&&0===i.status&&this._chunkError()}},this._chunkLoaded=function(){4===i.readyState&&(i.status<200||400<=i.status?this._chunkError():(this._start+=this._config.chunkSize?this._config.chunkSize:i.responseText.length,this._finished=!this._config.chunkSize||this._start>=function(e){var t=e.getResponseHeader("Content-Range");if(null===t)return-1;return parseInt(t.substring(t.lastIndexOf("/")+1))}(i),this.parseChunk(i.responseText)))},this._chunkError=function(e){var t=i.statusText||e;this._sendError(new Error(t))}}function c(e){var i,n;(e=e||{}).chunkSize||(e.chunkSize=b.LocalChunkSize),h.call(this,e);var s="undefined"!=typeof FileReader;this.stream=function(e){this._input=e,n=e.slice||e.webkitSlice||e.mozSlice,s?((i=new FileReader).onload=v(this._chunkLoaded,this),i.onerror=v(this._chunkError,this)):i=new FileReaderSync,this._nextChunk()},this._nextChunk=function(){this._finished||this._config.preview&&!(this._rowCount<this._config.preview)||this._readChunk()},this._readChunk=function(){var e=this._input;if(this._config.chunkSize){var t=Math.min(this._start+this._config.chunkSize,this._input.size);e=n.call(e,this._start,t)}var r=i.readAsText(e,this._config.encoding);s||this._chunkLoaded({target:{result:r}})},this._chunkLoaded=function(e){this._start+=this._config.chunkSize,this._finished=!this._config.chunkSize||this._start>=this._input.size,this.parseChunk(e.target.result)},this._chunkError=function(){this._sendError(i.error)}}function p(e){var r;h.call(this,e=e||{}),this.stream=function(e){return r=e,this._nextChunk()},this._nextChunk=function(){if(!this._finished){var e,t=this._config.chunkSize;return t?(e=r.substring(0,t),r=r.substring(t)):(e=r,r=""),this._finished=!r,this.parseChunk(e)}}}function g(e){h.call(this,e=e||{});var t=[],r=!0,i=!1;this.pause=function(){h.prototype.pause.apply(this,arguments),this._input.pause()},this.resume=function(){h.prototype.resume.apply(this,arguments),this._input.resume()},this.stream=function(e){this._input=e,this._input.on("data",this._streamData),this._input.on("end",this._streamEnd),this._input.on("error",this._streamError)},this._checkIsFinished=function(){i&&1===t.length&&(this._finished=!0)},this._nextChunk=function(){this._checkIsFinished(),t.length?this.parseChunk(t.shift()):r=!0},this._streamData=v(function(e){try{t.push("string"==typeof e?e:e.toString(this._config.encoding)),r&&(r=!1,this._checkIsFinished(),this.parseChunk(t.shift()))}catch(e){this._streamError(e)}},this),this._streamError=v(function(e){this._streamCleanUp(),this._sendError(e)},this),this._streamEnd=v(function(){this._streamCleanUp(),i=!0,this._streamData("")},this),this._streamCleanUp=v(function(){this._input.removeListener("data",this._streamData),this._input.removeListener("end",this._streamEnd),this._input.removeListener("error",this._streamError)},this)}function r(m){var a,o,u,i=Math.pow(2,53),n=-i,s=/^\s*-?(\d+\.?|\.\d+|\d+\.\d+)([eE][-+]?\d+)?\s*$/,h=/^((\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)))$/,t=this,r=0,f=0,d=!1,e=!1,l=[],c={data:[],errors:[],meta:{}};if(J(m.step)){var p=m.step;m.step=function(e){if(c=e,_())g();else{if(g(),0===c.data.length)return;r+=e.data.length,m.preview&&r>m.preview?o.abort():(c.data=c.data[0],p(c,t))}}}function y(e){return"greedy"===m.skipEmptyLines?""===e.join("").trim():1===e.length&&0===e[0].length}function g(){return c&&u&&(k("Delimiter","UndetectableDelimiter","Unable to auto-detect delimiting character; defaulted to '"+b.DefaultDelimiter+"'"),u=!1),m.skipEmptyLines&&(c.data=c.data.filter(function(e){return!y(e)})),_()&&function(){if(!c)return;function e(e,t){J(m.transformHeader)&&(e=m.transformHeader(e,t)),l.push(e)}if(Array.isArray(c.data[0])){for(var t=0;_()&&t<c.data.length;t++)c.data[t].forEach(e);c.data.splice(0,1)}else c.data.forEach(e)}(),function(){if(!c||!m.header&&!m.dynamicTyping&&!m.transform)return c;function e(e,t){var r,i=m.header?{}:[];for(r=0;r<e.length;r++){var n=r,s=e[r];m.header&&(n=r>=l.length?"__parsed_extra":l[r]),m.transform&&(s=m.transform(s,n)),s=v(n,s),"__parsed_extra"===n?(i[n]=i[n]||[],i[n].push(s)):i[n]=s}return m.header&&(r>l.length?k("FieldMismatch","TooManyFields","Too many fields: expected "+l.length+" fields but parsed "+r,f+t):r<l.length&&k("FieldMismatch","TooFewFields","Too few fields: expected "+l.length+" fields but parsed "+r,f+t)),i}var t=1;!c.data.length||Array.isArray(c.data[0])?(c.data=c.data.map(e),t=c.data.length):c.data=e(c.data,0);m.header&&c.meta&&(c.meta.fields=l);return f+=t,c}()}function _(){return m.header&&0===l.length}function v(e,t){return r=e,m.dynamicTypingFunction&&void 0===m.dynamicTyping[r]&&(m.dynamicTyping[r]=m.dynamicTypingFunction(r)),!0===(m.dynamicTyping[r]||m.dynamicTyping)?"true"===t||"TRUE"===t||"false"!==t&&"FALSE"!==t&&(function(e){if(s.test(e)){var t=parseFloat(e);if(n<t&&t<i)return!0}return!1}(t)?parseFloat(t):h.test(t)?new Date(t):""===t?null:t):t;var r}function k(e,t,r,i){var n={type:e,code:t,message:r};void 0!==i&&(n.row=i),c.errors.push(n)}this.parse=function(e,t,r){var i=m.quoteChar||'"';if(m.newline||(m.newline=function(e,t){e=e.substring(0,1048576);var r=new RegExp(Q(t)+"([^]*?)"+Q(t),"gm"),i=(e=e.replace(r,"")).split("\r"),n=e.split("\n"),s=1<n.length&&n[0].length<i[0].length;if(1===i.length||s)return"\n";for(var a=0,o=0;o<i.length;o++)"\n"===i[o][0]&&a++;return a>=i.length/2?"\r\n":"\r"}(e,i)),u=!1,m.delimiter)J(m.delimiter)&&(m.delimiter=m.delimiter(e),c.meta.delimiter=m.delimiter);else{var n=function(e,t,r,i,n){var s,a,o,u;n=n||[",","\t","|",";",b.RECORD_SEP,b.UNIT_SEP];for(var h=0;h<n.length;h++){var f=n[h],d=0,l=0,c=0;o=void 0;for(var p=new E({comments:i,delimiter:f,newline:t,preview:10}).parse(e),g=0;g<p.data.length;g++)if(r&&y(p.data[g]))c++;else{var _=p.data[g].length;l+=_,void 0!==o?0<_&&(d+=Math.abs(_-o),o=_):o=_}0<p.data.length&&(l/=p.data.length-c),(void 0===a||d<=a)&&(void 0===u||u<l)&&1.99<l&&(a=d,s=f,u=l)}return{successful:!!(m.delimiter=s),bestDelimiter:s}}(e,m.newline,m.skipEmptyLines,m.comments,m.delimitersToGuess);n.successful?m.delimiter=n.bestDelimiter:(u=!0,m.delimiter=b.DefaultDelimiter),c.meta.delimiter=m.delimiter}var s=w(m);return m.preview&&m.header&&s.preview++,a=e,o=new E(s),c=o.parse(a,t,r),g(),d?{meta:{paused:!0}}:c||{meta:{paused:!1}}},this.paused=function(){return d},this.pause=function(){d=!0,o.abort(),a=J(m.chunk)?"":a.substring(o.getCharIndex())},this.resume=function(){t.streamer._halted?(d=!1,t.streamer.parseChunk(a,!0)):setTimeout(t.resume,3)},this.aborted=function(){return e},this.abort=function(){e=!0,o.abort(),c.meta.aborted=!0,J(m.complete)&&m.complete(c),a=""}}function Q(e){return e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}function E(j){var z,M=(j=j||{}).delimiter,P=j.newline,U=j.comments,q=j.step,N=j.preview,B=j.fastMode,K=z=void 0===j.quoteChar||null===j.quoteChar?'"':j.quoteChar;if(void 0!==j.escapeChar&&(K=j.escapeChar),("string"!=typeof M||-1<b.BAD_DELIMITERS.indexOf(M))&&(M=","),U===M)throw new Error("Comment character same as delimiter");!0===U?U="#":("string"!=typeof U||-1<b.BAD_DELIMITERS.indexOf(U))&&(U=!1),"\n"!==P&&"\r"!==P&&"\r\n"!==P&&(P="\n");var W=0,H=!1;this.parse=function(i,t,r){if("string"!=typeof i)throw new Error("Input must be a string");var n=i.length,e=M.length,s=P.length,a=U.length,o=J(q),u=[],h=[],f=[],d=W=0;if(!i)return L();if(j.header&&!t){var l=i.split(P)[0].split(M),c=[],p={},g=!1;for(var _ in l){var m=l[_];J(j.transformHeader)&&(m=j.transformHeader(m,_));var y=m,v=p[m]||0;for(0<v&&(g=!0,y=m+"_"+v),p[m]=v+1;c.includes(y);)y=y+"_"+v;c.push(y)}if(g){var k=i.split(P);k[0]=c.join(M),i=k.join(P)}}if(B||!1!==B&&-1===i.indexOf(z)){for(var b=i.split(P),E=0;E<b.length;E++){if(f=b[E],W+=f.length,E!==b.length-1)W+=P.length;else if(r)return L();if(!U||f.substring(0,a)!==U){if(o){if(u=[],I(f.split(M)),F(),H)return L()}else I(f.split(M));if(N&&N<=E)return u=u.slice(0,N),L(!0)}}return L()}for(var w=i.indexOf(M,W),R=i.indexOf(P,W),C=new RegExp(Q(K)+Q(z),"g"),S=i.indexOf(z,W);;)if(i[W]!==z)if(U&&0===f.length&&i.substring(W,W+a)===U){if(-1===R)return L();W=R+s,R=i.indexOf(P,W),w=i.indexOf(M,W)}else if(-1!==w&&(w<R||-1===R))f.push(i.substring(W,w)),W=w+e,w=i.indexOf(M,W);else{if(-1===R)break;if(f.push(i.substring(W,R)),D(R+s),o&&(F(),H))return L();if(N&&u.length>=N)return L(!0)}else for(S=W,W++;;){if(-1===(S=i.indexOf(z,S+1)))return r||h.push({type:"Quotes",code:"MissingQuotes",message:"Quoted field unterminated",row:u.length,index:W}),T();if(S===n-1)return T(i.substring(W,S).replace(C,z));if(z!==K||i[S+1]!==K){if(z===K||0===S||i[S-1]!==K){-1!==w&&w<S+1&&(w=i.indexOf(M,S+1)),-1!==R&&R<S+1&&(R=i.indexOf(P,S+1));var O=A(-1===R?w:Math.min(w,R));if(i.substr(S+1+O,e)===M){f.push(i.substring(W,S).replace(C,z)),i[W=S+1+O+e]!==z&&(S=i.indexOf(z,W)),w=i.indexOf(M,W),R=i.indexOf(P,W);break}var x=A(R);if(i.substring(S+1+x,S+1+x+s)===P){if(f.push(i.substring(W,S).replace(C,z)),D(S+1+x+s),w=i.indexOf(M,W),S=i.indexOf(z,W),o&&(F(),H))return L();if(N&&u.length>=N)return L(!0);break}h.push({type:"Quotes",code:"InvalidQuotes",message:"Trailing quote on quoted field is malformed",row:u.length,index:W}),S++}}else S++}return T();function I(e){u.push(e),d=W}function A(e){var t=0;if(-1!==e){var r=i.substring(S+1,e);r&&""===r.trim()&&(t=r.length)}return t}function T(e){return r||(void 0===e&&(e=i.substring(W)),f.push(e),W=n,I(f),o&&F()),L()}function D(e){W=e,I(f),f=[],R=i.indexOf(P,W)}function L(e){return{data:u,errors:h,meta:{delimiter:M,linebreak:P,aborted:H,truncated:!!e,cursor:d+(t||0)}}}function F(){q(L()),u=[],h=[]}},this.abort=function(){H=!0},this.getCharIndex=function(){return W}}function _(e){var t=e.data,r=a[t.workerId],i=!1;if(t.error)r.userError(t.error,t.file);else if(t.results&&t.results.data){var n={abort:function(){i=!0,m(t.workerId,{data:[],errors:[],meta:{aborted:!0}})},pause:y,resume:y};if(J(r.userStep)){for(var s=0;s<t.results.data.length&&(r.userStep({data:t.results.data[s],errors:t.results.errors,meta:t.results.meta},n),!i);s++);delete t.results}else J(r.userChunk)&&(r.userChunk(t.results,n,t.file),delete t.results)}t.finished&&!i&&m(t.workerId,t.results)}function m(e,t){var r=a[e];J(r.userComplete)&&r.userComplete(t),r.terminate(),delete a[e]}function y(){throw new Error("Not implemented.")}function w(e){if("object"!=typeof e||null===e)return e;var t=Array.isArray(e)?[]:{};for(var r in e)t[r]=w(e[r]);return t}function v(e,t){return function(){e.apply(t,arguments)}}function J(e){return"function"==typeof e}return o&&(f.onmessage=function(e){var t=e.data;void 0===b.WORKER_ID&&t&&(b.WORKER_ID=t.workerId);if("string"==typeof t.input)f.postMessage({workerId:b.WORKER_ID,results:b.parse(t.input,t.config),finished:!0});else if(f.File&&t.input instanceof File||t.input instanceof Object){var r=b.parse(t.input,t.config);r&&f.postMessage({workerId:b.WORKER_ID,results:r,finished:!0})}}),(l.prototype=Object.create(h.prototype)).constructor=l,(c.prototype=Object.create(h.prototype)).constructor=c,(p.prototype=Object.create(p.prototype)).constructor=p,(g.prototype=Object.create(h.prototype)).constructor=g,b});
+</script>
+<style>
+/* WeChat-like color palette */
+:root {
+  --bg-page: #ededed;
+  --bg-sidebar: #2e2e2e;
+  --bg-sidebar-item: transparent;
+  --bg-sidebar-item-hover: #3a3a3a;
+  --bg-sidebar-item-active: #4a4a4a;
+  --bg-main: #ededed;
+  --bg-bubble-self: #95ec69;
+  --bg-bubble-other: #ffffff;
+  --bg-header: #f7f7f7;
+  --text-primary: #1a1a1a;
+  --text-secondary: #888;
+  --text-sidebar: #e6e6e6;
+  --text-sidebar-secondary: #999;
+  --border: #d9d9d9;
+  --accent: #07c160;
+  --modal-bg: rgba(0,0,0,0.55);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+               "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+.hidden { display: none !important; }
+
+.screen { height: 100vh; width: 100vw; }
+
+/* ===== Loader screen ===== */
+#loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a3a2a 0%, #2e2e2e 100%);
+}
+.loader-card {
+  background: #fff;
+  padding: 40px 56px;
+  border-radius: 12px;
+  max-width: 560px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+.loader-card h1 { margin: 0 0 8px; font-size: 24px; font-weight: 600; }
+.loader-card .subtitle { color: var(--text-secondary); margin: 0 0 28px; font-size: 13px; }
+.filezone {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filezone:hover, .filezone.drag-over {
+  border-color: var(--accent);
+  background: #f0fdf4;
+}
+.filezone-icon { font-size: 32px; margin-bottom: 12px; }
+.filezone-text { line-height: 1.7; color: #555; }
+.filezone code {
+  background: #f3f3f3;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+.loader-status {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: #f0fdf4;
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  white-space: pre-line;
+}
+.loader-status.error {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+  color: #991b1b;
+}
+.help { margin-top: 24px; font-size: 12px; color: var(--text-secondary); }
+.help summary { cursor: pointer; padding: 4px 0; }
+.help ul { margin: 8px 0 0; padding-left: 20px; }
+.help li { margin: 3px 0; }
+
+/* ===== Drop overlay ===== */
+#drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 193, 96, 0.15);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.drop-message {
+  background: #fff;
+  padding: 40px 60px;
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.drop-icon {
+  font-size: 48px;
+  font-weight: 300;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* ===== App layout ===== */
+#app {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Sidebar */
+#sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--bg-sidebar);
+  color: var(--text-sidebar);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1a1a1a;
+}
+.sidebar-header {
+  padding: 12px;
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #1a1a1a;
+}
+.sidebar-header input {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+.sidebar-header input::placeholder { color: #777; }
+.sidebar-header button {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.sidebar-header button:hover { background: #1a1a1a; }
+#conv-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.conv-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #252525;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  background: var(--bg-sidebar-item);
+}
+.conv-item:hover { background: var(--bg-sidebar-item-hover); }
+.conv-item.active { background: var(--bg-sidebar-item-active); }
+.conv-avatar {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  flex-shrink: 0;
+  font-size: 15px;
+}
+.conv-avatar.group { background: #b06bd9; }
+.conv-meta { flex: 1; min-width: 0; }
+.conv-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-sidebar);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.conv-name .conv-time {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-sidebar-secondary);
+  flex-shrink: 0;
+}
+.conv-preview {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-sidebar-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.conv-count {
+  background: #555;
+  color: #fff;
+  border-radius: 9px;
+  padding: 0 6px;
+  font-size: 10px;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+.sidebar-footer {
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--text-sidebar-secondary);
+  border-top: 1px solid #1a1a1a;
+}
+
+/* Main */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-main);
+  min-width: 0;
+}
+#main-header {
+  height: 56px;
+  padding: 0 20px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#current-session-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+#current-session-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+#msg-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#main-footer {
+  height: 28px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  background: var(--bg-header);
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+/* Message bubbles */
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 4px;
+  max-width: 80%;
+}
+.msg-row.self { align-self: flex-end; flex-direction: row-reverse; }
+.msg-avatar {
+  width: 36px; height: 36px;
+  border-radius: 5px;
+  background: #b0b0b0;
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.msg-row.self .msg-avatar { background: var(--accent); }
+.msg-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.msg-sender {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+  padding: 0 4px;
+}
+.msg-row.self .msg-sender { text-align: right; }
+.msg-bubble {
+  background: var(--bg-bubble-other);
+  padding: 9px 13px;
+  border-radius: 6px;
+  position: relative;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  max-width: 480px;
+}
+.msg-row.self .msg-bubble {
+  background: var(--bg-bubble-self);
+}
+.msg-bubble.type-sysmsg, .msg-bubble.type-system {
+  background: rgba(0,0,0,0.06);
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  align-self: center;
+  box-shadow: none;
+  max-width: 70%;
+}
+.msg-bubble.type-image::before,
+.msg-bubble.type-video::before,
+.msg-bubble.type-voice::before,
+.msg-bubble.type-file::before,
+.msg-bubble.type-emoji::before,
+.msg-bubble.type-location::before,
+.msg-bubble.type-appmsg::before,
+.msg-bubble.type-link::before,
+.msg-bubble.type-voip::before,
+.msg-bubble.type-unknown::before {
+  content: attr(data-type-label);
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(0,0,0,0.06);
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.msg-time-divider {
+  align-self: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(0,0,0,0.08);
+  padding: 2px 10px;
+  border-radius: 10px;
+  margin: 16px 0 8px;
+}
+.msg-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 80px;
+  font-size: 13px;
+}
+
+/* Search highlight */
+.search-hl {
+  background: #fef08a;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-card {
+  background: #fff;
+  border-radius: 10px;
+  width: 720px;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h2 { margin: 0; font-size: 16px; }
+.modal-header button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+#stats-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: #f8f8f8;
+  padding: 14px;
+  border-radius: 8px;
+}
+.stat-card .label { font-size: 11px; color: var(--text-secondary); }
+.stat-card .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+.stats-section { margin-top: 20px; }
+.stats-section h3 { font-size: 13px; margin: 0 0 10px; color: #555; }
+.stats-list { font-size: 12px; }
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+.stats-bar-label { width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stats-bar-fill {
+  background: var(--accent);
+  height: 14px;
+  border-radius: 2px;
+  min-width: 1px;
+}
+.stats-bar-num { color: var(--text-secondary); font-size: 11px; width: 60px; text-align: right; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+#sidebar ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+
+</style>
+</head>
+<body>
+
+<div id="drop-overlay" class="hidden">
+  <div class="drop-message">
+    <div class="drop-icon">+</div>
+    <div>拖入 CSV / JSONL 文件</div>
+  </div>
+</div>
+
+<!-- 初始空态:加载文件区 -->
+<div id="loader" class="screen">
+  <div class="loader-card">
+    <h1>微信记录查看器</h1>
+    <p class="subtitle">本地浏览器内运行 · 数据不出本机 · 无后端</p>
+    <div id="filezone" class="filezone">
+      <div class="filezone-icon">📂</div>
+      <div class="filezone-text">
+        把 <code>all_messages.csv</code> / <code>raw_messages.csv</code> / <code>*.jsonl</code><br>
+        拖到这里，或<label for="fileinput" class="link">点击选择文件</label>
+      </div>
+      <input id="fileinput" type="file" multiple accept=".csv,.jsonl,.json,.txt" hidden>
+    </div>
+    <div id="loader-status" class="loader-status hidden"></div>
+    <details class="help">
+      <summary>支持的列名（自动识别）</summary>
+      <ul>
+        <li><strong>时间</strong>：CreateTime / msgCreateTime / timestamp / time / date</li>
+        <li><strong>内容</strong>：Message / msgContent / content / msg / text</li>
+        <li><strong>方向</strong>：MesDes / mesDes / is_self / direction（0=自己发）</li>
+        <li><strong>会话</strong>：Talker / ChatUsrName / session / chat_id / room</li>
+        <li><strong>发送者</strong>：Sender / FromUser / sender_name</li>
+        <li><strong>类型</strong>：Type / mesType / msg_type</li>
+      </ul>
+    </details>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="app" class="screen hidden">
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <input id="search" type="search" placeholder="🔍 搜索会话 / 消息内容">
+      <button id="btn-stats" title="统计面板">📊</button>
+      <button id="btn-reload" title="重新加载">🔄</button>
+    </div>
+    <div id="conv-list"></div>
+    <div class="sidebar-footer">
+      <span id="msg-count">—</span>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header id="main-header">
+      <div id="current-session-name">选择左侧会话</div>
+      <div id="current-session-meta"></div>
+    </header>
+    <div id="msg-stream"></div>
+    <footer id="main-footer">
+      <small id="msg-stream-status">—</small>
+    </footer>
+  </main>
+</div>
+
+<!-- 统计弹层 -->
+<div id="stats-modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>统计</h2>
+      <button id="stats-close">✕</button>
+    </div>
+    <div id="stats-body"></div>
+  </div>
+</div>
+
+<script>
+// ===== State =====
+const STATE = {
+  messages: [],         // all loaded messages, normalized
+  conversations: [],    // [{id, name, lastTs, count, preview, isGroup}]
+  currentConv: null,    // session id
+  searchTerm: "",
+  filteredConvs: null,  // when search active
+};
+
+// ===== Column name aliases (case-insensitive) =====
+const COLS = {
+  timestamp: ["msgcreatetime", "createtime", "timestamp", "time", "date", "ts", "msg_time"],
+  content:   ["msgcontent", "message", "content", "msg", "text", "body"],
+  direction: ["mesdes", "is_self", "direction", "from_me", "fromself"],
+  session:   ["talker", "chatusrname", "session", "chat", "chat_id", "room", "session_id", "username"],
+  sender:    ["sender", "fromuser", "sender_name", "speaker", "from"],
+  type:      ["mestype", "type", "msg_type", "messagetype"],
+  msgid:     ["mesid", "mes_id", "msg_id", "id", "rowid", "mesvolume", "mes_local_id", "meslocalid"],
+};
+
+const TYPE_LABEL = {
+  text: "",
+  image: "🖼 图片",
+  voice: "🎙 语音",
+  video: "🎥 视频",
+  emoji: "😀 表情",
+  location: "📍 位置",
+  file: "📎 文件",
+  link: "🔗 链接",
+  appmsg: "📦 应用消息",
+  voip: "📞 通话",
+  card: "👤 名片",
+  sysmsg: "",
+  unknown: "❓",
+};
+
+// WeChat message type ints
+const TYPE_MAP = {
+  1: "text", 3: "image", 34: "voice", 42: "card", 43: "video",
+  47: "emoji", 48: "location", 49: "appmsg", 50: "voip", 62: "video",
+  10000: "sysmsg", 10002: "sysmsg",
+};
+
+// ===== Helpers =====
+function lc(s) { return (s || "").toString().toLowerCase().trim(); }
+
+function findColumn(headers, aliases) {
+  const lc_headers = headers.map(lc);
+  for (const alias of aliases) {
+    const idx = lc_headers.indexOf(alias);
+    if (idx >= 0) return headers[idx];
+  }
+  // Fuzzy: header contains alias
+  for (const alias of aliases) {
+    const idx = lc_headers.findIndex(h => h.includes(alias));
+    if (idx >= 0) return headers[idx];
+  }
+  return null;
+}
+
+function normalizeTimestamp(v) {
+  if (v == null || v === "") return null;
+  // Strings like "2024-01-15 12:30:45"
+  if (typeof v === "string" && /[-:T]/.test(v)) {
+    const t = Date.parse(v);
+    if (!isNaN(t)) return Math.floor(t / 1000);
+  }
+  const n = Number(v);
+  if (isNaN(n)) return null;
+  // Heuristic: ms vs s
+  if (n > 10_000_000_000) return Math.floor(n / 1000);
+  return Math.floor(n);
+}
+
+function normalizeType(v) {
+  if (v == null) return "text";
+  // String mapping
+  const s = lc(v);
+  if (TYPE_LABEL.hasOwnProperty(s)) return s;
+  const n = Number(v);
+  if (!isNaN(n) && TYPE_MAP[n]) return TYPE_MAP[n];
+  return "unknown";
+}
+
+// WeChat-style columns where 0 = self sent (need inversion vs intuitive boolean).
+const INVERTED_DIRECTION_COLS = new Set(["mesdes"]);
+
+function normalizeDirection(v, columnName) {
+  if (v == null || v === "") return false;
+  const s = lc(v);
+  if (s === "self" || s === "me" || s === "true") return true;
+  if (s === "other" || s === "false") return false;
+  const n = Number(v);
+  if (isNaN(n)) return false;
+  const inverted = INVERTED_DIRECTION_COLS.has(lc(columnName));
+  // is_self / from_me etc: 1 means self. mesDes: 0 means self.
+  return inverted ? n === 0 : n !== 0;
+}
+
+function tsToDate(ts, fmt) {
+  if (ts == null) return "";
+  const d = new Date(ts * 1000);
+  const Y = d.getFullYear();
+  const M = String(d.getMonth() + 1).padStart(2, "0");
+  const D = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  if (fmt === "date") return `${Y}-${M}-${D}`;
+  if (fmt === "time") return `${h}:${m}`;
+  if (fmt === "short") {
+    const today = new Date();
+    if (Y === today.getFullYear() && M == (today.getMonth() + 1) && D == today.getDate()) {
+      return `${h}:${m}`;
+    }
+    return `${M}/${D}`;
+  }
+  return `${Y}-${M}-${D} ${h}:${m}`;
+}
+
+function avatarText(name) {
+  if (!name) return "?";
+  const cleaned = name.replace(/^wxid_/, "").replace(/@chatroom$/, "");
+  // Last 2 chars for chinese, first char for ascii
+  if (/[一-龥]/.test(cleaned)) {
+    return cleaned.slice(-2);
+  }
+  return cleaned.slice(0, 2).toUpperCase();
+}
+
+function escapeHTML(s) {
+  if (s == null) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function highlightSearch(text, term) {
+  if (!term) return escapeHTML(text);
+  const escaped = escapeHTML(text);
+  const t = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return escaped.replace(new RegExp(t, "gi"), m => `<span class="search-hl">${m}</span>`);
+}
+
+// ===== File loading =====
+async function loadFiles(files) {
+  const status = document.getElementById("loader-status");
+  status.classList.remove("hidden", "error");
+  status.textContent = "解析中...";
+
+  let totalMessages = [];
+  for (const file of files) {
+    try {
+      const text = await file.text();
+      let rows;
+      if (file.name.endsWith(".jsonl") || file.name.endsWith(".json")) {
+        rows = parseJSONL(text);
+      } else {
+        rows = parseCSV(text);
+      }
+      const normalized = normalizeRows(rows, file.name);
+      totalMessages = totalMessages.concat(normalized);
+      status.textContent += `\n${file.name}: ${normalized.length} 条`;
+    } catch (e) {
+      status.classList.add("error");
+      status.textContent = `加载 ${file.name} 失败:\n${e.message}`;
+      console.error(e);
+      return;
+    }
+  }
+
+  if (totalMessages.length === 0) {
+    status.classList.add("error");
+    status.textContent = "解析后 0 条消息。请检查 CSV 列名是否被识别（见下方支持列名）";
+    return;
+  }
+
+  STATE.messages = totalMessages;
+  rebuildConversations();
+  status.textContent = `共加载 ${totalMessages.length} 条 / ${STATE.conversations.length} 个会话\n点击左侧会话查看`;
+  setTimeout(showApp, 500);
+}
+
+function parseCSV(text) {
+  const r = Papa.parse(text, {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: false,
+  });
+  if (r.errors && r.errors.length) {
+    console.warn("CSV parse warnings:", r.errors.slice(0, 5));
+  }
+  return r.data;
+}
+
+function parseJSONL(text) {
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    try { out.push(JSON.parse(t)); } catch {}
+  }
+  // Also try parsing as a single JSON array
+  if (out.length <= 1 && text.trim().startsWith("[")) {
+    try {
+      const arr = JSON.parse(text);
+      if (Array.isArray(arr)) return arr;
+    } catch {}
+  }
+  return out;
+}
+
+function normalizeRows(rows, sourceName) {
+  if (!rows.length) return [];
+  const headers = Object.keys(rows[0]);
+  const cols = {};
+  for (const k of Object.keys(COLS)) {
+    cols[k] = findColumn(headers, COLS[k]);
+  }
+  console.log(`[${sourceName}] column mapping:`, cols);
+
+  return rows.map((row, i) => {
+    const ts = normalizeTimestamp(cols.timestamp ? row[cols.timestamp] : null);
+    const content = cols.content ? row[cols.content] : "";
+    const type = normalizeType(cols.type ? row[cols.type] : null);
+    const isSelf = normalizeDirection(cols.direction ? row[cols.direction] : null, cols.direction);
+    const session = cols.session ? (row[cols.session] || "").toString().trim() : "(unknown)";
+    const sender = cols.sender ? row[cols.sender] : null;
+    const msgId = cols.msgid ? row[cols.msgid] : `${sourceName}#${i}`;
+    return {
+      msg_id: msgId,
+      timestamp: ts,
+      content: content || "",
+      type,
+      is_self: isSelf,
+      session: session || "(unknown)",
+      sender: sender || (isSelf ? "self" : session),
+      source: sourceName,
+    };
+  }).filter(m => m.session); // drop rows with no session
+}
+
+function rebuildConversations() {
+  const map = new Map();
+  for (const m of STATE.messages) {
+    let c = map.get(m.session);
+    if (!c) {
+      c = {
+        id: m.session,
+        name: m.session,
+        lastTs: m.timestamp || 0,
+        count: 0,
+        preview: "",
+        isGroup: m.session.endsWith("@chatroom"),
+      };
+      map.set(m.session, c);
+    }
+    c.count++;
+    if (m.timestamp && m.timestamp >= c.lastTs) {
+      c.lastTs = m.timestamp;
+      c.preview = previewOf(m);
+    }
+  }
+  STATE.conversations = Array.from(map.values()).sort((a, b) => b.lastTs - a.lastTs);
+}
+
+function previewOf(m) {
+  if (m.type !== "text" && m.type !== "sysmsg" && TYPE_LABEL[m.type]) {
+    return `[${TYPE_LABEL[m.type].replace(/^\W+\s*/, "")}]`;
+  }
+  const text = (m.content || "").replace(/\s+/g, " ").slice(0, 40);
+  return text;
+}
+
+// ===== UI rendering =====
+function showApp() {
+  document.getElementById("loader").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  renderConvList();
+  document.getElementById("msg-count").textContent =
+    `共 ${STATE.messages.length.toLocaleString()} 条 / ${STATE.conversations.length} 会话`;
+}
+
+function renderConvList() {
+  const list = document.getElementById("conv-list");
+  const convs = STATE.filteredConvs || STATE.conversations;
+  list.innerHTML = "";
+  if (convs.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#888;font-size:12px;">无匹配会话</div>';
+    return;
+  }
+  for (const c of convs) {
+    const div = document.createElement("div");
+    div.className = "conv-item" + (c.id === STATE.currentConv ? " active" : "");
+    div.dataset.sessionId = c.id;
+    div.innerHTML = `
+      <div class="conv-avatar ${c.isGroup ? "group" : ""}">${escapeHTML(avatarText(c.name))}</div>
+      <div class="conv-meta">
+        <div class="conv-name">
+          <span title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</span>
+          <span class="conv-time">${tsToDate(c.lastTs, "short")}</span>
+        </div>
+        <div class="conv-preview">
+          <span>${escapeHTML(c.preview)}</span>
+          <span class="conv-count">${c.count}</span>
+        </div>
+      </div>
+    `;
+    div.addEventListener("click", () => selectConversation(c.id));
+    list.appendChild(div);
+  }
+}
+
+function selectConversation(sessionId) {
+  STATE.currentConv = sessionId;
+  renderConvList();
+  renderMessages();
+}
+
+function renderMessages() {
+  const stream = document.getElementById("msg-stream");
+  const header = document.getElementById("current-session-name");
+  const meta = document.getElementById("current-session-meta");
+  const status = document.getElementById("msg-stream-status");
+
+  const sessionId = STATE.currentConv;
+  if (!sessionId) {
+    stream.innerHTML = '<div class="msg-empty">从左边选一个会话开始浏览</div>';
+    header.textContent = "选择左侧会话";
+    meta.textContent = "";
+    status.textContent = "";
+    return;
+  }
+
+  const conv = STATE.conversations.find(c => c.id === sessionId);
+  let msgs = STATE.messages.filter(m => m.session === sessionId);
+  if (STATE.searchTerm) {
+    const t = STATE.searchTerm.toLowerCase();
+    msgs = msgs.filter(m => m.content && m.content.toLowerCase().includes(t));
+  }
+  msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+  header.textContent = conv.name;
+  meta.textContent = `${msgs.length} 条 · ${conv.isGroup ? "群聊" : "私聊"}`;
+  status.textContent = `${msgs.length} 条消息` + (STATE.searchTerm ? ` (筛选: "${STATE.searchTerm}")` : "");
+
+  stream.innerHTML = "";
+  if (msgs.length === 0) {
+    stream.innerHTML = '<div class="msg-empty">无匹配消息</div>';
+    return;
+  }
+
+  let lastDate = "";
+  const frag = document.createDocumentFragment();
+  for (const m of msgs) {
+    const d = tsToDate(m.timestamp, "date");
+    if (d && d !== lastDate) {
+      const divider = document.createElement("div");
+      divider.className = "msg-time-divider";
+      divider.textContent = d;
+      frag.appendChild(divider);
+      lastDate = d;
+    }
+    frag.appendChild(renderMessageRow(m));
+  }
+  stream.appendChild(frag);
+  // Scroll to bottom or first search hit
+  if (STATE.searchTerm) {
+    const hit = stream.querySelector(".search-hl");
+    if (hit) hit.scrollIntoView({ block: "center" });
+  } else {
+    stream.scrollTop = stream.scrollHeight;
+  }
+}
+
+function renderMessageRow(m) {
+  if (m.type === "sysmsg") {
+    const row = document.createElement("div");
+    row.className = "msg-row";
+    row.style.alignSelf = "center";
+    row.style.maxWidth = "70%";
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble type-sysmsg";
+    bubble.innerHTML = highlightSearch(m.content || "[系统消息]", STATE.searchTerm);
+    row.appendChild(bubble);
+    return row;
+  }
+  const row = document.createElement("div");
+  row.className = "msg-row" + (m.is_self ? " self" : "");
+  const senderName = m.is_self ? "我" : (m.sender || m.session);
+  const isText = m.type === "text" || !TYPE_LABEL[m.type] || TYPE_LABEL[m.type] === "";
+  const typeLabel = isText ? "" : TYPE_LABEL[m.type];
+  const bubbleClass = `msg-bubble type-${m.type}`;
+  row.innerHTML = `
+    <div class="msg-avatar">${escapeHTML(avatarText(senderName))}</div>
+    <div class="msg-bubble-wrap">
+      ${(!m.is_self && senderName !== m.session) ? `<div class="msg-sender">${escapeHTML(senderName)} · ${tsToDate(m.timestamp, "time")}</div>` : `<div class="msg-sender">${tsToDate(m.timestamp, "time")}</div>`}
+      <div class="${bubbleClass}" ${typeLabel ? `data-type-label="${escapeHTML(typeLabel)}"` : ""}>${
+        isText ? highlightSearch(m.content || "", STATE.searchTerm) : highlightSearch((m.content || "").slice(0, 200), STATE.searchTerm)
+      }</div>
+    </div>
+  `;
+  return row;
+}
+
+// ===== Search =====
+function onSearch(value) {
+  STATE.searchTerm = value.trim();
+  if (!STATE.searchTerm) {
+    STATE.filteredConvs = null;
+    renderConvList();
+    renderMessages();
+    return;
+  }
+  const t = STATE.searchTerm.toLowerCase();
+  // Filter conversations: keep those whose name matches or any message matches
+  const sessionsWithHits = new Set();
+  for (const m of STATE.messages) {
+    if (m.content && m.content.toLowerCase().includes(t)) {
+      sessionsWithHits.add(m.session);
+    }
+  }
+  STATE.filteredConvs = STATE.conversations.filter(c =>
+    c.name.toLowerCase().includes(t) || sessionsWithHits.has(c.id)
+  );
+  renderConvList();
+  if (STATE.currentConv) renderMessages();
+}
+
+// ===== Stats =====
+function renderStats() {
+  const body = document.getElementById("stats-body");
+  const msgs = STATE.messages;
+  const total = msgs.length;
+  const sessions = STATE.conversations.length;
+  const selfCount = msgs.filter(m => m.is_self).length;
+  const validTs = msgs.map(m => m.timestamp).filter(t => t && t > 0);
+  const earliest = validTs.length ? Math.min(...validTs) : null;
+  const latest = validTs.length ? Math.max(...validTs) : null;
+
+  const byType = {};
+  const byMonth = {};
+  const bySession = {};
+  for (const m of msgs) {
+    byType[m.type] = (byType[m.type] || 0) + 1;
+    if (m.timestamp) {
+      const month = tsToDate(m.timestamp, "date").slice(0, 7);
+      byMonth[month] = (byMonth[month] || 0) + 1;
+    }
+    bySession[m.session] = (bySession[m.session] || 0) + 1;
+  }
+
+  const sortByValueDesc = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]);
+  const topSessions = sortByValueDesc(bySession).slice(0, 15);
+  const topTypes = sortByValueDesc(byType);
+  const months = Object.entries(byMonth).sort();
+  const maxMonth = Math.max(...Object.values(byMonth), 1);
+  const maxSession = topSessions.length ? topSessions[0][1] : 1;
+
+  body.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">总消息</div><div class="value">${total.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">会话数</div><div class="value">${sessions.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">我发送</div><div class="value">${selfCount.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">时间跨度</div><div class="value" style="font-size:13px;">${
+        earliest ? tsToDate(earliest, "date") : "—"
+      } ~ ${latest ? tsToDate(latest, "date") : "—"}</div></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Top 会话</h3>
+      <div class="stats-list">
+        ${topSessions.map(([s, n]) => {
+          const conv = STATE.conversations.find(c => c.id === s);
+          const name = conv ? conv.name : s;
+          return `<div class="stats-bar">
+            <div class="stats-bar-label" title="${escapeHTML(name)}">${escapeHTML(name)}</div>
+            <div class="stats-bar-fill" style="width:${(n / maxSession * 100).toFixed(1)}%"></div>
+            <div class="stats-bar-num">${n.toLocaleString()}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h3>消息类型</h3>
+      <div class="stats-list">
+        ${topTypes.map(([t, n]) => `<div class="stats-bar">
+          <div class="stats-bar-label">${TYPE_LABEL[t] || t}</div>
+          <div class="stats-bar-fill" style="width:${(n / total * 100).toFixed(1)}%"></div>
+          <div class="stats-bar-num">${n.toLocaleString()}</div>
+        </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h3>按月分布</h3>
+      <div class="stats-list">
+        ${months.map(([month, n]) => `<div class="stats-bar">
+          <div class="stats-bar-label">${month}</div>
+          <div class="stats-bar-fill" style="width:${(n / maxMonth * 100).toFixed(1)}%"></div>
+          <div class="stats-bar-num">${n.toLocaleString()}</div>
+        </div>`).join("")}
+      </div>
+    </div>
+  `;
+  document.getElementById("stats-modal").classList.remove("hidden");
+}
+
+// ===== Wiring =====
+function setupDropZone() {
+  const zone = document.getElementById("filezone");
+  const overlay = document.getElementById("drop-overlay");
+  const input = document.getElementById("fileinput");
+
+  zone.addEventListener("click", () => input.click());
+  input.addEventListener("change", () => loadFiles(Array.from(input.files)));
+
+  let dragCounter = 0;
+  window.addEventListener("dragenter", e => {
+    e.preventDefault();
+    dragCounter++;
+    overlay.classList.remove("hidden");
+  });
+  window.addEventListener("dragleave", e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) overlay.classList.add("hidden");
+  });
+  window.addEventListener("dragover", e => e.preventDefault());
+  window.addEventListener("drop", e => {
+    e.preventDefault();
+    dragCounter = 0;
+    overlay.classList.add("hidden");
+    if (e.dataTransfer.files.length > 0) {
+      loadFiles(Array.from(e.dataTransfer.files));
+    }
+  });
+}
+
+function setupApp() {
+  document.getElementById("search").addEventListener("input", e => {
+    onSearch(e.target.value);
+  });
+  document.getElementById("btn-stats").addEventListener("click", renderStats);
+  document.getElementById("stats-close").addEventListener("click", () => {
+    document.getElementById("stats-modal").classList.add("hidden");
+  });
+  document.getElementById("btn-reload").addEventListener("click", () => {
+    if (confirm("清空当前数据,重新加载?")) {
+      STATE.messages = [];
+      STATE.conversations = [];
+      STATE.currentConv = null;
+      document.getElementById("app").classList.add("hidden");
+      document.getElementById("loader").classList.remove("hidden");
+      document.getElementById("loader-status").classList.add("hidden");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupDropZone();
+  setupApp();
+});
+
+</script>
+</body>
+</html>

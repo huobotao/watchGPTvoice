@@ -1,22 +1,43 @@
 # 微信记录查看器（本地 Web 版）
 
+> 🎯 **最快上手**：下载 `wechat_viewer.html`（单文件 52KB，完全离线）→ 双击 → 拖 CSV 进去。零安装、零依赖、零联网。
+
 把 Codex（或我的脚本）导出的 CSV/JSONL 拖进来，立即看一个**微信风格**的聊天界面：
 - 左侧栏会话列表（按最近活跃排序）
 - 右侧消息流（自己发的绿气泡，对方白气泡，按日期分组）
 - 顶部全局搜索（同时筛会话和消息内容）
 - 📊 按钮看统计（消息量、会话排行、按月分布、消息类型分布）
 
-## 怎么用（30 秒）
+## 怎么用
+
+### 方式 A：单文件版（推荐）
+
+下载 `wechat_viewer.html`（一个文件，52KB，全部内嵌），双击打开，拖 CSV 进去。**完全离线**，零依赖。
+
+直链：
+[`wechat_viewer.html`](./wechat_viewer.html)
+
+### 方式 B：开发版（多文件）
 
 ```bash
-# 1) 把整个 viewer 目录复制到你 Mac 上任意位置
-# 2) 双击打开 index.html (浏览器默认应该是 Safari/Chrome)
-# 3) 把你的 CSV/JSONL 拖进虚线框
+# 1) 把整个 viewer/ 目录复制到你 Mac 上任意位置
+# 2) 双击 index.html
+# 3) 拖 CSV/JSONL 进虚线框
 ```
 
-完全在你浏览器里运行，**数据不出本机**、无后端、无网络请求（除了第一次从 CDN 加载 PapaParse 解析库）。
+需要联网（从 CDN 加载 PapaParse 一次性）。改代码方便。
 
-如果想完全离线（CDN 都不连），看下面 §离线版。
+### 重新打包单文件
+
+改了源码后想重新生成 `wechat_viewer.html`：
+
+```bash
+# 第一次需要拉 PapaParse
+curl -L https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js -o /tmp/papaparse.min.js
+python3 bundle.py
+```
+
+**所有方式都是数据不出本机**——浏览器内 FileReader 读 CSV，无上传、无后端。
 
 ## 支持的数据格式
 
