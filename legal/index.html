@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>庭审质证策略助手</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">⚖️</span>
+    <div>
+      <h1>庭审质证策略助手</h1>
+      <p class="sub">交互式拆解对方指控 · 规划质证方向 · 排序庭审优先级</p>
+    </div>
+  </div>
+  <button id="btn-settings" class="ghost">设置</button>
+</header>
+
+<div class="disclaimer">
+  ⚠️ 本工具仅用于帮助你结构化整理案件、辅助思考，<b>不构成正式法律意见</b>。重大决定请咨询执业律师。所有数据仅保存在你当前浏览器本地。
+</div>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="case">① 案件信息</button>
+  <button class="tab" data-tab="accusations">② 对方指控</button>
+  <button class="tab" data-tab="defense">③ 我方事实与证据</button>
+  <button class="tab" data-tab="analysis">④ AI 策略分析</button>
+  <button class="tab" data-tab="export">⑤ 导出</button>
+</nav>
+
+<main>
+
+<!-- ① 案件信息 -->
+<section class="panel" data-panel="case">
+  <h2>案件基本信息</h2>
+  <p class="hint">先把案情骨架填好，后续 AI 分析会基于此上下文。</p>
+
+  <div class="grid-2">
+    <label>案由 / 案件类型
+      <input type="text" id="case-type" placeholder="如：民间借贷纠纷 / 名誉权纠纷 / 买卖合同纠纷" />
+    </label>
+    <label>我方诉讼角色
+      <select id="case-role">
+        <option value="">请选择</option>
+        <option value="被告">被告</option>
+        <option value="原告">原告</option>
+        <option value="第三人">第三人</option>
+        <option value="反诉原告">反诉原告</option>
+      </select>
+    </label>
+    <label>司法管辖 / 法律体系
+      <input type="text" id="case-jurisdiction" placeholder="如：中国大陆 / 中国香港 / 美国加州 等" />
+    </label>
+    <label>当前阶段
+      <select id="case-stage">
+        <option value="">请选择</option>
+        <option value="立案前">立案前 / 收到起诉状</option>
+        <option value="举证期">举证期内</option>
+        <option value="庭前会议">庭前会议</option>
+        <option value="开庭前一周">开庭前一周内</option>
+        <option value="一审中">一审已开庭</option>
+        <option value="二审">二审 / 上诉</option>
+      </select>
+    </label>
+  </div>
+
+  <label class="block">对方诉讼请求（一字不漏照抄起诉状的"请求事项"）
+    <textarea id="case-claims" rows="4" placeholder="1. 判令被告……&#10;2. 判令被告承担本案诉讼费用"></textarea>
+  </label>
+
+  <label class="block">案情简述（背景、时间线、关键节点）
+    <textarea id="case-summary" rows="6" placeholder="尽量按时间顺序：&#10;2023-XX-XX 双方……&#10;2024-XX-XX 发生……&#10;2025-XX-XX 对方起诉……"></textarea>
+  </label>
+
+  <label class="block">你最担心 / 最不确定的点是什么？
+    <textarea id="case-concerns" rows="3" placeholder="如：对方手里有一份微信记录我记不清原文了 / 我无法证明那次转账是借款而非赠与"></textarea>
+  </label>
+
+  <div class="actions">
+    <button class="primary" id="case-save">保存</button>
+  </div>
+</section>
+
+<!-- ② 对方指控 -->
+<section class="panel hidden" data-panel="accusations">
+  <h2>对方的指控 / 事实主张</h2>
+  <p class="hint">把对方起诉状里每一条独立的事实主张拆开录入。<b>一条一条拆开</b>是关键——后面要逐条质证。</p>
+
+  <div id="accusation-list"></div>
+
+  <div class="actions">
+    <button class="primary" id="add-accusation">+ 新增一条指控</button>
+  </div>
+</section>
+
+<!-- ③ 我方事实和证据 -->
+<section class="panel hidden" data-panel="defense">
+  <h2>我方事实主张</h2>
+  <p class="hint">写下你认为的"真相版本"。AI 会对比双方版本找差异点。</p>
+  <div id="facts-list"></div>
+  <div class="actions">
+    <button class="primary" id="add-fact">+ 新增事实主张</button>
+  </div>
+
+  <hr/>
+
+  <h2>我方已有证据</h2>
+  <p class="hint">手里有什么先列出来，AI 会判断证明力 / 是否需要补强。</p>
+  <div id="evidence-list"></div>
+  <div class="actions">
+    <button class="primary" id="add-evidence">+ 新增一份证据</button>
+  </div>
+</section>
+
+<!-- ④ AI 分析 -->
+<section class="panel hidden" data-panel="analysis">
+  <h2>AI 策略分析</h2>
+  <p class="hint">基于你录入的所有信息生成。每个按钮独立调用，便于聚焦不同维度。</p>
+
+  <div class="analysis-grid">
+    <div class="ana-card">
+      <h3>1. 构成要件分解</h3>
+      <p>把对方每条指控拆解为法律构成要件，标出"对方必须证明哪几个事实"，你只要打掉任何一个，该指控就不成立。</p>
+      <button class="primary" data-analysis="elements">开始分析</button>
+    </div>
+    <div class="ana-card">
+      <h3>2. 逐条质证思路</h3>
+      <p>针对对方可能提交的每份证据，给出质证方向：真实性 / 合法性 / 关联性，以及具体追问的话术。</p>
+      <button class="primary" data-analysis="cross">开始分析</button>
+    </div>
+    <div class="ana-card">
+      <h3>3. 庭审优先级排序</h3>
+      <p>哪些指控是"主战场"必须打赢，哪些是次要可以让步，哪些是陷阱不要纠缠，给出 P0/P1/P2 排序。</p>
+      <button class="primary" data-analysis="priority">开始分析</button>
+    </div>
+    <div class="ana-card">
+      <h3>4. 整体辩护策略大纲</h3>
+      <p>综合以上输出一份庭审打法：开场陈述要点、举证顺序、反诘问设计、风险预案。</p>
+      <button class="primary" data-analysis="strategy">开始分析</button>
+    </div>
+  </div>
+
+  <div id="analysis-output" class="output"></div>
+</section>
+
+<!-- ⑤ 导出 -->
+<section class="panel hidden" data-panel="export">
+  <h2>导出</h2>
+  <p class="hint">导出后可保存到本地、打印或带去庭审现场作为参考。</p>
+  <div class="actions">
+    <button class="primary" id="export-md">导出为 Markdown</button>
+    <button id="export-json">导出原始 JSON（备份用）</button>
+    <button id="import-json">从 JSON 恢复</button>
+    <input type="file" id="import-file" accept="application/json" hidden />
+    <button class="danger" id="reset-all">清空全部数据</button>
+  </div>
+</section>
+
+</main>
+
+<!-- 设置弹窗 -->
+<div id="settings-modal" class="modal hidden">
+  <div class="modal-body">
+    <h2>设置</h2>
+    <label class="block">AI 服务商
+      <select id="set-provider">
+        <option value="anthropic">Anthropic（Claude）</option>
+        <option value="openai">OpenAI</option>
+      </select>
+    </label>
+    <label class="block">API Key（仅存本地浏览器，不会上传到任何服务器）
+      <input type="password" id="set-key" placeholder="sk-... 或 sk-ant-..." />
+    </label>
+    <label class="block">模型
+      <input type="text" id="set-model" placeholder="claude-sonnet-4-6 / gpt-4o 等" />
+    </label>
+    <div class="actions">
+      <button class="primary" id="set-save">保存</button>
+      <button id="set-cancel">取消</button>
+    </div>
+    <p class="hint" style="margin-top:14px">
+      不知道填什么？Anthropic 推荐 <code>claude-sonnet-4-6</code>，OpenAI 推荐 <code>gpt-4o</code>。
+    </p>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
