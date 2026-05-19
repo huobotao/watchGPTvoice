@@ -44,24 +44,6 @@ jobs:
           PUBLIC_BASE: /${{ github.event.repository.name }}/
         run: npm run build
 
-      # configure-pages with enablement:true only CREATES a Pages site if none
-      # exists — it does NOT change build_type on an already-enabled site. This
-      # repo had Pages pre-configured as "deploy from branch main/(root)", which
-      # kept serving the legacy GPT files at /. Force build_type=workflow so the
-      # artifact uploaded below is what gets served.
-      - name: Force Pages source to GitHub Actions
-        working-directory: .
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -e
-          if gh api "repos/$REPO/pages" >/dev/null 2>&1; then
-            gh api -X PUT "repos/$REPO/pages" -f build_type=workflow
-          else
-            gh api -X POST "repos/$REPO/pages" -f build_type=workflow
-          fi
-
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
