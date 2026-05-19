@@ -48,6 +48,51 @@ html, body {
   font-size: 13px;
 }
 
+/* 显眼的 API Key 输入条 */
+.apikey-bar {
+  background: linear-gradient(135deg, #fff4d6 0%, #ffe5b4 100%);
+  border-bottom: 2px solid #f0c468;
+  padding: 14px 28px;
+}
+.apikey-bar.configured {
+  background: linear-gradient(135deg, #e8f8ee 0%, #d4f0dd 100%);
+  border-bottom-color: #8ac99e;
+}
+.apikey-bar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.ak-label { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 280px; }
+.ak-icon { font-size: 26px; }
+.ak-label strong { display: block; color: #6a4a08; font-size: 14px; }
+.apikey-bar.configured .ak-label strong { color: #1f6b3b; }
+.ak-sub { color: var(--ink-soft); font-size: 12px; margin-top: 2px; line-height: 1.45; }
+.ak-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ak-form select, .ak-form input {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #d4ad5b;
+  background: #fff;
+  font-size: 13px;
+  border-radius: 6px;
+}
+.ak-form select { width: 150px; }
+.ak-form input { width: 280px; }
+.ak-form button { padding: 8px 14px; font-size: 13px; }
+@media (max-width: 720px) {
+  .ak-form input { width: 100%; flex: 1; }
+}
+
 .tabs {
   display: flex;
   gap: 4px;

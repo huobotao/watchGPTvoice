@@ -643,6 +643,7 @@ document.getElementById("set-save").addEventListener("click", () => {
   settings.model = document.getElementById("set-model").value.trim() ||
     (settings.provider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4o");
   saveSettings();
+  renderApiKeyBar();
   modal.classList.add("hidden");
   toast("设置已保存", "ok");
 });
@@ -660,8 +661,72 @@ function escapeHtml(s) {
 }
 function escapeAttr(s) { return escapeHtml(s); }
 
+/* ---------- 显眼 API Key 输入条 ---------- */
+function renderApiKeyBar() {
+  const bar = document.getElementById("apikey-bar");
+  const title = document.getElementById("ak-title");
+  const sub = document.getElementById("ak-sub");
+  const provSel = document.getElementById("ak-provider");
+  const keyInput = document.getElementById("ak-key");
+
+  provSel.value = settings.provider;
+  if (settings.apiKey) {
+    bar.classList.add("configured");
+    const masked = settings.apiKey.slice(0, 7) + "…" + settings.apiKey.slice(-4);
+    title.innerHTML = `✅ API Key 已配置（${settings.provider === "anthropic" ? "Claude" : "OpenAI"}：<code>${masked}</code>）`;
+    sub.textContent = "可以去 ④ AI 分析点按钮直接出结果。想换 Key？重新填写后点保存即可。";
+    keyInput.value = "";
+    keyInput.placeholder = "如需更换，在此输入新的 Key";
+  } else {
+    bar.classList.remove("configured");
+    title.textContent = '先填 API Key 才能用"直接分析"按钮';
+    sub.innerHTML = '不想填？也可以用免费模式：在 ④ 点【📋 复制提示词】粘贴到 <a href="https://claude.ai" target="_blank" rel="noopener">Claude.ai</a> / <a href="https://chat.openai.com" target="_blank" rel="noopener">ChatGPT</a>';
+    keyInput.value = "";
+    keyInput.placeholder = "sk-ant-... 或 sk-...";
+  }
+}
+
+document.getElementById("ak-save").addEventListener("click", () => {
+  const provider = document.getElementById("ak-provider").value;
+  const key = document.getElementById("ak-key").value.trim();
+  if (!key) {
+    toast("请先粘贴 API Key 再点保存", "error");
+    document.getElementById("ak-key").focus();
+    return;
+  }
+  if (provider === "anthropic" && !key.startsWith("sk-ant-")) {
+    if (!confirm("Claude 的 Key 通常以 sk-ant- 开头，你确认要保存这个值吗？")) return;
+  }
+  if (provider === "openai" && !key.startsWith("sk-")) {
+    if (!confirm("OpenAI 的 Key 通常以 sk- 开头，你确认要保存这个值吗？")) return;
+  }
+  settings.provider = provider;
+  settings.apiKey = key;
+  if (!settings.model) {
+    settings.model = provider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4o";
+  }
+  saveSettings();
+  renderApiKeyBar();
+  toast("API Key 已保存到本地浏览器", "ok");
+});
+
+document.getElementById("ak-provider").addEventListener("change", e => {
+  const key = document.getElementById("ak-key");
+  key.placeholder = e.target.value === "anthropic" ? "sk-ant-..." : "sk-...";
+});
+
+document.getElementById("ak-toggle").addEventListener("click", () => {
+  const k = document.getElementById("ak-key");
+  k.type = k.type === "password" ? "text" : "password";
+});
+
+document.getElementById("ak-key").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("ak-save").click();
+});
+
 /* ---------- 初始渲染 ---------- */
 function renderAll() {
+  renderApiKeyBar();
   renderCaseInfo();
   renderAccusations();
   renderFacts();

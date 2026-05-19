@@ -16,8 +16,30 @@
       <p class="sub">交互式拆解对方指控 · 规划质证方向 · 排序庭审优先级</p>
     </div>
   </div>
-  <button id="btn-settings" class="ghost">设置</button>
+  <button id="btn-settings" class="ghost">⚙️ 设置</button>
 </header>
+
+<!-- 显眼的 API Key 输入条：没填就一直显示，填好后变成"已配置" -->
+<div id="apikey-bar" class="apikey-bar">
+  <div class="apikey-bar-inner">
+    <div class="ak-label">
+      <span class="ak-icon">🔑</span>
+      <div>
+        <strong id="ak-title">先填 API Key 才能用"直接分析"按钮</strong>
+        <div class="ak-sub" id="ak-sub">不想填？也可以用免费模式：在 ④ 点【📋 复制提示词】粘贴到 Claude.ai / ChatGPT</div>
+      </div>
+    </div>
+    <div class="ak-form">
+      <select id="ak-provider">
+        <option value="anthropic">Claude (Anthropic)</option>
+        <option value="openai">OpenAI</option>
+      </select>
+      <input type="password" id="ak-key" placeholder="sk-ant-... 或 sk-..." autocomplete="off" />
+      <button class="primary" id="ak-save">保存</button>
+      <button class="ghost" id="ak-toggle" title="显示/隐藏">👁</button>
+    </div>
+  </div>
+</div>
 
 <div class="disclaimer">
   ⚠️ 本工具仅用于帮助你结构化整理案件、辅助思考，<b>不构成正式法律意见</b>。重大决定请咨询执业律师。所有数据仅保存在你当前浏览器本地。
