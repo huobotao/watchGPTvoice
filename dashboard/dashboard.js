@@ -277,6 +277,115 @@ $('#rubricSave').addEventListener('click', async () => {
 
 $('#rubricCancel').addEventListener('click', () => rubricDialog.close());
 
+// ----- settings dialog -----
+
+const settingsDialog = $('#settingsDialog');
+
+async function loadSettingsIntoDialog() {
+  const s = await fetch('/api/settings').then((r) => r.json());
+  // Pre-fill inputs with empty (we don't echo back the secret value); show
+  // current masked value + source as a hint underneath the field.
+  $('#settingsAnthropic').value = '';
+  $('#settingsAnthropic').placeholder = s.anthropicApiKeySet ? s.anthropicApiKey + '  (leave blank to keep)' : 'sk-ant-...';
+  $('#settingsAnthropicMeta').textContent = s.anthropicApiKeySet
+    ? `Currently set (from ${s.sources.anthropic}). Paste a new value to replace, or blank to keep.`
+    : 'Not set.';
+  $('#settingsAnthropicMeta').className = 'settings-meta ' + (s.anthropicApiKeySet ? 'is-set' : 'is-unset');
+
+  $('#settingsDomain').value = '';
+  $('#settingsDomain').placeholder = s.domainApiKeySet ? s.domainApiKey + '  (leave blank to keep)' : 'key_...';
+  $('#settingsDomainMeta').textContent = s.domainApiKeySet
+    ? `Currently set (from ${s.sources.domain}). Paste a new value to replace, or blank to keep.`
+    : 'Not set. Only needed when source = domain.';
+  $('#settingsDomainMeta').className = 'settings-meta ' + (s.domainApiKeySet ? 'is-set' : 'is-unset');
+
+  $('#settingsSource').value = s.source;
+  $('#settingsModel').value = s.visionModel;
+  $('#settingsTestResult').textContent = '';
+  $('#settingsTestResult').className = '';
+}
+
+$('#settingsBtn').addEventListener('click', async () => {
+  if (DEMO_MODE) {
+    alert('Demo mode: keys can only be saved when the backend is running.\nRun `npm start` in the project folder.');
+    return;
+  }
+  await loadSettingsIntoDialog();
+  settingsDialog.showModal();
+});
+
+$('#settingsSave').addEventListener('click', async () => {
+  const patch = {};
+  const a = $('#settingsAnthropic').value.trim();
+  const d = $('#settingsDomain').value.trim();
+  if (a) patch.anthropicApiKey = a;
+  if (d) patch.domainApiKey = d;
+  patch.source = $('#settingsSource').value;
+  patch.visionModel = $('#settingsModel').value;
+  await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  settingsDialog.close();
+  await loadHealth();
+});
+
+$('#settingsCancel').addEventListener('click', () => settingsDialog.close());
+
+async function runTest(which) {
+  const out = $('#settingsTestResult');
+  out.textContent = 'testing…';
+  out.className = '';
+  // First persist whatever the user has typed, otherwise we'd test the old key
+  await $('#settingsSave').click;
+  try {
+    const r = await fetch('/api/settings/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ which }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      out.textContent = which === 'anthropic'
+        ? `✓ Anthropic OK · model ${j.model}`
+        : `✓ Domain OK · HTTP ${j.status}`;
+      out.className = 'ok';
+    } else {
+      out.textContent = `✗ ${j.error || j.statusText || 'failed'}`;
+      out.className = 'err';
+    }
+  } catch (err) {
+    out.textContent = `✗ ${err.message}`;
+    out.className = 'err';
+  }
+}
+
+$('#testAnthropicBtn').addEventListener('click', async () => {
+  // Persist first so a freshly-typed key gets tested
+  const a = $('#settingsAnthropic').value.trim();
+  if (a) {
+    await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ anthropicApiKey: a }),
+    });
+  }
+  runTest('anthropic');
+});
+
+$('#testDomainBtn').addEventListener('click', async () => {
+  const d = $('#settingsDomain').value.trim();
+  if (d) {
+    await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domainApiKey: d }),
+    });
+  }
+  runTest('domain');
+});
+
 // ----- render cards -----
 
 function render() {

@@ -1,10 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 const Anthropic = require('@anthropic-ai/sdk');
+const settings = require('../settings');
 
-const client = new Anthropic();
-const MODEL = process.env.VISION_MODEL || 'claude-opus-4-7';
 const RUBRIC_PATH = path.join(__dirname, '..', '..', 'data', 'rubric.md');
+
+// Build client per-call so an API key edited in the UI takes effect immediately.
+function buildClient() {
+  const apiKey = settings.getAnthropicKey();
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set (use Settings dialog or .env)');
+  return new Anthropic({ apiKey });
+}
 
 function loadRubric() {
   return fs.readFileSync(RUBRIC_PATH, 'utf8');
@@ -84,6 +90,8 @@ async function analyze(listing, priceContext) {
     .filter(Boolean)
     .join('\n');
 
+  const client = buildClient();
+  const MODEL = settings.getVisionModel();
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 1024,
@@ -117,7 +125,7 @@ async function analyze(listing, priceContext) {
       cache_read_input_tokens: response.usage.cache_read_input_tokens || 0,
       cache_creation_input_tokens: response.usage.cache_creation_input_tokens || 0,
     },
-    _model: MODEL,
+    _model: settings.getVisionModel(),
     _analyzedAt: new Date().toISOString(),
   };
 }

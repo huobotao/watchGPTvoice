@@ -1,26 +1,25 @@
-// Stub for the real Domain.com.au API.
-// Domain's developer API: https://developer.domain.com.au/
-// Auth flow: OAuth2 client credentials -> Bearer token, then GET /v1/listings/residential/_search
+// Real Domain.com.au API client.
 //
-// To enable, set DOMAIN_API_KEY (and optionally DOMAIN_CLIENT_ID/DOMAIN_CLIENT_SECRET if using OAuth)
-// in .env, switch SOURCE=domain in .env, and replace the throws below with fetch() calls.
+// Domain supports two auth methods on different endpoints:
+//   (a) Simple X-Api-Key header (project-level "key_..." style key)
+//   (b) OAuth 2.0 Client Credentials (Client ID + Secret -> Bearer token)
 //
-// Keep the same shape as mockClient (id, address, suburb, bedrooms, weeklyRent, images[], url, ...).
+// This client uses method (a). If your project only has a Client ID + Secret
+// pair instead of a "key_..." key, swap getToken() to do an OAuth call against
+// auth.domain.com.au/v1/connect/token first, then send the token as
+// Authorization: Bearer <token>.
+
+const settings = require('../settings');
 
 const API_BASE = 'https://api.domain.com.au/v1';
 
-async function getToken() {
-  // TODO: implement OAuth2 client credentials flow against Domain's token endpoint
-  // and cache the bearer token. For API-key auth, no token call is needed.
-  return process.env.DOMAIN_API_KEY;
+function authHeaders() {
+  const key = settings.getDomainKey();
+  if (!key) throw new Error('DOMAIN_API_KEY not set (use Settings dialog or .env)');
+  return { 'X-Api-Key': key };
 }
 
 async function search(params = {}) {
-  const token = await getToken();
-  if (!token) {
-    throw new Error('DOMAIN_API_KEY not set. Configure .env or use SOURCE=mock.');
-  }
-  // Map our params to Domain's residential search body.
   const body = {
     listingType: 'Rent',
     propertyTypes: ['Apartment', 'ApartmentUnitFlat', 'Studio'],
@@ -37,24 +36,19 @@ async function search(params = {}) {
 
   const res = await fetch(`${API_BASE}/listings/residential/_search`, {
     method: 'POST',
-    headers: {
-      'X-Api-Key': token,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    throw new Error(`Domain API ${res.status}: ${await res.text()}`);
+    const text = await res.text();
+    throw new Error(`Domain API ${res.status}: ${text}`);
   }
   const data = await res.json();
   return data.map(normalize);
 }
 
 async function getById(id) {
-  const token = await getToken();
-  const res = await fetch(`${API_BASE}/listings/${id}`, {
-    headers: { 'X-Api-Key': token },
-  });
+  const res = await fetch(`${API_BASE}/listings/${id}`, { headers: authHeaders() });
   if (!res.ok) return null;
   return normalize(await res.json());
 }

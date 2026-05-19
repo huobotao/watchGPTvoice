@@ -1,7 +1,18 @@
-const source = process.env.SOURCE || 'mock';
+const settings = require('../settings');
 
-const client = source === 'domain'
-  ? require('./realClient')
-  : require('./mockClient');
+const mock = require('./mockClient');
+const real = require('./realClient');
 
-module.exports = client;
+// Resolve per-call so the SOURCE can be flipped from the Settings UI without
+// restarting the server.
+function pick() {
+  return settings.getSource() === 'domain' ? real : mock;
+}
+
+module.exports = {
+  get kind() {
+    return pick().kind;
+  },
+  search: (params) => pick().search(params),
+  getById: (id) => pick().getById(id),
+};

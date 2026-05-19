@@ -8,6 +8,7 @@ const domain = require('./domain');
 const analyzer = require('./vision/analyzer');
 const { priceContext } = require('./scoring/score');
 const store = require('./store');
+const settings = require('./settings');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_DIR = path.join(__dirname, '..', 'dashboard');
@@ -22,9 +23,54 @@ app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     source: domain.kind,
-    hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
-    visionModel: process.env.VISION_MODEL || 'claude-opus-4-7',
+    hasAnthropicKey: Boolean(settings.getAnthropicKey()),
+    hasDomainKey: Boolean(settings.getDomainKey()),
+    visionModel: settings.getVisionModel(),
   });
+});
+
+app.get('/api/settings', (_req, res) => {
+  res.json(settings.publicView());
+});
+
+app.put('/api/settings', (req, res) => {
+  const allowed = ['anthropicApiKey', 'domainApiKey', 'visionModel', 'source'];
+  const patch = {};
+  for (const k of allowed) {
+    if (k in (req.body || {})) patch[k] = req.body[k];
+  }
+  settings.update(patch);
+  res.json(settings.publicView());
+});
+
+// Test a key by hitting a cheap endpoint. Doesn't reveal the key.
+app.post('/api/settings/test', async (req, res) => {
+  const which = req.body?.which;
+  try {
+    if (which === 'anthropic') {
+      const Anthropic = require('@anthropic-ai/sdk');
+      const key = settings.getAnthropicKey();
+      if (!key) throw new Error('no Anthropic key configured');
+      const c = new Anthropic({ apiKey: key });
+      const r = await c.messages.create({
+        model: settings.getVisionModel(),
+        max_tokens: 16,
+        messages: [{ role: 'user', content: 'ping' }],
+      });
+      return res.json({ ok: true, model: r.model, output_tokens: r.usage.output_tokens });
+    }
+    if (which === 'domain') {
+      const key = settings.getDomainKey();
+      if (!key) throw new Error('no Domain key configured');
+      const r = await fetch('https://api.domain.com.au/v1/me', {
+        headers: { 'X-Api-Key': key },
+      });
+      return res.json({ ok: r.ok, status: r.status, statusText: r.statusText });
+    }
+    return res.status(400).json({ error: 'which must be "anthropic" or "domain"' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 app.get('/api/rubric', (_req, res) => {
@@ -85,8 +131,8 @@ app.post('/api/scrape', async (req, res) => {
 
 // Run AI triage on listings. Body: { id?, force? }
 app.post('/api/analyze', async (req, res) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set in .env' });
+  if (!settings.getAnthropicKey()) {
+    return res.status(400).json({ error: 'No Anthropic API key. Open Settings (top-right) and paste your key.' });
   }
   try {
     const { id, force } = req.body || {};
@@ -114,7 +160,7 @@ app.post('/api/analyze', async (req, res) => {
 
 // Scrape + analyze new listings only.
 app.post('/api/run', async (req, res) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!settings.getAnthropicKey()) {
     return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set' });
   }
   try {
@@ -145,6 +191,7 @@ app.post('/api/run', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Rental finder listening on http://localhost:${PORT}`);
   console.log(`  source:        ${domain.kind}`);
-  console.log(`  vision model:  ${process.env.VISION_MODEL || 'claude-opus-4-7'}`);
-  console.log(`  anthropic key: ${process.env.ANTHROPIC_API_KEY ? 'set' : 'MISSING'}`);
+  console.log(`  vision model:  ${settings.getVisionModel()}`);
+  console.log(`  anthropic key: ${settings.getAnthropicKey() ? 'set' : 'MISSING (open Settings in the UI to paste it)'}`);
+  console.log(`  domain key:    ${settings.getDomainKey() ? 'set' : 'MISSING (only needed if source=domain)'}`);
 });

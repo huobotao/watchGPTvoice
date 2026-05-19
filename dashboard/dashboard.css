@@ -333,3 +333,62 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.8rem 0;
+}
+
+.settings-row > span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.settings-row input,
+.settings-row select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--panel-3);
+  border-radius: 6px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.settings-row select { font-family: inherit; }
+
+.settings-meta {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.settings-meta.is-set { color: var(--deal); }
+.settings-meta.is-unset { color: var(--bad); }
+
+.settings-test {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0 0.5rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+#settingsTestResult {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+#settingsTestResult.ok { color: var(--deal); }
+#settingsTestResult.err { color: var(--bad); }
+
+code {
+  background: var(--panel-2);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
