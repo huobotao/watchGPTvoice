@@ -353,6 +353,28 @@ html, body {
   margin-right: 6px;
   vertical-align: middle;
 }
+.msg-bubble.unresolved {
+  border-left: 3px solid #f59e0b;
+  background: #fffbeb;
+  font-style: italic;
+  color: #78350f;
+}
+.msg-row.self .msg-bubble.unresolved {
+  background: #fef3c7;
+  border-left: none;
+  border-right: 3px solid #f59e0b;
+}
+.msg-bubble.unresolved::before {
+  content: "⚠ WCDB 字典未解";
+  display: block;
+  font-size: 10px;
+  color: #b45309;
+  font-style: normal;
+  margin-bottom: 4px;
+  background: none;
+  padding: 0;
+}
+
 .msg-time-divider {
   align-self: center;
   font-size: 11px;

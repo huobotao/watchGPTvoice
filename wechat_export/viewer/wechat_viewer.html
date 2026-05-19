@@ -369,6 +369,28 @@ html, body {
   margin-right: 6px;
   vertical-align: middle;
 }
+.msg-bubble.unresolved {
+  border-left: 3px solid #f59e0b;
+  background: #fffbeb;
+  font-style: italic;
+  color: #78350f;
+}
+.msg-row.self .msg-bubble.unresolved {
+  background: #fef3c7;
+  border-left: none;
+  border-right: 3px solid #f59e0b;
+}
+.msg-bubble.unresolved::before {
+  content: "⚠ WCDB 字典未解";
+  display: block;
+  font-size: 10px;
+  color: #b45309;
+  font-style: normal;
+  margin-bottom: 4px;
+  background: none;
+  padding: 0;
+}
+
 .msg-time-divider {
   align-self: center;
   font-size: 11px;
@@ -558,10 +580,10 @@ const COLS = {
   timestamp: ["msgcreatetime", "createtime", "timestamp", "time", "date", "ts", "msg_time"],
   content:   ["msgcontent", "message", "content", "msg", "text", "body"],
   direction: ["mesdes", "is_self", "direction", "from_me", "fromself"],
-  session:   ["talker", "chatusrname", "session", "chat", "chat_id", "room", "session_id", "username"],
+  session:   ["conversation", "talker", "chatusrname", "session", "chat", "chat_id", "room", "session_id", "username"],
   sender:    ["sender", "fromuser", "sender_name", "speaker", "from"],
   type:      ["mestype", "type", "msg_type", "messagetype"],
-  msgid:     ["mesid", "mes_id", "msg_id", "id", "rowid", "mesvolume", "mes_local_id", "meslocalid"],
+  msgid:     ["mesid", "mes_id", "msg_id", "id", "rowid", "mesvolume", "mes_local_id", "meslocalid", "local_id", "server_id"],
 };
 
 const TYPE_LABEL = {
@@ -634,13 +656,20 @@ const INVERTED_DIRECTION_COLS = new Set(["mesdes"]);
 function normalizeDirection(v, columnName) {
   if (v == null || v === "") return false;
   const s = lc(v);
-  if (s === "self" || s === "me" || s === "true") return true;
-  if (s === "other" || s === "false") return false;
+  // String variants
+  if (s === "self" || s === "me" || s === "true" || s === "out" || s === "send" || s === "sent") return true;
+  if (s === "other" || s === "false" || s === "in" || s === "recv" || s === "received") return false;
   const n = Number(v);
   if (isNaN(n)) return false;
   const inverted = INVERTED_DIRECTION_COLS.has(lc(columnName));
   // is_self / from_me etc: 1 means self. mesDes: 0 means self.
   return inverted ? n === 0 : n !== 0;
+}
+
+// Detect Codex's WCDB/zstd unresolved-content marker
+const UNRESOLVED_RE = /^\[WCDB\/zstd[^\]]*\]/;
+function isUnresolvedContent(s) {
+  return typeof s === "string" && UNRESOLVED_RE.test(s);
 }
 
 function tsToDate(ts, fmt) {
@@ -939,7 +968,8 @@ function renderMessageRow(m) {
   const senderName = m.is_self ? "我" : (m.sender || m.session);
   const isText = m.type === "text" || !TYPE_LABEL[m.type] || TYPE_LABEL[m.type] === "";
   const typeLabel = isText ? "" : TYPE_LABEL[m.type];
-  const bubbleClass = `msg-bubble type-${m.type}`;
+  const unresolved = isUnresolvedContent(m.content);
+  const bubbleClass = `msg-bubble type-${m.type}` + (unresolved ? " unresolved" : "");
   row.innerHTML = `
     <div class="msg-avatar">${escapeHTML(avatarText(senderName))}</div>
     <div class="msg-bubble-wrap">
@@ -983,6 +1013,7 @@ function renderStats() {
   const total = msgs.length;
   const sessions = STATE.conversations.length;
   const selfCount = msgs.filter(m => m.is_self).length;
+  const unresolvedCount = msgs.filter(m => isUnresolvedContent(m.content)).length;
   const validTs = msgs.map(m => m.timestamp).filter(t => t && t > 0);
   const earliest = validTs.length ? Math.min(...validTs) : null;
   const latest = validTs.length ? Math.max(...validTs) : null;
@@ -1014,6 +1045,7 @@ function renderStats() {
       <div class="stat-card"><div class="label">时间跨度</div><div class="value" style="font-size:13px;">${
         earliest ? tsToDate(earliest, "date") : "—"
       } ~ ${latest ? tsToDate(latest, "date") : "—"}</div></div>
+      ${unresolvedCount > 0 ? `<div class="stat-card" style="grid-column: 1/-1; background: #fffbeb; border-left: 3px solid #f59e0b;"><div class="label">⚠ WCDB 字典未解(dict_id=5)</div><div class="value" style="font-size:16px;">${unresolvedCount.toLocaleString()} 条 — 需要 .sqlite-first.material 字典文件才能还原</div></div>` : ""}
     </div>
 
     <div class="stats-section">
