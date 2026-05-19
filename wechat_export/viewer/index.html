@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微信记录查看器</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+
+<div id="drop-overlay" class="hidden">
+  <div class="drop-message">
+    <div class="drop-icon">+</div>
+    <div>拖入 CSV / JSONL 文件</div>
+  </div>
+</div>
+
+<!-- 初始空态:加载文件区 -->
+<div id="loader" class="screen">
+  <div class="loader-card">
+    <h1>微信记录查看器</h1>
+    <p class="subtitle">本地浏览器内运行 · 数据不出本机 · 无后端</p>
+    <div id="filezone" class="filezone">
+      <div class="filezone-icon">📂</div>
+      <div class="filezone-text">
+        把 <code>all_messages.csv</code> / <code>raw_messages.csv</code> / <code>*.jsonl</code><br>
+        拖到这里，或<label for="fileinput" class="link">点击选择文件</label>
+      </div>
+      <input id="fileinput" type="file" multiple accept=".csv,.jsonl,.json,.txt" hidden>
+    </div>
+    <div id="loader-status" class="loader-status hidden"></div>
+    <details class="help">
+      <summary>支持的列名（自动识别）</summary>
+      <ul>
+        <li><strong>时间</strong>：CreateTime / msgCreateTime / timestamp / time / date</li>
+        <li><strong>内容</strong>：Message / msgContent / content / msg / text</li>
+        <li><strong>方向</strong>：MesDes / mesDes / is_self / direction（0=自己发）</li>
+        <li><strong>会话</strong>：Talker / ChatUsrName / session / chat_id / room</li>
+        <li><strong>发送者</strong>：Sender / FromUser / sender_name</li>
+        <li><strong>类型</strong>：Type / mesType / msg_type</li>
+      </ul>
+    </details>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="app" class="screen hidden">
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <input id="search" type="search" placeholder="🔍 搜索会话 / 消息内容">
+      <button id="btn-stats" title="统计面板">📊</button>
+      <button id="btn-reload" title="重新加载">🔄</button>
+    </div>
+    <div id="conv-list"></div>
+    <div class="sidebar-footer">
+      <span id="msg-count">—</span>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header id="main-header">
+      <div id="current-session-name">选择左侧会话</div>
+      <div id="current-session-meta"></div>
+    </header>
+    <div id="msg-stream"></div>
+    <footer id="main-footer">
+      <small id="msg-stream-status">—</small>
+    </footer>
+  </main>
+</div>
+
+<!-- 统计弹层 -->
+<div id="stats-modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>统计</h2>
+      <button id="stats-close">✕</button>
+    </div>
+    <div id="stats-body"></div>
+  </div>
+</div>
+
+<script src="viewer.js"></script>
+</body>
+</html>
