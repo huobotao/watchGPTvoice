@@ -195,6 +195,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 }
 .ana-card h3 { margin: 0 0 6px; font-size: 15px; }
 .ana-card p { color: var(--ink-soft); font-size: 13px; margin: 0 0 12px; }
+.ana-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.ana-btns button { padding: 7px 12px; font-size: 13px; }
 
 .output {
   background: #0f172a;

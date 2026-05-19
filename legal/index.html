@@ -81,6 +81,7 @@
 
   <div class="actions">
     <button class="primary" id="case-save">保存</button>
+    <button id="case-demo">📥 加载示例案件（演示用）</button>
   </div>
 </section>
 
@@ -118,28 +119,44 @@
 <!-- ④ AI 分析 -->
 <section class="panel hidden" data-panel="analysis">
   <h2>AI 策略分析</h2>
-  <p class="hint">基于你录入的所有信息生成。每个按钮独立调用，便于聚焦不同维度。</p>
+  <p class="hint">
+    两种使用方式：<br/>
+    🟦 <b>直连模式</b>（推荐）— 在右上角【设置】填 API Key，下方按钮直接出结果。<br/>
+    🟩 <b>免 Key 模式</b> — 点【复制提示词】，去 <a href="https://chat.openai.com" target="_blank" rel="noopener">ChatGPT</a> 或 <a href="https://claude.ai" target="_blank" rel="noopener">Claude.ai</a> 网页版粘贴（免费账号也能用）。
+  </p>
 
   <div class="analysis-grid">
     <div class="ana-card">
       <h3>1. 构成要件分解</h3>
       <p>把对方每条指控拆解为法律构成要件，标出"对方必须证明哪几个事实"，你只要打掉任何一个，该指控就不成立。</p>
-      <button class="primary" data-analysis="elements">开始分析</button>
+      <div class="ana-btns">
+        <button class="primary" data-analysis="elements">直接分析</button>
+        <button class="ghost" data-copy="elements">📋 复制提示词</button>
+      </div>
     </div>
     <div class="ana-card">
       <h3>2. 逐条质证思路</h3>
       <p>针对对方可能提交的每份证据，给出质证方向：真实性 / 合法性 / 关联性，以及具体追问的话术。</p>
-      <button class="primary" data-analysis="cross">开始分析</button>
+      <div class="ana-btns">
+        <button class="primary" data-analysis="cross">直接分析</button>
+        <button class="ghost" data-copy="cross">📋 复制提示词</button>
+      </div>
     </div>
     <div class="ana-card">
       <h3>3. 庭审优先级排序</h3>
       <p>哪些指控是"主战场"必须打赢，哪些是次要可以让步，哪些是陷阱不要纠缠，给出 P0/P1/P2 排序。</p>
-      <button class="primary" data-analysis="priority">开始分析</button>
+      <div class="ana-btns">
+        <button class="primary" data-analysis="priority">直接分析</button>
+        <button class="ghost" data-copy="priority">📋 复制提示词</button>
+      </div>
     </div>
     <div class="ana-card">
       <h3>4. 整体辩护策略大纲</h3>
       <p>综合以上输出一份庭审打法：开场陈述要点、举证顺序、反诘问设计、风险预案。</p>
-      <button class="primary" data-analysis="strategy">开始分析</button>
+      <div class="ana-btns">
+        <button class="primary" data-analysis="strategy">直接分析</button>
+        <button class="ghost" data-copy="strategy">📋 复制提示词</button>
+      </div>
     </div>
   </div>
 

@@ -74,6 +74,73 @@ function renderCaseInfo() {
   document.getElementById("case-summary").value = f.summary || "";
   document.getElementById("case-concerns").value = f.concerns || "";
 }
+document.getElementById("case-demo").addEventListener("click", () => {
+  if (state.caseInfo.type || state.accusations.length || state.evidence.length) {
+    if (!confirm("当前已有数据，加载示例会覆盖。继续？")) return;
+  }
+  state = loadDemoCase();
+  saveState();
+  renderAll();
+  toast("示例案件已加载，可以去 ④ AI 分析 试试", "ok");
+});
+
+function loadDemoCase() {
+  return {
+    caseInfo: {
+      type: "民间借贷纠纷",
+      role: "被告",
+      jurisdiction: "中国大陆",
+      stage: "举证期",
+      claims: "1. 判令被告归还原告借款本金人民币 100,000 元；\n2. 判令被告支付利息；\n3. 判令被告承担本案诉讼费用。",
+      summary: "2023-09 原告向被告银行转账 10 万元，备注空白。\n2024-01 双方因合作项目产生分歧。\n2024-08 原告口头要求还钱，被告认为该笔款项是合作出资。\n2025-03 原告以民间借贷起诉被告。",
+      concerns: "对方手里有一份微信聊天截图，其中我说'下周还'，但语境是讨论项目进度款，不是承认借款。担心被断章取义。"
+    },
+    accusations: [
+      {
+        claim: "被告于 2023-09-15 向原告借款 10 万元",
+        legalBasis: "《民法典》第 667、675 条 借款合同",
+        evidence: "①银行转账回单 10 万元；②微信聊天截图（含'下周还'字样）",
+        weakness: "转账备注为空，无借条；'下周还'语境实为项目款，非借款"
+      },
+      {
+        claim: "被告承诺月息 1%，未支付利息共计 12000 元",
+        legalBasis: "《民法典》第 680 条",
+        evidence: "原告陈述 + 一张未签字的'利息清单'手写件",
+        weakness: "无书面利息约定；手写件未经被告签字确认"
+      }
+    ],
+    facts: [
+      { text: "2023-09 该笔 10 万元系双方约定的合作项目共同出资款，非借款。" },
+      { text: "微信中'下周还'指项目尾款，由甲方支付后我方分配，非个人借款。" },
+      { text: "双方从未有过利息约定，原告所谓'手写清单'我从未见过。" }
+    ],
+    evidence: [
+      {
+        name: "合作项目电子合同 PDF",
+        type: "电子数据",
+        proves: "双方存在合作关系，10 万元属于出资款",
+        source: "邮箱原件下载",
+        weakness: "未约定明确出资金额"
+      },
+      {
+        name: "完整微信聊天记录导出（含上下文 30 条）",
+        type: "电子数据",
+        proves: "'下周还'语境是项目款分配，非借款",
+        source: "手机端微信原始备份",
+        weakness: "未公证；部分聊天涉及第三方隐私"
+      },
+      {
+        name: "项目甲方转账记录",
+        type: "书证",
+        proves: "项目存在真实业务，10 万元有合理用途",
+        source: "甲方公司财务部出具的对账单",
+        weakness: "需甲方配合出庭或出具证明"
+      }
+    ],
+    analyses: { elements: "", cross: "", priority: "", strategy: "" }
+  };
+}
+
 document.getElementById("case-save").addEventListener("click", () => {
   state.caseInfo = {
     type: document.getElementById("case-type").value.trim(),
@@ -319,6 +386,27 @@ const analysisPrompts = {
 document.querySelectorAll("[data-analysis]").forEach(btn => {
   btn.addEventListener("click", () => runAnalysis(btn.dataset.analysis));
 });
+
+document.querySelectorAll("[data-copy]").forEach(btn => {
+  btn.addEventListener("click", () => copyPromptToClipboard(btn.dataset.copy));
+});
+
+async function copyPromptToClipboard(kind) {
+  const cfg = analysisPrompts[kind];
+  const full = `# 角色\n${cfg.sys}\n\n# 我的案件材料\n${buildUserPrompt(kind)}`;
+  try {
+    await navigator.clipboard.writeText(full);
+    toast(`已复制【${cfg.title}】提示词，去 ChatGPT/Claude.ai 粘贴即可`, "ok");
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = full;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    toast("已复制（兼容模式）", "ok");
+  }
+}
 
 async function runAnalysis(kind) {
   if (!settings.apiKey) {

@@ -78,3 +78,43 @@
 ## 浏览器预览
 
 如果你只是想先看 UI 长什么样,用浏览器打开 `index.html` 即可,不需要 Xcode。
+
+---
+
+## 🆕 庭审质证策略助手 (`legal/`)
+
+与上面 Apple Watch 项目无关的独立工具：被起诉时，帮你结构化拆解对方指控、规划质证方向、排序庭审优先级。
+
+### 一键使用（部署到 GitHub Pages 后）
+
+仓库根目录已附带 `.github/workflows/pages.yml`，**首次启用步骤**：
+
+1. 把当前分支合并到 `main`（或直接在 Pages 设置里选这个分支）
+2. 打开 GitHub 仓库 → **Settings → Pages** → Source 选 **GitHub Actions**
+3. Action 跑完后访问：`https://huobotao.github.io/watchGPTvoice/legal/`
+4. 收藏这个 URL，以后**一点就用**
+
+### 也可以本地直接打开
+
+```bash
+git pull
+open legal/index.html        # macOS
+xdg-open legal/index.html    # Linux
+start legal\index.html       # Windows
+```
+
+### 两种 AI 调用方式
+
+- **🟦 直连模式**：在【设置】填 Claude/OpenAI 的 API Key，按钮直接出结果
+- **🟩 免 Key 模式**：点【📋 复制提示词】，去 [ChatGPT](https://chat.openai.com) 或 [Claude.ai](https://claude.ai) 网页版粘贴。**免费账号也能用**
+
+### 提供的 4 种分析
+
+1. **构成要件分解** — 找出对方必须证明的事实，定位"软肋要件"
+2. **逐条质证思路** — 真实性/合法性/关联性三性质疑 + 可朗读的追问话术
+3. **庭审优先级排序** — P0 主战场 / P1 重要 / P2 次要 / 🪤 陷阱
+4. **整体辩护策略大纲** — 开场陈述、举证顺序、应对脚本、风险预案
+
+第一次进入推荐先点【📥 加载示例案件】，按完整流程过一遍。
+
+> ⚠️ 本工具仅辅助思考与整理，**不构成正式法律意见**。重大决定请咨询执业律师。所有数据仅保存在你当前浏览器 localStorage，不上传任何服务器。
