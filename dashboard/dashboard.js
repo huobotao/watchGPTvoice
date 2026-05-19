@@ -1,12 +1,16 @@
-const $ = (sel) => document.querySelector(sel);
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => root.querySelectorAll(sel);
+
 const grid = $('#grid');
 const statusEl = $('#status');
+let currentTab = 'DEAL';
+let lastItems = [];
 
 async function loadHealth() {
   try {
     const res = await fetch('/api/health').then((r) => r.json());
     statusEl.textContent = `source: ${res.source} · model: ${res.visionModel} · API key: ${res.hasAnthropicKey ? 'OK' : 'missing'}`;
-    statusEl.style.color = res.hasAnthropicKey ? '#8a92a6' : '#f87171';
+    statusEl.style.color = res.hasAnthropicKey ? 'var(--muted)' : 'var(--bad)';
   } catch (err) {
     statusEl.textContent = `unreachable: ${err.message}`;
   }
@@ -14,7 +18,18 @@ async function loadHealth() {
 
 async function loadListings() {
   const res = await fetch('/api/listings').then((r) => r.json());
-  render(res.items);
+  lastItems = res.items;
+  updateCounts();
+  render();
+}
+
+function updateCounts() {
+  const counts = { DEAL: 0, SUSPECT: 0, DISCARD: 0, UNANALYZED: 0 };
+  for (const item of lastItems) counts[item.effectiveDecision] = (counts[item.effectiveDecision] || 0) + 1;
+  for (const [k, v] of Object.entries(counts)) {
+    const el = document.querySelector(`[data-count="${k}"]`);
+    if (el) el.textContent = v;
+  }
 }
 
 function getParams() {
@@ -46,23 +61,29 @@ async function withButton(btn, fn) {
   btn.textContent = '…';
   try {
     return await fn();
+  } catch (err) {
+    statusEl.textContent = `error: ${err.message}`;
+    statusEl.style.color = 'var(--bad)';
+    throw err;
   } finally {
     btn.disabled = false;
     btn.textContent = oldText;
   }
 }
 
+// ----- top-level actions -----
+
 $('#scrapeBtn').addEventListener('click', (e) =>
   withButton(e.target, async () => {
     const r = await postJson('/api/scrape', getParams());
-    statusEl.textContent = `scraped ${r.count} listings from ${r.source}`;
+    statusEl.textContent = `scraped ${r.scraped} (${r.new} new) from ${r.source}`;
     await loadListings();
   }),
 );
 
 $('#analyzeBtn').addEventListener('click', (e) =>
   withButton(e.target, async () => {
-    statusEl.textContent = 'analyzing with Claude Vision (this can take a minute)…';
+    statusEl.textContent = 'analyzing with Claude Vision…';
     const r = await postJson('/api/analyze', {});
     statusEl.textContent = `analyzed ${r.analyzed} listings`;
     await loadListings();
@@ -73,23 +94,55 @@ $('#runBtn').addEventListener('click', (e) =>
   withButton(e.target, async () => {
     statusEl.textContent = 'scraping + analyzing…';
     const r = await postJson('/api/run', getParams());
-    statusEl.textContent = `done: ${r.scraped} scraped, ${r.results.filter((x) => x.ok).length} analyzed`;
+    const ok = r.results.filter((x) => x.ok).length;
+    statusEl.textContent = `done: ${r.scraped} scraped, ${ok} analyzed`;
     await loadListings();
   }),
 );
 
 $('#refreshBtn').addEventListener('click', loadListings);
 
-function classifyScore(n) {
-  if (n >= 75) return 'high';
-  if (n >= 55) return 'mid';
-  return 'low';
-}
+// ----- tabs -----
 
-function render(items) {
+$$('.tab').forEach((tab) =>
+  tab.addEventListener('click', () => {
+    $$('.tab').forEach((t) => t.classList.remove('is-active'));
+    tab.classList.add('is-active');
+    currentTab = tab.dataset.tab;
+    render();
+  }),
+);
+
+// ----- rubric editor -----
+
+const rubricDialog = $('#rubricDialog');
+const rubricText = $('#rubricText');
+
+$('#rubricBtn').addEventListener('click', async () => {
+  const r = await fetch('/api/rubric').then((r) => r.json());
+  rubricText.value = r.text;
+  rubricDialog.showModal();
+});
+
+$('#rubricSave').addEventListener('click', async () => {
+  await fetch('/api/rubric', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: rubricText.value }),
+  });
+  rubricDialog.close();
+  statusEl.textContent = 'rubric saved. next Analyze run will use the new version.';
+});
+
+$('#rubricCancel').addEventListener('click', () => rubricDialog.close());
+
+// ----- render cards -----
+
+function render() {
   grid.innerHTML = '';
-  if (!items || items.length === 0) {
-    grid.innerHTML = '<div class="empty">No listings yet — click <strong>Scrape</strong> to load mock data.</div>';
+  const items = lastItems.filter((x) => x.effectiveDecision === currentTab);
+  if (items.length === 0) {
+    grid.innerHTML = `<div class="empty">No listings in <strong>${currentTab}</strong>.<br><small>Click Scrape, then Analyze.</small></div>`;
     return;
   }
   const tpl = $('#cardTpl');
@@ -97,58 +150,72 @@ function render(items) {
     const node = tpl.content.cloneNode(true);
     const card = node.querySelector('.card');
     const l = item.listing;
-    const s = item.score || {};
-    const v = item.vision;
+    const a = item.analysis;
+    const pc = item.priceContext;
+    const decision = item.effectiveDecision;
+    const verdict = item.userVerdict;
 
-    if (s.isDeal) card.classList.add('is-deal');
-    node.querySelector('.badge').textContent = s.composite != null ? `${s.composite}/100` : 'unscored';
+    card.classList.add(`decision-${decision}`);
+    if (verdict) card.classList.add('has-verdict');
+    card.dataset.id = l.id;
 
+    node.querySelector('.badge').textContent = decision;
     const thumb = node.querySelector('.thumb');
     if (l.images && l.images[0]) thumb.style.backgroundImage = `url("${l.images[0]}")`;
 
     node.querySelector('.addr').textContent = l.address;
     node.querySelector('.meta').textContent = `${l.bedrooms}🛏  ${l.bathrooms}🛁  ${l.carSpaces}🚗  · ${l.suburb}`;
-    node.querySelector('.rent').textContent = `$${l.weeklyRent}/wk` + (s.suburbMedianRent ? `   median $${s.suburbMedianRent} (${s.priceDeltaPct >= 0 ? '−' : '+'}${Math.abs(s.priceDeltaPct)}%)` : '');
 
-    const setScore = (sel, val) => {
-      const el = node.querySelector(sel);
-      if (val == null) {
-        el.textContent = '—';
-      } else {
-        el.textContent = val;
-        el.classList.add(classifyScore(val));
-      }
-    };
-    setScore('.val.composite', s.composite);
-    setScore('.val.vision', s.visionScore || (v && v.overall_score));
-    setScore('.val.price', s.priceScore);
+    const rentLine = `$${l.weeklyRent}/wk`;
+    const medianLine = pc?.suburbMedianRent
+      ? `   median $${pc.suburbMedianRent} (${pc.priceDeltaPct >= 0 ? '−' : '+'}${Math.abs(pc.priceDeltaPct)}%)`
+      : '';
+    node.querySelector('.rent').textContent = rentLine + medianLine;
 
-    if (v) {
-      node.querySelector('.summary').textContent = v.summary;
-      const features = node.querySelector('.features');
-      for (const f of v.notable_features || []) {
+    if (a) {
+      node.querySelector('.headline').textContent = a.headline;
+      node.querySelector('.reasoning-text').textContent = a.reasoning;
+      const criteriaBox = node.querySelector('.criteria');
+      for (const c of a.matched_criteria || []) {
         const t = document.createElement('span');
         t.className = 'tag';
-        t.textContent = f;
-        features.appendChild(t);
+        t.textContent = c;
+        criteriaBox.appendChild(t);
       }
-      const flags = node.querySelector('.flags');
-      for (const f of v.red_flags || []) {
+      const pros = node.querySelector('.pros');
+      for (const p of a.pros || []) {
         const t = document.createElement('span');
-        t.className = 'tag flag';
-        t.textContent = f;
-        flags.appendChild(t);
+        t.className = 'tag';
+        t.textContent = p;
+        pros.appendChild(t);
+      }
+      const cons = node.querySelector('.cons');
+      for (const c of a.cons || []) {
+        const t = document.createElement('span');
+        t.className = 'tag con';
+        t.textContent = c;
+        cons.appendChild(t);
       }
     } else {
-      node.querySelector('.summary').textContent = l.description || '';
+      node.querySelector('.headline').textContent = l.description || 'Not yet analyzed.';
+      node.querySelector('.reasoning').style.display = 'none';
     }
 
-    const link = node.querySelector('.link');
-    link.href = l.url;
-    link.textContent = 'View listing →';
+    node.querySelectorAll('.actions button').forEach((btn) => {
+      btn.addEventListener('click', () => onReview(l.id, btn.dataset.action));
+    });
+
+    node.querySelector('.link').href = l.url;
+    node.querySelector('.link').textContent = 'View listing →';
 
     grid.appendChild(node);
   }
+}
+
+async function onReview(id, action) {
+  const verdict = action === 'undo' ? null : action;
+  await postJson(`/api/listings/${id}/review`, { verdict });
+  await loadListings();
 }
 
 loadHealth();

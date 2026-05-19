@@ -26,17 +26,35 @@ function write(state) {
 function upsertListing(listing) {
   const state = read();
   const existing = state.listings[listing.id] || {};
-  state.listings[listing.id] = { ...existing, ...listing, listing };
+  state.listings[listing.id] = { ...existing, listing };
   write(state);
 }
 
-function setAnalysis(id, vision, score) {
+function setAnalysis(id, analysis, priceContext) {
   const state = read();
   if (!state.listings[id]) return;
-  state.listings[id].vision = vision;
-  state.listings[id].score = score;
+  state.listings[id].analysis = analysis;
+  state.listings[id].priceContext = priceContext;
   state.listings[id].analyzedAt = new Date().toISOString();
   write(state);
+}
+
+// Human verdict on a SUSPECT listing (or override of any AI decision).
+// verdict: 'CONFIRMED_DEAL' | 'CONFIRMED_DISCARD' | null (clears)
+function setVerdict(id, verdict, note) {
+  const state = read();
+  if (!state.listings[id]) return null;
+  if (verdict === null) {
+    delete state.listings[id].userVerdict;
+  } else {
+    state.listings[id].userVerdict = {
+      verdict,
+      note: note || '',
+      reviewedAt: new Date().toISOString(),
+    };
+  }
+  write(state);
+  return state.listings[id];
 }
 
 function all() {
@@ -47,4 +65,19 @@ function get(id) {
   return read().listings[id] || null;
 }
 
-module.exports = { upsertListing, setAnalysis, all, get };
+// Effective decision: human verdict wins over AI decision.
+function effectiveDecision(item) {
+  if (item.userVerdict) {
+    return item.userVerdict.verdict === 'CONFIRMED_DEAL' ? 'DEAL' : 'DISCARD';
+  }
+  return item.analysis?.decision || 'UNANALYZED';
+}
+
+module.exports = {
+  upsertListing,
+  setAnalysis,
+  setVerdict,
+  all,
+  get,
+  effectiveDecision,
+};

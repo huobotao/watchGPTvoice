@@ -2,13 +2,20 @@
   --bg: #0f1115;
   --panel: #181b22;
   --panel-2: #232734;
+  --panel-3: #2c3142;
   --text: #e8eaf0;
   --muted: #8a92a6;
-  --accent: #4ade80;
-  --accent-2: #38bdf8;
-  --warn: #fbbf24;
-  --bad: #f87171;
+  --border: #262a35;
+
   --deal: #22c55e;
+  --deal-soft: rgba(34, 197, 94, 0.15);
+  --suspect: #fbbf24;
+  --suspect-soft: rgba(251, 191, 36, 0.15);
+  --discard: #6b7280;
+  --discard-soft: rgba(107, 114, 128, 0.15);
+
+  --accent: #38bdf8;
+  --bad: #f87171;
 }
 
 * { box-sizing: border-box; }
@@ -26,7 +33,7 @@ body {
   align-items: baseline;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #262a35;
+  border-bottom: 1px solid var(--border);
   background: var(--panel);
   position: sticky;
   top: 0;
@@ -51,11 +58,11 @@ body {
   gap: 1rem;
   align-items: end;
   background: var(--panel);
-  border-bottom: 1px solid #262a35;
+  border-bottom: 1px solid var(--border);
 }
 
 fieldset {
-  border: 1px solid #2a2f3d;
+  border: 1px solid var(--panel-3);
   border-radius: 6px;
   padding: 0.5rem 1rem;
   display: flex;
@@ -79,7 +86,7 @@ fieldset label {
 
 fieldset input {
   background: var(--panel-2);
-  border: 1px solid #2f3445;
+  border: 1px solid var(--panel-3);
   color: var(--text);
   border-radius: 4px;
   padding: 0.35rem 0.5rem;
@@ -87,27 +94,65 @@ fieldset input {
   width: 11ch;
 }
 
-.buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
+.buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 button {
   background: var(--panel-2);
-  border: 1px solid #2f3445;
+  border: 1px solid var(--panel-3);
   color: var(--text);
   padding: 0.5rem 0.9rem;
   border-radius: 6px;
   font-size: 0.85rem;
   cursor: pointer;
   font-weight: 500;
+  font-family: inherit;
 }
 
-button:hover { background: #2c3142; }
-button.primary { background: var(--accent); color: #04140a; border-color: var(--accent); }
-button.primary:hover { background: #6ee79a; }
+button:hover { background: var(--panel-3); }
+button.primary { background: var(--deal); color: #04140a; border-color: var(--deal); }
+button.primary:hover { background: #4ade80; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1.5rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tab:hover { background: transparent; color: var(--text); }
+.tab.is-active { color: var(--text); border-bottom-color: var(--accent); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--discard); }
+.dot-deal { background: var(--deal); }
+.dot-suspect { background: var(--suspect); }
+.dot-discard { background: var(--discard); }
+
+.count {
+  background: var(--panel-2);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.tab.is-active .count { background: var(--panel-3); color: var(--text); }
 
 .grid {
   display: grid;
@@ -118,38 +163,53 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .card {
   background: var(--panel);
-  border: 1px solid #262a35;
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
+  border-top: 4px solid var(--discard);
 }
 
-.card.is-deal {
-  border-color: var(--deal);
-  box-shadow: 0 0 0 1px var(--deal), 0 8px 30px -10px rgba(34, 197, 94, 0.4);
+.card.decision-DEAL { border-top-color: var(--deal); background: linear-gradient(to bottom, var(--deal-soft), var(--panel) 30%); }
+.card.decision-SUSPECT { border-top-color: var(--suspect); background: linear-gradient(to bottom, var(--suspect-soft), var(--panel) 30%); }
+.card.decision-DISCARD { border-top-color: var(--discard); opacity: 0.75; }
+.card.decision-UNANALYZED { border-top-color: var(--accent); }
+
+.card.has-verdict::after {
+  content: 'reviewed';
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--accent);
+  color: #04212d;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .badge {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
-  background: rgba(15, 17, 21, 0.9);
+  background: rgba(15, 17, 21, 0.92);
   color: var(--text);
-  padding: 0.25rem 0.55rem;
+  padding: 0.3rem 0.65rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   z-index: 2;
+  letter-spacing: 0.04em;
 }
-
-.card.is-deal .badge { background: var(--deal); color: #04140a; }
 
 .thumb {
   height: 200px;
   background: #1a1d26 center/cover;
-  border-bottom: 1px solid #262a35;
+  border-bottom: 1px solid var(--border);
 }
 
 .body {
@@ -160,68 +220,44 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   flex: 1;
 }
 
-.addr {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-}
+.addr { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.meta { font-size: 0.8rem; color: var(--muted); }
+.rent { font-size: 1.05rem; font-weight: 600; color: var(--accent); }
+.headline { margin: 0; font-size: 0.9rem; color: #d1d5e2; }
 
-.meta {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.rent {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--accent-2);
-}
-
-.scores {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.4rem;
-  margin: 0.3rem 0;
-}
-
-.bar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.reasoning {
   background: var(--panel-2);
-  padding: 0.45rem;
   border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.8rem;
 }
 
-.bar .lbl {
-  font-size: 0.65rem;
+.reasoning summary {
+  cursor: pointer;
   color: var(--muted);
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
-.bar .val {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-}
+.reasoning-text { margin: 0.5rem 0; color: #c8cdd9; }
 
-.bar .val.high { color: var(--accent); }
-.bar .val.mid { color: var(--warn); }
-.bar .val.low { color: var(--bad); }
-
-.summary {
-  font-size: 0.85rem;
-  color: #c8cdd9;
-  margin: 0;
-}
-
-.features, .flags {
+.criteria {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
 }
+
+.criteria .tag {
+  background: var(--panel-3);
+  color: var(--muted);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.pros, .cons { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 
 .tag {
   font-size: 0.7rem;
@@ -231,12 +267,27 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   color: #86efac;
 }
 
-.tag.flag { background: #3a1d1d; color: #fca5a5; }
+.tag.con { background: #3a1d1d; color: #fca5a5; }
+
+.actions {
+  display: none;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.card.decision-SUSPECT:not(.has-verdict) .actions { display: flex; }
+.card.has-verdict .actions { display: flex; }
+.card.has-verdict .btn-deal, .card.has-verdict .btn-discard { display: none; }
+.card:not(.has-verdict) .btn-undo { display: none; }
+
+.btn-deal { background: var(--deal); color: #04140a; border-color: var(--deal); flex: 1; }
+.btn-discard { background: var(--bad); color: #1a0808; border-color: var(--bad); flex: 1; }
+.btn-undo { flex: 1; }
 
 .link {
   margin-top: auto;
   font-size: 0.8rem;
-  color: var(--accent-2);
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -248,4 +299,37 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   color: var(--muted);
   padding: 3rem;
   font-size: 0.9rem;
+}
+
+.rubric-dialog {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 720px;
+  width: 90vw;
+}
+
+.rubric-dialog::backdrop { background: rgba(0, 0, 0, 0.65); }
+.rubric-dialog h2 { margin-top: 0; }
+.rubric-help { color: var(--muted); font-size: 0.85rem; }
+
+.rubric-dialog textarea {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--panel-3);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.rubric-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }

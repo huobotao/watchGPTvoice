@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sydney Rental Finder · AI 评分</title>
+<title>Sydney Rental · AI 三分类</title>
 <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
 <header class="topbar">
-  <h1>Sydney Rental Finder</h1>
+  <h1>Sydney Rental Triage</h1>
   <div class="status" id="status">loading…</div>
 </header>
 
@@ -25,8 +25,24 @@
     <button id="analyzeBtn">2. Analyze with AI</button>
     <button id="runBtn" class="primary">Run end-to-end</button>
     <button id="refreshBtn">Refresh</button>
+    <button id="rubricBtn">Edit Rubric</button>
   </div>
 </section>
+
+<nav class="tabs">
+  <button class="tab is-active" data-tab="DEAL">
+    <span class="dot dot-deal"></span>Deals <span class="count" data-count="DEAL">0</span>
+  </button>
+  <button class="tab" data-tab="SUSPECT">
+    <span class="dot dot-suspect"></span>Review queue <span class="count" data-count="SUSPECT">0</span>
+  </button>
+  <button class="tab" data-tab="DISCARD">
+    <span class="dot dot-discard"></span>Discarded <span class="count" data-count="DISCARD">0</span>
+  </button>
+  <button class="tab" data-tab="UNANALYZED">
+    <span class="dot"></span>Unanalyzed <span class="count" data-count="UNANALYZED">0</span>
+  </button>
+</nav>
 
 <main id="grid" class="grid"></main>
 
@@ -38,18 +54,35 @@
       <h3 class="addr"></h3>
       <div class="meta"></div>
       <div class="rent"></div>
-      <div class="scores">
-        <div class="bar"><span class="lbl">Composite</span><span class="val composite"></span></div>
-        <div class="bar"><span class="lbl">Vision</span><span class="val vision"></span></div>
-        <div class="bar"><span class="lbl">Price</span><span class="val price"></span></div>
+      <p class="headline"></p>
+      <details class="reasoning">
+        <summary>Reasoning</summary>
+        <p class="reasoning-text"></p>
+        <div class="criteria"></div>
+      </details>
+      <div class="pros"></div>
+      <div class="cons"></div>
+      <div class="actions">
+        <button class="btn-deal" data-action="CONFIRMED_DEAL">✓ Confirm Deal</button>
+        <button class="btn-discard" data-action="CONFIRMED_DISCARD">✗ Reject</button>
+        <button class="btn-undo" data-action="undo">Undo</button>
       </div>
-      <p class="summary"></p>
-      <div class="features"></div>
-      <div class="flags"></div>
-      <a class="link" target="_blank" rel="noopener">View on Domain →</a>
+      <a class="link" target="_blank" rel="noopener">View listing →</a>
     </div>
   </article>
 </template>
+
+<dialog id="rubricDialog" class="rubric-dialog">
+  <form method="dialog">
+    <h2>Triage Rubric</h2>
+    <p class="rubric-help">这段会注入 Claude 的 system prompt。改完保存后下次 Analyze 会用新版本。</p>
+    <textarea id="rubricText" rows="20"></textarea>
+    <div class="rubric-actions">
+      <button type="button" id="rubricSave" class="primary">Save</button>
+      <button type="button" id="rubricCancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
 
 <script src="dashboard.js"></script>
 </body>
