@@ -1,86 +1,61 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Apple Watch · ChatGPT Voice</title>
-<link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#EDEDED" />
+  <title>微信</title>
+  <link rel="stylesheet" href="assets/css/wechat.css" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2307C160'/><text x='32' y='44' font-size='38' text-anchor='middle' fill='white' font-family='-apple-system'>微</text></svg>" />
 </head>
 <body>
-  <main class="stage">
-    <div class="watch" role="application" aria-label="Apple Watch ChatGPT">
-      <div class="crown" aria-hidden="true"></div>
-      <div class="side-button" aria-hidden="true"></div>
-
-      <div class="bezel">
-        <div class="screen" id="screen">
-
-          <!-- Status bar -->
-          <header class="status-bar">
-            <span class="status-time" id="statusTime">10:09</span>
-            <span class="status-dot" aria-hidden="true"></span>
-          </header>
-
-          <!-- Home screen: ChatGPT app icon -->
-          <section class="view view-home is-active" id="viewHome" aria-label="主屏幕">
-            <button class="app-icon" id="openApp" aria-label="打开 ChatGPT">
-              <svg viewBox="0 0 64 64" class="logo" aria-hidden="true">
-                <defs>
-                  <radialGradient id="g" cx="50%" cy="50%" r="60%">
-                    <stop offset="0%" stop-color="#10a37f"/>
-                    <stop offset="100%" stop-color="#0b6f57"/>
-                  </radialGradient>
-                </defs>
-                <rect width="64" height="64" rx="14" fill="url(#g)"/>
-                <path fill="#fff" d="M44.6 27.2a8.6 8.6 0 0 0-.74-7.06 8.7 8.7 0 0 0-9.37-4.17 8.62 8.62 0 0 0-6.5-2.9 8.7 8.7 0 0 0-8.3 6.02 8.62 8.62 0 0 0-5.76 4.17 8.7 8.7 0 0 0 1.07 10.2 8.62 8.62 0 0 0 .74 7.07 8.7 8.7 0 0 0 9.37 4.17 8.62 8.62 0 0 0 6.5 2.9 8.7 8.7 0 0 0 8.3-6.02 8.62 8.62 0 0 0 5.76-4.17 8.7 8.7 0 0 0-1.07-10.2zM34.5 47.2a6.45 6.45 0 0 1-4.13-1.5l.2-.12 6.86-3.96a1.13 1.13 0 0 0 .57-.98v-9.66l2.9 1.68a.1.1 0 0 1 .06.08v8.01a6.47 6.47 0 0 1-6.46 6.45zM20.6 41.3a6.43 6.43 0 0 1-.77-4.32l.2.12 6.87 3.96a1.12 1.12 0 0 0 1.13 0l8.39-4.84v3.35a.11.11 0 0 1-.04.09l-6.94 4a6.46 6.46 0 0 1-8.84-2.36zM18.8 26.27a6.44 6.44 0 0 1 3.36-2.83v8.16a1.11 1.11 0 0 0 .56.98l8.36 4.82-2.9 1.68a.11.11 0 0 1-.1 0l-6.95-4a6.47 6.47 0 0 1-2.36-8.81zm23.83 5.55-8.39-4.86 2.9-1.67a.11.11 0 0 1 .1 0l6.95 4a6.46 6.46 0 0 1-1 11.65v-8.16a1.13 1.13 0 0 0-.56-.97zM45.5 26.5l-.2-.12-6.86-3.99a1.12 1.12 0 0 0-1.13 0l-8.39 4.84v-3.35a.1.1 0 0 1 .04-.09l6.95-4a6.46 6.46 0 0 1 9.6 6.7zm-18.2 5.49-2.9-1.68a.11.11 0 0 1-.06-.08v-8.01a6.46 6.46 0 0 1 10.6-4.96l-.2.11-6.87 3.97a1.12 1.12 0 0 0-.57.97zm1.58-3.4 3.74-2.16 3.74 2.15v4.32l-3.73 2.16-3.74-2.16z"/>
-              </svg>
-              <span class="app-label">ChatGPT</span>
-            </button>
-          </section>
-
-          <!-- Recording screen -->
-          <section class="view view-record" id="viewRecord" aria-label="语音录制">
-            <button class="back-btn" id="backHome" aria-label="返回">‹</button>
-            <div class="record-title" id="recordTitle">轻点开始说话</div>
-
-            <div class="waveform" id="waveform" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
-
-            <div class="timer" id="timer">0:00</div>
-
-            <button class="mic-btn" id="micBtn" aria-label="录音">
-              <svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"/>
-              </svg>
-              <svg class="send-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M3 11.5 21 3l-8.5 18-2.5-7.5z"/>
-              </svg>
-            </button>
-
-            <div class="hint" id="recordHint">点击话筒开始录音</div>
-          </section>
-
-          <!-- Reply screen -->
-          <section class="view view-reply" id="viewReply" aria-label="ChatGPT 回复">
-            <button class="back-btn" id="backRecord" aria-label="重新录制">‹</button>
-            <div class="reply-header">ChatGPT</div>
-            <div class="reply-bubble" id="replyBubble">
-              <span class="dots"><span></span><span></span><span></span></span>
-            </div>
-            <button class="again-btn" id="askAgain">再问一次</button>
-          </section>
-
-        </div>
+  <div id="device">
+    <div id="status-bar">
+      <div class="sb-time">9:41</div>
+      <div class="sb-notch"></div>
+      <div class="sb-right">
+        <svg viewBox="0 0 18 12" width="17" height="11"><path fill="currentColor" d="M1.5 9.5h2v1h-2zM5 8h2v2.5H5zM8.5 6h2v4.5h-2zM12 4h2v6.5h-2zM15.5 2h2v8.5h-2z"/></svg>
+        <svg viewBox="0 0 16 12" width="16" height="11"><path fill="none" stroke="currentColor" stroke-width="1.1" d="M1 4.5 A 8 6 0 0 1 15 4.5 M3.2 6.7 A 5 4 0 0 1 12.8 6.7 M5.4 8.9 A 2 1.5 0 0 1 10.6 8.9"/><circle cx="8" cy="10.5" r="0.9" fill="currentColor"/></svg>
+        <div class="sb-battery"><div class="sb-battery-level"></div><div class="sb-battery-cap"></div></div>
       </div>
     </div>
 
-    <p class="caption">轻点图标 → 轻点话筒开始录音 → 再轻点发送</p>
-  </main>
+    <div id="page-stack"></div>
 
-  <script src="app.js"></script>
+    <div id="tabbar">
+      <a class="tab" data-tab="chats" href="#/chats">
+        <div class="tab-icon" data-icon="chats"></div>
+        <div class="tab-label">微信</div>
+        <div class="tab-badge" data-badge="chats"></div>
+      </a>
+      <a class="tab" data-tab="contacts" href="#/contacts">
+        <div class="tab-icon" data-icon="contacts"></div>
+        <div class="tab-label">通讯录</div>
+        <div class="tab-badge" data-badge="contacts"></div>
+      </a>
+      <a class="tab" data-tab="discover" href="#/discover">
+        <div class="tab-icon" data-icon="discover"></div>
+        <div class="tab-label">发现</div>
+        <div class="tab-badge" data-badge="discover"></div>
+      </a>
+      <a class="tab" data-tab="me" href="#/me">
+        <div class="tab-icon" data-icon="me"></div>
+        <div class="tab-label">我</div>
+        <div class="tab-badge" data-badge="me"></div>
+      </a>
+      <div class="tab-home-indicator"></div>
+    </div>
+  </div>
+
+  <div id="overlay-root"></div>
+  <div id="toast-root"></div>
+
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/views.js"></script>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>
