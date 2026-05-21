@@ -76,7 +76,8 @@
     cursor: pointer; -webkit-appearance: none; appearance: none; font-family: inherit; }
   .illum-card .illum-toggle button.active { background: rgba(255,184,107,0.15); color: var(--accent);
     border-color: var(--accent); font-weight: 600; }
-  .illum-card .illum-chart { width: 100%; height: 100px; margin-top: 10px; display: block; }
+  .illum-card .illum-chart { width: 100%; height: 100px; margin-top: 10px; display: block;
+    touch-action: pan-y; }
   .illum-card .illum-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
 
   .group { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
@@ -181,7 +182,7 @@
       <button data-mode="both" class="active">两者</button>
     </div>
     <svg id="illum-chart" class="illum-chart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
-    <div class="illum-axis">
+    <div class="illum-axis" id="illum-axis">
       <span>−12h</span><span>−6h</span><span>现在</span><span>+6h</span><span>+12h</span>
     </div>
   </div>
@@ -402,16 +403,19 @@
     return direct + diffuse;
   }
 
-  // 构建 24h 曲线（mode = 'illum' / 'temp' / 'both'）
+  // 构建曲线图（mode = 'illum' / 'temp' / 'both'，窗口 ± chartHalfMin 分钟）
   function buildChart(now, lat, lng, mode) {
     const W = 320, H = 100;
     const padL = 4, padR = 4, padT = 14, padB = 4;
     const cw = W - padL - padR, ch = H - padT - padB;
+    const halfMin = chartHalfMin;
 
+    // 自适应采样步长：保证约 240~300 个点
+    const stepMin = Math.max(0.25, (2 * halfMin) / 280);
     const samples = [];
     let maxLux = 0;
     let tempMin = Infinity, tempMax = -Infinity;
-    for (let m = -12 * 60; m <= 12 * 60; m += 5) {
+    for (let m = -halfMin; m <= halfMin + 0.001; m += stepMin) {
       const t = new Date(now.getTime() + m * 60000);
       const alt = getSunPos(t, lat, lng).alt / rad;
       const lux = illuminance(alt);
@@ -427,21 +431,20 @@
     const curTemp = tempAt(now.getTime());
     const hasTemp = tempMin !== Infinity;
     if (hasTemp) {
-      // 给上下各加 10% 边距
       const range = Math.max(2, tempMax - tempMin);
       tempMin -= range * 0.1;
       tempMax += range * 0.1;
     }
 
-    const toX = m => padL + ((m + 12 * 60) / (24 * 60)) * cw;
+    const toX = m => padL + ((m + halfMin) / (2 * halfMin)) * cw;
 
     const yMinLux = -3.2;
-    const yMaxLux = Math.log10(maxLux + 1) + 0.05;
+    const yMaxLux = Math.max(1.5, Math.log10(maxLux + 1) + 0.05);
     const toYLux  = lux => padT + ch - ((Math.log10(Math.max(lux, 1e-4)) - yMinLux) / (yMaxLux - yMinLux)) * ch;
     const toYTemp = hasTemp ? (t => padT + ch - ((t - tempMin) / (tempMax - tempMin)) * ch) : null;
 
-    // 收集 ±12h 内所有日出/日落事件，用于在图上标点
-    const halfMs = 12 * 3600 * 1000;
+    // 收集当前可视窗口内所有日出/日落事件
+    const halfMs = halfMin * 60 * 1000;
     const events = [];
     for (let off = -1; off <= 1; off++) {
       const d = new Date(now.getTime() + off * dayMs);
@@ -751,6 +754,10 @@
   };
   const POS_REFRESH_MS = 3 * 60 * 1000;
   let chartMode = 'both';  // 'illum' | 'temp' | 'both'
+  const CHART_DEFAULT_HALF = 720;     // ±12h
+  const CHART_MIN_HALF = 15;          // ±15 分钟
+  const CHART_MAX_HALF = 720;         // ±12h
+  let chartHalfMin = CHART_DEFAULT_HALF;
 
   function setStatus(msg, isErr) {
     const el = $('status');
@@ -896,6 +903,22 @@
     const chart = buildChart(now, state.lat, state.lng, chartMode);
     $('illum-card').hidden = false;
     $('illum-chart').innerHTML = chart.svgInner;
+    // X 轴刻度文本随缩放变化
+    const half = chartHalfMin;
+    const halfHalf = half / 2;
+    const fmtAxisOff = m => {
+      const a = Math.abs(m);
+      if (a < 1) return '0';
+      if (a < 60) return Math.round(a) + '分';
+      if (a % 60 === 0) return (a / 60) + 'h';
+      return (Math.round(a / 6) / 10) + 'h';
+    };
+    $('illum-axis').innerHTML =
+      `<span>−${fmtAxisOff(half)}</span>` +
+      `<span>−${fmtAxisOff(halfHalf)}</span>` +
+      `<span>现在</span>` +
+      `<span>+${fmtAxisOff(halfHalf)}</span>` +
+      `<span>+${fmtAxisOff(half)}</span>`;
 
     const hasTemp = chart.curTemp != null;
     if (chartMode === 'illum') {
@@ -1018,6 +1041,65 @@
       b.classList.toggle('active', b.dataset.mode === chartMode));
     if (state.lat != null) render();
   });
+
+  // 曲线图缩放：双指捏合 / 鼠标滚轮 / 双击重置
+  (function setupChartZoom() {
+    const chartEl = $('illum-chart');
+    let pinch = null;
+    let lastTap = 0;
+
+    chartEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const a = e.touches[0], b = e.touches[1];
+        pinch = {
+          dist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+          half: chartHalfMin,
+        };
+      } else if (e.touches.length === 1) {
+        const t = Date.now();
+        if (t - lastTap < 350) {
+          chartHalfMin = CHART_DEFAULT_HALF;
+          if (state.lat != null) render();
+          lastTap = 0;
+        } else {
+          lastTap = t;
+        }
+      }
+    }, { passive: false });
+
+    chartEl.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && pinch) {
+        e.preventDefault();
+        const a = e.touches[0], b = e.touches[1];
+        const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        let newHalf = pinch.half * (pinch.dist / Math.max(d, 1));
+        newHalf = Math.max(CHART_MIN_HALF, Math.min(CHART_MAX_HALF, newHalf));
+        if (Math.abs(newHalf - chartHalfMin) > 0.5) {
+          chartHalfMin = newHalf;
+          if (state.lat != null) render();
+        }
+      }
+    }, { passive: false });
+
+    chartEl.addEventListener('touchend', () => { pinch = null; });
+
+    chartEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = Math.exp(e.deltaY * 0.0015);
+      let newHalf = chartHalfMin * factor;
+      newHalf = Math.max(CHART_MIN_HALF, Math.min(CHART_MAX_HALF, newHalf));
+      if (Math.abs(newHalf - chartHalfMin) > 0.1) {
+        chartHalfMin = newHalf;
+        if (state.lat != null) render();
+      }
+    }, { passive: false });
+
+    chartEl.addEventListener('dblclick', () => {
+      chartHalfMin = CHART_DEFAULT_HALF;
+      if (state.lat != null) render();
+    });
+  })();
 
   setInterval(() => { if (state.lat != null) render(); }, 1000);
 
