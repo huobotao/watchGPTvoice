@@ -170,7 +170,36 @@ $$('.city-tab').forEach(btn => {
   });
 });
 
-// Day cell click → 简单脉冲反馈,真实版应跳转到详情/预订
+// 点单元格 → 弹底部抽屉
+const sheet         = $('#sheet');
+const sheetBackdrop = $('#sheetBackdrop');
+const sheetEyebrow  = $('#sheetEyebrow');
+const sheetTitle    = $('#sheetTitle');
+const sheetSub      = $('#sheetSub');
+
+function openSheet(city, day) {
+  const hotelNights = 4;
+  const total = day.price + day.hotel * hotelNights;
+  sheetEyebrow.textContent = `SYD → ${city.iata} · 周${day.dow} ${day.md}`;
+  sheetTitle.textContent   = `A$${day.price} 往返 + 酒店 ${hotelNights} 晚 A$${day.hotel*hotelNights}`;
+  if (day.band === 'deal') {
+    sheetSub.textContent = `总预算 A$${total} · 比 30 日均价省 ~A$${Math.round(Math.abs(city.avgDeltaPct) * day.price / 100)}`;
+    sheetSub.style.color = '';
+  } else {
+    sheetSub.textContent = `总预算 A$${total} · ${day.band === 'high' ? '今日偏贵,可等一等' : '价位适中'}`;
+    sheetSub.style.color = day.band === 'high' ? 'var(--warn)' : '';
+  }
+  sheet.classList.add('is-open');
+  sheetBackdrop.classList.add('is-open');
+  sheet.setAttribute('aria-hidden', 'false');
+}
+
+function closeSheet() {
+  sheet.classList.remove('is-open');
+  sheetBackdrop.classList.remove('is-open');
+  sheet.setAttribute('aria-hidden', 'true');
+}
+
 grid.addEventListener('click', (e) => {
   const cell = e.target.closest('.day');
   if (!cell) return;
@@ -178,6 +207,24 @@ grid.addEventListener('click', (e) => {
     [{ transform: 'scale(1)' }, { transform: 'scale(.94)' }, { transform: 'scale(1)' }],
     { duration: 200, easing: 'ease-out' }
   );
+  const idx = Array.from(grid.children).indexOf(cell);
+  const activeIATA = $('.city-tab.is-active')?.dataset.city || 'AKL';
+  const city = MOCK[activeIATA];
+  const day  = city.days[idx];
+  if (day) openSheet(city, day);
+});
+
+$('#sheetClose')?.addEventListener('click', closeSheet);
+sheetBackdrop.addEventListener('click', closeSheet);
+
+// 点目的地卡片 → 切换到该城市
+$$('.dest[data-city]').forEach(card => {
+  card.addEventListener('click', () => {
+    const iata = card.dataset.city;
+    const tab = document.querySelector(`.city-tab[data-city="${iata}"]`);
+    if (tab) tab.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 });
 
 switchCity('AKL');

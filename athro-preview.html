@@ -4,14 +4,18 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Athro · SYD → NZ 机票特价监视器</title>
+
+<!-- iOS PWA: 加到主屏幕后全屏运行 -->
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Athro" />
 <meta name="theme-color" content="#0a0e1a" />
 <meta name="format-detection" content="telephone=no" />
+
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiAgIHN0b3AtY29sb3I9IiMwYTBlMWEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNTUiIHN0b3AtY29sb3I9IiMxZjIzNDIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiAgIHN0b3AtY29sb3I9IiMyYTFkM2YiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InBsYW5lIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVjZjJjMSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM0YWRjZmYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI4MCUiIGN5PSIwJSIgcj0iODAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmY2YThiIiBzdG9wLW9wYWNpdHk9Ii41Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmNmE4YiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0idXJsKCNiZykiLz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0idXJsKCNnbG93KSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDk2IDk2KSBzY2FsZSgxMy4zKSI+CiAgICA8cGF0aCBmaWxsPSJ1cmwoI3BsYW5lKSIgZD0iTTIuNSAxNi41IDIxIDkgMTQgMThsLTIuNC0zLjEtMS42IDQtMS41LTIuNC02IDFaIi8+CiAgPC9nPgo8L3N2Zz4K" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiAgIHN0b3AtY29sb3I9IiMwYTBlMWEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNTUiIHN0b3AtY29sb3I9IiMxZjIzNDIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiAgIHN0b3AtY29sb3I9IiMyYTFkM2YiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InBsYW5lIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVjZjJjMSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM0YWRjZmYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI4MCUiIGN5PSIwJSIgcj0iODAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmY2YThiIiBzdG9wLW9wYWNpdHk9Ii41Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmNmE4YiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0idXJsKCNiZykiLz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0idXJsKCNnbG93KSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDk2IDk2KSBzY2FsZSgxMy4zKSI+CiAgICA8cGF0aCBmaWxsPSJ1cmwoI3BsYW5lKSIgZD0iTTIuNSAxNi41IDIxIDkgMTQgMThsLTIuNC0zLjEtMS42IDQtMS41LTIuNC02IDFaIi8+CiAgPC9nPgo8L3N2Zz4K" />
+<link rel="manifest" href="#" />
 <style>
 :root{
   --bg-0:#0a0e1a;
@@ -384,6 +388,273 @@ body{
 .lg-mid{background:var(--mid)}
 .lg-high{background:var(--high)}
 
+/* --- Today section blocks --- */
+.block{margin-top:6px;display:flex;flex-direction:column;gap:8px}
+.block-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 6px;
+}
+.block-head h2{
+  margin:0;font-size:13.5px;letter-spacing:.4px;
+  color:var(--ink-2);font-weight:700;
+}
+.block-link{
+  font-size:12px;color:var(--accent-2);font-weight:600;
+}
+
+/* alerts */
+.alerts{
+  list-style:none;margin:0;padding:0;
+  background:var(--card);
+  backdrop-filter:saturate(160%) blur(22px);
+  -webkit-backdrop-filter:saturate(160%) blur(22px);
+  border:1px solid var(--card-line);border-radius:18px;
+  overflow:hidden;
+  box-shadow:var(--shadow-1);
+}
+.alert{
+  display:grid;grid-template-columns:18px 1fr auto;
+  align-items:center;gap:10px;
+  padding:11px 14px;
+  border-top:1px solid var(--card-line);
+  font-size:12.5px;
+}
+.alert:first-child{border-top:0}
+.alert-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--ink-3);
+  justify-self:center;
+}
+.alert.is-fresh .alert-dot{
+  background:var(--accent);
+  box-shadow:0 0 0 0 rgba(92,242,193,.55);
+  animation:athro-pulse 1.6s ease-out infinite;
+}
+.alert.is-cool .alert-dot{background:var(--warn)}
+.alert-title{font-weight:700;color:var(--ink);font-size:13px;letter-spacing:.1px}
+.alert-meta{color:var(--ink-3);font-size:11.5px;margin-top:1px}
+.alert-time{color:var(--ink-3);font-size:11px}
+
+/* destinations */
+.dest-list{display:flex;flex-direction:column;gap:6px}
+.dest{
+  display:grid;grid-template-columns:36px 1fr auto;
+  align-items:center;gap:10px;
+  padding:10px 12px;
+  background:var(--card);
+  backdrop-filter:saturate(160%) blur(22px);
+  -webkit-backdrop-filter:saturate(160%) blur(22px);
+  border:1px solid var(--card-line);border-radius:14px;
+}
+.dest-flag{
+  width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.05);
+  font-size:20px;line-height:1;
+}
+.dest-name{font-size:14px;font-weight:700;color:var(--ink)}
+.dest-iata{
+  margin-left:5px;font-size:10px;font-weight:700;letter-spacing:.6px;
+  color:var(--ink-3);
+}
+.dest-meta{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.dest-stat{text-align:right;line-height:1.15}
+.dest-stat-num{
+  font-size:15px;font-weight:800;
+  background:linear-gradient(180deg,#fff 0%,#cfe9ff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:-.2px;
+}
+.dest-stat-tag{font-size:10px;color:var(--ink-3);letter-spacing:.4px;margin-top:1px}
+.dest-add{
+  appearance:none;border:1px dashed rgba(255,255,255,.18);
+  background:transparent;color:var(--ink-3);
+  border-radius:14px;padding:12px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;
+}
+.dest-add-icon{
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+  display:grid;place-items:center;color:var(--ink-2);
+  font-size:14px;
+}
+
+/* rule card */
+.rule-card{
+  background:var(--card);
+  backdrop-filter:saturate(160%) blur(22px);
+  -webkit-backdrop-filter:saturate(160%) blur(22px);
+  border:1px solid var(--card-line);border-radius:18px;
+  padding:6px 14px;
+}
+.rule-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;
+  border-top:1px solid var(--card-line);
+  font-size:13px;
+}
+.rule-row:first-child{border-top:0}
+.rule-label{color:var(--ink-3);letter-spacing:.2px}
+.rule-value{color:var(--ink-2);font-weight:500}
+.rule-value b{color:var(--ink);font-weight:800}
+
+/* tip card */
+.tip-card{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:12px 14px;
+  background:linear-gradient(135deg, rgba(92,242,193,.10), rgba(74,220,255,.08));
+  border:1px solid rgba(92,242,193,.18);
+  border-radius:18px;
+}
+.tip-emoji{font-size:22px;line-height:1}
+.tip-text{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.tip-text b{color:var(--ink);font-weight:700}
+
+.footer-note{
+  text-align:center;
+  color:var(--ink-3);font-size:10.5px;letter-spacing:.4px;
+  margin:8px 0 0;
+}
+
+/* --- Day-detail bottom sheet --- */
+.sheet-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+  z-index:60;
+}
+.sheet-backdrop.is-open{opacity:1;pointer-events:auto}
+
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;
+  z-index:70;
+  max-height:88vh;
+  background:linear-gradient(180deg,#1d2240 0%, #14182c 100%);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:24px 24px 0 0;
+  box-shadow:0 -30px 80px -20px rgba(0,0,0,.7);
+  padding:8px 16px 18px;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom));
+  transform:translateY(105%);
+  transition:transform .32s cubic-bezier(.2,.7,.2,1);
+  display:flex;flex-direction:column;gap:14px;
+  overflow-y:auto;
+}
+.sheet.is-open{transform:translateY(0)}
+.sheet-handle{
+  align-self:center;
+  width:38px;height:4px;border-radius:3px;
+  background:rgba(255,255,255,.18);
+  margin:4px 0 6px;
+  flex:0 0 auto;
+}
+.sheet-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;
+}
+.sheet-eyebrow{font-size:11.5px;color:var(--ink-3);letter-spacing:.4px}
+.sheet-title{
+  font-size:18px;font-weight:800;color:var(--ink);
+  margin-top:2px;letter-spacing:-.2px;
+}
+.sheet-sub{font-size:12px;color:var(--accent);font-weight:700;margin-top:3px;letter-spacing:.2px}
+.sheet-close{
+  appearance:none;border:0;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,.08);color:var(--ink);
+  font-size:18px;line-height:1;cursor:pointer;
+}
+
+.sheet-section{display:flex;flex-direction:column;gap:8px}
+.sheet-h{
+  margin:0;font-size:11.5px;letter-spacing:.6px;
+  color:var(--ink-3);font-weight:700;text-transform:uppercase;
+}
+
+/* flight segment */
+.seg{
+  display:grid;grid-template-columns:auto 1fr auto;
+  align-items:center;gap:10px;
+  padding:11px 12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--card-line);
+  border-radius:14px;
+}
+.seg-alt{opacity:.78}
+.seg-airline{display:flex;align-items:center;gap:8px;min-width:0}
+.al-logo{
+  width:30px;height:30px;border-radius:7px;
+  display:grid;place-items:center;
+  font-weight:800;font-size:11px;letter-spacing:.6px;
+  color:#fff;
+}
+.al-jq{background:linear-gradient(135deg,#ff5e1a,#ff8a3d)}
+.al-qf{background:linear-gradient(135deg,#e60000,#a8050a)}
+.al-nz{background:linear-gradient(135deg,#1a1a1a,#3a3a3a);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.al-name{font-size:11.5px;color:var(--ink-2);font-weight:600;letter-spacing:.2px}
+.seg-times{display:flex;align-items:center;gap:10px}
+.seg-time{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.seg-time b{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:.2px}
+.seg-time span{font-size:9.5px;color:var(--ink-3);letter-spacing:.4px;margin-top:1px}
+.seg-arc{
+  display:flex;flex-direction:column;align-items:center;
+  min-width:70px;
+}
+.seg-arc i{
+  display:block;width:60px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--ink-3),transparent);
+  position:relative;
+}
+.seg-arc i::after{
+  content:"";position:absolute;right:-3px;top:-3px;
+  width:0;height:0;
+  border-left:5px solid var(--ink-3);
+  border-top:3px solid transparent;border-bottom:3px solid transparent;
+}
+.seg-arc span{font-size:9.5px;color:var(--ink-3);margin-top:3px}
+.seg-price{font-size:14px;font-weight:800;color:var(--ink)}
+
+/* hotel */
+.hot{
+  display:grid;grid-template-columns:1fr auto;
+  column-gap:10px;row-gap:1px;
+  padding:11px 12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--card-line);
+  border-radius:14px;
+}
+.hot-name{font-size:13.5px;font-weight:700;color:var(--ink);grid-column:1/2}
+.hot-meta{font-size:11px;color:var(--ink-3);grid-column:1/2}
+.hot-rating{font-size:11.5px;color:var(--accent);font-weight:700;grid-column:2/3;align-self:start}
+.hot-price{font-size:14px;font-weight:800;color:var(--ink);grid-column:2/3;align-self:end;text-align:right}
+.hot-price small{font-size:10px;color:var(--ink-3);font-weight:600;margin-left:1px}
+
+/* sheet footer cta */
+.sheet-foot{
+  display:flex;gap:10px;padding-top:4px;
+  border-top:1px solid var(--card-line);
+  margin-top:2px;padding-top:14px;
+}
+.sheet-cta{
+  flex:1;appearance:none;border:0;
+  padding:12px;border-radius:12px;
+  font:inherit;font-size:13.5px;font-weight:800;letter-spacing:.4px;
+  cursor:pointer;
+}
+.sheet-cta-1{
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#06251c;
+  box-shadow:0 8px 22px -10px rgba(92,242,193,.55);
+}
+.sheet-cta-2{
+  background:rgba(255,255,255,.06);color:var(--ink);
+}
+
 /* --- Home indicator --- */
 .home-indicator{
   position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
@@ -496,6 +767,8 @@ body{
       <div class="phone-frame">
         <div class="notch" aria-hidden="true"></div>
         <div class="phone-screen" id="screen">
+
+          <!-- iOS status bar -->
           <header class="ios-status">
             <span class="ios-time">9:41</span>
             <span class="ios-icons" aria-hidden="true">
@@ -504,11 +777,15 @@ body{
               <span class="i-battery"><i></i></span>
             </span>
           </header>
+
+          <!-- Today / 负一屏 view -->
           <div class="today">
             <div class="today-head">
               <h1 class="today-greet">今天</h1>
               <p class="today-sub">悉尼 · 周六 5月9日</p>
             </div>
+
+            <!-- Athro 大号 widget -->
             <article class="widget widget-athro" id="widgetAthro">
               <header class="w-head">
                 <div class="brand">
@@ -531,6 +808,7 @@ body{
                   </div>
                 </div>
               </header>
+
               <section class="w-summary">
                 <div class="summary-best">
                   <span class="best-label">7 日最低 · 含合适酒店</span>
@@ -546,7 +824,9 @@ body{
                   <span class="trend-text" id="trendText">较 30 日均价 −28%</span>
                 </div>
               </section>
+
               <section class="w-grid" id="dayGrid" aria-label="未来 7 天票价"></section>
+
               <footer class="w-foot">
                 <span class="foot-item">
                   <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2 13V6h12v7H2Zm1-1h10V7H3v5Zm2-7V3a3 3 0 0 1 6 0v2H9V3a1 1 0 0 0-2 0v2H5Z"/></svg>
@@ -561,6 +841,8 @@ body{
                 </span>
               </footer>
             </article>
+
+            <!-- 推送通知样例 -->
             <article class="notif" id="notif">
               <div class="notif-icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.5 16.5 21 9 14 18l-2.4-3.1-1.6 4-1.5-2.4-6 1Z"/></svg>
@@ -574,23 +856,241 @@ body{
                 <div class="notif-text" id="notifText">5 月 12 日往返 A$399 · 同期 4★ 酒店 A$148/晚 · 比近 30 日均价低 28%</div>
               </div>
             </article>
+
             <p class="legend">
               <span class="lg-dot lg-deal"></span>特价命中
               <span class="lg-dot lg-low"></span>偏低
               <span class="lg-dot lg-mid"></span>正常
               <span class="lg-dot lg-high"></span>偏高
             </p>
+
+            <!-- 最近特价提醒 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>最近特价提醒</h2>
+                <span class="block-link">全部</span>
+              </header>
+              <ol class="alerts">
+                <li class="alert is-fresh">
+                  <span class="alert-dot"></span>
+                  <div class="alert-body">
+                    <div class="alert-title">SYD → AKL · A$399 往返</div>
+                    <div class="alert-meta">命中 · 5月12日(周二) · 比 30 日均价低 28%</div>
+                  </div>
+                  <span class="alert-time">现在</span>
+                </li>
+                <li class="alert">
+                  <span class="alert-dot"></span>
+                  <div class="alert-body">
+                    <div class="alert-title">SYD → CHC · A$498 往返</div>
+                    <div class="alert-meta">命中 · 5月13日(周三) · 同期 4★ 酒店 A$135/晚</div>
+                  </div>
+                  <span class="alert-time">2 小时前</span>
+                </li>
+                <li class="alert is-cool">
+                  <span class="alert-dot"></span>
+                  <div class="alert-body">
+                    <div class="alert-title">SYD → ZQN · 价位回落到 A$679</div>
+                    <div class="alert-meta">观察 · 5月14日(周四) · 还差 A$30 触达预算</div>
+                  </div>
+                  <span class="alert-time">昨天</span>
+                </li>
+              </ol>
+            </section>
+
+            <!-- 我的目的地 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>我的目的地</h2>
+                <span class="block-link">编辑</span>
+              </header>
+              <div class="dest-list">
+                <article class="dest" data-city="AKL">
+                  <div class="dest-flag">🇳🇿</div>
+                  <div class="dest-text">
+                    <div class="dest-name">奥克兰 <span class="dest-iata">AKL</span></div>
+                    <div class="dest-meta">监视 24 天 · 命中 3 次特价</div>
+                  </div>
+                  <div class="dest-stat">
+                    <div class="dest-stat-num">A$399</div>
+                    <div class="dest-stat-tag">最低往返</div>
+                  </div>
+                </article>
+                <article class="dest" data-city="CHC">
+                  <div class="dest-flag">🇳🇿</div>
+                  <div class="dest-text">
+                    <div class="dest-name">基督城 <span class="dest-iata">CHC</span></div>
+                    <div class="dest-meta">监视 18 天 · 命中 2 次特价</div>
+                  </div>
+                  <div class="dest-stat">
+                    <div class="dest-stat-num">A$498</div>
+                    <div class="dest-stat-tag">最低往返</div>
+                  </div>
+                </article>
+                <article class="dest" data-city="ZQN">
+                  <div class="dest-flag">🇳🇿</div>
+                  <div class="dest-text">
+                    <div class="dest-name">皇后镇 <span class="dest-iata">ZQN</span></div>
+                    <div class="dest-meta">监视 11 天 · 接近预算</div>
+                  </div>
+                  <div class="dest-stat">
+                    <div class="dest-stat-num">A$679</div>
+                    <div class="dest-stat-tag">最低往返</div>
+                  </div>
+                </article>
+                <button class="dest dest-add">
+                  <span class="dest-add-icon">+</span>
+                  <span class="dest-add-text">添加目的地</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- 特价命中规则 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>命中规则</h2>
+                <span class="block-link">调整</span>
+              </header>
+              <div class="rule-card">
+                <div class="rule-row">
+                  <span class="rule-label">往返机票</span>
+                  <span class="rule-value">≤ A$<b>500</b> · 直飞优先</span>
+                </div>
+                <div class="rule-row">
+                  <span class="rule-label">同期 4★ 酒店</span>
+                  <span class="rule-value">≤ A$<b>160</b> / 晚 · 评分 ≥ 8.4</span>
+                </div>
+                <div class="rule-row">
+                  <span class="rule-label">出行窗口</span>
+                  <span class="rule-value">未来 <b>30</b> 天内任意 3-5 晚</span>
+                </div>
+                <div class="rule-row">
+                  <span class="rule-label">通知方式</span>
+                  <span class="rule-value">推送 + Apple Watch 提示</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- 今日小贴士 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>盯价小贴士</h2>
+              </header>
+              <div class="tip-card">
+                <div class="tip-emoji">💡</div>
+                <div class="tip-text">
+                  <b>周二出发往往最便宜。</b>
+                  你监视的三条航线在过去 30 天里,周二出发的均价比周五低 22%。
+                </div>
+              </div>
+            </section>
+
+            <p class="footer-note">
+              Athro · 数据每 30 分钟刷新一次 · 当前为模拟数据
+            </p>
           </div>
+
           <div class="home-indicator" aria-hidden="true"></div>
         </div>
       </div>
+
       <span class="side-btn side-btn-power" aria-hidden="true"></span>
       <span class="side-btn side-btn-vol-up" aria-hidden="true"></span>
       <span class="side-btn side-btn-vol-dn" aria-hidden="true"></span>
     </div>
-    <p class="caption">从主屏向右滑到「今天」视图,Athro 一直在替你盯价。点 AKL / CHC / ZQN 切换目的地。</p>
+
+    <!-- 日详情抽屉(点单元格滑出) -->
+    <div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true"></div>
+    <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-head">
+        <div>
+          <div class="sheet-eyebrow" id="sheetEyebrow">SYD → AKL · 周二 5月12日</div>
+          <div class="sheet-title" id="sheetTitle">A$399 往返 + 酒店 4 晚 A$592</div>
+          <div class="sheet-sub" id="sheetSub">总预算 A$991 · 比 30 日均价省 A$160</div>
+        </div>
+        <button class="sheet-close" id="sheetClose" aria-label="关闭">×</button>
+      </header>
+
+      <section class="sheet-section">
+        <h3 class="sheet-h">去程 · 悉尼 → 奥克兰</h3>
+        <article class="seg">
+          <div class="seg-airline">
+            <span class="al-logo al-jq">JQ</span>
+            <span class="al-name">Jetstar 137</span>
+          </div>
+          <div class="seg-times">
+            <div class="seg-time"><b>06:55</b><span>SYD</span></div>
+            <div class="seg-arc">
+              <i></i>
+              <span>3h 10m · 直飞</span>
+            </div>
+            <div class="seg-time"><b>12:05</b><span>AKL</span></div>
+          </div>
+          <div class="seg-price">A$199</div>
+        </article>
+        <article class="seg seg-alt">
+          <div class="seg-airline">
+            <span class="al-logo al-qf">QF</span>
+            <span class="al-name">Qantas 143</span>
+          </div>
+          <div class="seg-times">
+            <div class="seg-time"><b>09:30</b><span>SYD</span></div>
+            <div class="seg-arc">
+              <i></i>
+              <span>3h 05m · 直飞</span>
+            </div>
+            <div class="seg-time"><b>14:35</b><span>AKL</span></div>
+          </div>
+          <div class="seg-price">A$268</div>
+        </article>
+      </section>
+
+      <section class="sheet-section">
+        <h3 class="sheet-h">回程 · 奥克兰 → 悉尼</h3>
+        <article class="seg">
+          <div class="seg-airline">
+            <span class="al-logo al-nz">NZ</span>
+            <span class="al-name">Air NZ 105</span>
+          </div>
+          <div class="seg-times">
+            <div class="seg-time"><b>17:40</b><span>AKL</span></div>
+            <div class="seg-arc">
+              <i></i>
+              <span>3h 25m · 直飞</span>
+            </div>
+            <div class="seg-time"><b>19:05</b><span>SYD</span></div>
+          </div>
+          <div class="seg-price">A$200</div>
+        </article>
+      </section>
+
+      <section class="sheet-section">
+        <h3 class="sheet-h">同期 4★ 酒店 · 4 晚</h3>
+        <article class="hot">
+          <div class="hot-name">SO/ Auckland</div>
+          <div class="hot-meta">奥克兰 CBD · 离机场 21 km</div>
+          <div class="hot-rating">8.7 ★</div>
+          <div class="hot-price">A$148<small>/晚</small></div>
+        </article>
+        <article class="hot">
+          <div class="hot-name">QT Auckland</div>
+          <div class="hot-meta">海湾区 · 步行至天空塔</div>
+          <div class="hot-rating">8.5 ★</div>
+          <div class="hot-price">A$162<small>/晚</small></div>
+        </article>
+      </section>
+
+      <footer class="sheet-foot">
+        <button class="sheet-cta sheet-cta-2">设为提醒</button>
+        <button class="sheet-cta sheet-cta-1">查看预订 →</button>
+      </footer>
+    </aside>
+
+    <p class="caption">从主屏向右滑到「今天」视图,Athro 一直在替你盯价。点 AKL / CHC / ZQN 切换目的地。点任一天看明细。</p>
   </main>
-<script>
+
+  <script>
 // Athro · SYD → NZ 机票 + 酒店特价监视器(高保真原型 / mock)
 // 今日基准:2026-05-09(周六)。展示从今日起 7 天每日往返最低价 + 酒店均价。
 // 预留 flightProvider 接口位:将来接 Skyscanner / Kiwi / Amadeus 时只替换 fetchCity()。
@@ -763,7 +1263,36 @@ $$('.city-tab').forEach(btn => {
   });
 });
 
-// Day cell click → 简单脉冲反馈,真实版应跳转到详情/预订
+// 点单元格 → 弹底部抽屉
+const sheet         = $('#sheet');
+const sheetBackdrop = $('#sheetBackdrop');
+const sheetEyebrow  = $('#sheetEyebrow');
+const sheetTitle    = $('#sheetTitle');
+const sheetSub      = $('#sheetSub');
+
+function openSheet(city, day) {
+  const hotelNights = 4;
+  const total = day.price + day.hotel * hotelNights;
+  sheetEyebrow.textContent = `SYD → ${city.iata} · 周${day.dow} ${day.md}`;
+  sheetTitle.textContent   = `A$${day.price} 往返 + 酒店 ${hotelNights} 晚 A$${day.hotel*hotelNights}`;
+  if (day.band === 'deal') {
+    sheetSub.textContent = `总预算 A$${total} · 比 30 日均价省 ~A$${Math.round(Math.abs(city.avgDeltaPct) * day.price / 100)}`;
+    sheetSub.style.color = '';
+  } else {
+    sheetSub.textContent = `总预算 A$${total} · ${day.band === 'high' ? '今日偏贵,可等一等' : '价位适中'}`;
+    sheetSub.style.color = day.band === 'high' ? 'var(--warn)' : '';
+  }
+  sheet.classList.add('is-open');
+  sheetBackdrop.classList.add('is-open');
+  sheet.setAttribute('aria-hidden', 'false');
+}
+
+function closeSheet() {
+  sheet.classList.remove('is-open');
+  sheetBackdrop.classList.remove('is-open');
+  sheet.setAttribute('aria-hidden', 'true');
+}
+
 grid.addEventListener('click', (e) => {
   const cell = e.target.closest('.day');
   if (!cell) return;
@@ -771,6 +1300,24 @@ grid.addEventListener('click', (e) => {
     [{ transform: 'scale(1)' }, { transform: 'scale(.94)' }, { transform: 'scale(1)' }],
     { duration: 200, easing: 'ease-out' }
   );
+  const idx = Array.from(grid.children).indexOf(cell);
+  const activeIATA = $('.city-tab.is-active')?.dataset.city || 'AKL';
+  const city = MOCK[activeIATA];
+  const day  = city.days[idx];
+  if (day) openSheet(city, day);
+});
+
+$('#sheetClose')?.addEventListener('click', closeSheet);
+sheetBackdrop.addEventListener('click', closeSheet);
+
+// 点目的地卡片 → 切换到该城市
+$$('.dest[data-city]').forEach(card => {
+  card.addEventListener('click', () => {
+    const iata = card.dataset.city;
+    const tab = document.querySelector(`.city-tab[data-city="${iata}"]`);
+    if (tab) tab.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 });
 
 switchCity('AKL');

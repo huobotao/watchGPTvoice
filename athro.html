@@ -120,6 +120,131 @@
               <span class="lg-dot lg-mid"></span>正常
               <span class="lg-dot lg-high"></span>偏高
             </p>
+
+            <!-- 最近特价提醒 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>最近特价提醒</h2>
+                <span class="block-link">全部</span>
+              </header>
+              <ol class="alerts">
+                <li class="alert is-fresh">
+                  <span class="alert-dot"></span>
+                  <div class="alert-body">
+                    <div class="alert-title">SYD → AKL · A$399 往返</div>
+                    <div class="alert-meta">命中 · 5月12日(周二) · 比 30 日均价低 28%</div>
+                  </div>
+                  <span class="alert-time">现在</span>
+                </li>
+                <li class="alert">
+                  <span class="alert-dot"></span>
+                  <div class="alert-body">
+                    <div class="alert-title">SYD → CHC · A$498 往返</div>
+                    <div class="alert-meta">命中 · 5月13日(周三) · 同期 4★ 酒店 A$135/晚</div>
+                  </div>
+                  <span class="alert-time">2 小时前</span>
+                </li>
+                <li class="alert is-cool">
+                  <span class="alert-dot"></span>
+                  <div class="alert-body">
+                    <div class="alert-title">SYD → ZQN · 价位回落到 A$679</div>
+                    <div class="alert-meta">观察 · 5月14日(周四) · 还差 A$30 触达预算</div>
+                  </div>
+                  <span class="alert-time">昨天</span>
+                </li>
+              </ol>
+            </section>
+
+            <!-- 我的目的地 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>我的目的地</h2>
+                <span class="block-link">编辑</span>
+              </header>
+              <div class="dest-list">
+                <article class="dest" data-city="AKL">
+                  <div class="dest-flag">🇳🇿</div>
+                  <div class="dest-text">
+                    <div class="dest-name">奥克兰 <span class="dest-iata">AKL</span></div>
+                    <div class="dest-meta">监视 24 天 · 命中 3 次特价</div>
+                  </div>
+                  <div class="dest-stat">
+                    <div class="dest-stat-num">A$399</div>
+                    <div class="dest-stat-tag">最低往返</div>
+                  </div>
+                </article>
+                <article class="dest" data-city="CHC">
+                  <div class="dest-flag">🇳🇿</div>
+                  <div class="dest-text">
+                    <div class="dest-name">基督城 <span class="dest-iata">CHC</span></div>
+                    <div class="dest-meta">监视 18 天 · 命中 2 次特价</div>
+                  </div>
+                  <div class="dest-stat">
+                    <div class="dest-stat-num">A$498</div>
+                    <div class="dest-stat-tag">最低往返</div>
+                  </div>
+                </article>
+                <article class="dest" data-city="ZQN">
+                  <div class="dest-flag">🇳🇿</div>
+                  <div class="dest-text">
+                    <div class="dest-name">皇后镇 <span class="dest-iata">ZQN</span></div>
+                    <div class="dest-meta">监视 11 天 · 接近预算</div>
+                  </div>
+                  <div class="dest-stat">
+                    <div class="dest-stat-num">A$679</div>
+                    <div class="dest-stat-tag">最低往返</div>
+                  </div>
+                </article>
+                <button class="dest dest-add">
+                  <span class="dest-add-icon">+</span>
+                  <span class="dest-add-text">添加目的地</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- 特价命中规则 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>命中规则</h2>
+                <span class="block-link">调整</span>
+              </header>
+              <div class="rule-card">
+                <div class="rule-row">
+                  <span class="rule-label">往返机票</span>
+                  <span class="rule-value">≤ A$<b>500</b> · 直飞优先</span>
+                </div>
+                <div class="rule-row">
+                  <span class="rule-label">同期 4★ 酒店</span>
+                  <span class="rule-value">≤ A$<b>160</b> / 晚 · 评分 ≥ 8.4</span>
+                </div>
+                <div class="rule-row">
+                  <span class="rule-label">出行窗口</span>
+                  <span class="rule-value">未来 <b>30</b> 天内任意 3-5 晚</span>
+                </div>
+                <div class="rule-row">
+                  <span class="rule-label">通知方式</span>
+                  <span class="rule-value">推送 + Apple Watch 提示</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- 今日小贴士 -->
+            <section class="block">
+              <header class="block-head">
+                <h2>盯价小贴士</h2>
+              </header>
+              <div class="tip-card">
+                <div class="tip-emoji">💡</div>
+                <div class="tip-text">
+                  <b>周二出发往往最便宜。</b>
+                  你监视的三条航线在过去 30 天里,周二出发的均价比周五低 22%。
+                </div>
+              </div>
+            </section>
+
+            <p class="footer-note">
+              Athro · 数据每 30 分钟刷新一次 · 当前为模拟数据
+            </p>
           </div>
 
           <div class="home-indicator" aria-hidden="true"></div>
@@ -131,7 +256,95 @@
       <span class="side-btn side-btn-vol-dn" aria-hidden="true"></span>
     </div>
 
-    <p class="caption">从主屏向右滑到「今天」视图,Athro 一直在替你盯价。点 AKL / CHC 切换目的地。</p>
+    <!-- 日详情抽屉(点单元格滑出) -->
+    <div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true"></div>
+    <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-head">
+        <div>
+          <div class="sheet-eyebrow" id="sheetEyebrow">SYD → AKL · 周二 5月12日</div>
+          <div class="sheet-title" id="sheetTitle">A$399 往返 + 酒店 4 晚 A$592</div>
+          <div class="sheet-sub" id="sheetSub">总预算 A$991 · 比 30 日均价省 A$160</div>
+        </div>
+        <button class="sheet-close" id="sheetClose" aria-label="关闭">×</button>
+      </header>
+
+      <section class="sheet-section">
+        <h3 class="sheet-h">去程 · 悉尼 → 奥克兰</h3>
+        <article class="seg">
+          <div class="seg-airline">
+            <span class="al-logo al-jq">JQ</span>
+            <span class="al-name">Jetstar 137</span>
+          </div>
+          <div class="seg-times">
+            <div class="seg-time"><b>06:55</b><span>SYD</span></div>
+            <div class="seg-arc">
+              <i></i>
+              <span>3h 10m · 直飞</span>
+            </div>
+            <div class="seg-time"><b>12:05</b><span>AKL</span></div>
+          </div>
+          <div class="seg-price">A$199</div>
+        </article>
+        <article class="seg seg-alt">
+          <div class="seg-airline">
+            <span class="al-logo al-qf">QF</span>
+            <span class="al-name">Qantas 143</span>
+          </div>
+          <div class="seg-times">
+            <div class="seg-time"><b>09:30</b><span>SYD</span></div>
+            <div class="seg-arc">
+              <i></i>
+              <span>3h 05m · 直飞</span>
+            </div>
+            <div class="seg-time"><b>14:35</b><span>AKL</span></div>
+          </div>
+          <div class="seg-price">A$268</div>
+        </article>
+      </section>
+
+      <section class="sheet-section">
+        <h3 class="sheet-h">回程 · 奥克兰 → 悉尼</h3>
+        <article class="seg">
+          <div class="seg-airline">
+            <span class="al-logo al-nz">NZ</span>
+            <span class="al-name">Air NZ 105</span>
+          </div>
+          <div class="seg-times">
+            <div class="seg-time"><b>17:40</b><span>AKL</span></div>
+            <div class="seg-arc">
+              <i></i>
+              <span>3h 25m · 直飞</span>
+            </div>
+            <div class="seg-time"><b>19:05</b><span>SYD</span></div>
+          </div>
+          <div class="seg-price">A$200</div>
+        </article>
+      </section>
+
+      <section class="sheet-section">
+        <h3 class="sheet-h">同期 4★ 酒店 · 4 晚</h3>
+        <article class="hot">
+          <div class="hot-name">SO/ Auckland</div>
+          <div class="hot-meta">奥克兰 CBD · 离机场 21 km</div>
+          <div class="hot-rating">8.7 ★</div>
+          <div class="hot-price">A$148<small>/晚</small></div>
+        </article>
+        <article class="hot">
+          <div class="hot-name">QT Auckland</div>
+          <div class="hot-meta">海湾区 · 步行至天空塔</div>
+          <div class="hot-rating">8.5 ★</div>
+          <div class="hot-price">A$162<small>/晚</small></div>
+        </article>
+      </section>
+
+      <footer class="sheet-foot">
+        <button class="sheet-cta sheet-cta-2">设为提醒</button>
+        <button class="sheet-cta sheet-cta-1">查看预订 →</button>
+      </footer>
+    </aside>
+
+    <p class="caption">从主屏向右滑到「今天」视图,Athro 一直在替你盯价。点 AKL / CHC / ZQN 切换目的地。点任一天看明细。</p>
   </main>
 
   <script src="athro.js"></script>
