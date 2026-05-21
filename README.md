@@ -78,3 +78,60 @@
 ## 浏览器预览
 
 如果你只是想先看 UI 长什么样,用浏览器打开 `index.html` 即可,不需要 Xcode。
+
+---
+
+# icloud-ai —— macOS 上用 AI 问你的 iCloud
+
+同一个 repo 里多带了一个 Python CLI:`icloud_ai/`。它读你 **本机 macOS** 上由 iCloud 同步下来的照片库 / 通讯录 / 日历,转成 JSONL,然后用你指定的 LLM 回答自然语言问题或做预设分析。
+
+> 注:苹果没有第三方"远程访问 iCloud"的公开 API。能合规拿到这些数据的前提是 **数据已经同步到这台 Mac**(照片库、通讯录、日历)。
+
+## 安装
+
+```bash
+cd <repo>
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e .
+```
+
+第一次跑 extract 时,macOS 会弹权限请求:
+- **照片库** → 终端(或你跑 Python 的 App)需要 *Full Disk Access* 或 Photos 访问权限
+- **通讯录 / 日历** → 同意访问
+
+## 三个子命令
+
+```bash
+# 1) 抽取 → ~/.icloud_ai/{photos,contacts,calendar}.jsonl
+icloud-ai extract --source all
+icloud-ai extract --source photos --limit 500     # 先试 500 张
+
+# 2) 自然语言问答
+export ANTHROPIC_API_KEY=sk-ant-...               # 或 OPENAI_API_KEY
+icloud-ai ask "去年和谁去过日本"
+icloud-ai ask "我最常和谁在周末见面" --provider openai --model gpt-4o
+
+# 3) 一键预设分析
+icloud-ai analyze relationships     # 人物关系
+icloud-ai analyze timeline          # 时间线
+icloud-ai analyze social            # 社交网络
+icloud-ai analyze trajectory        # 人物 / 地理轨迹
+icloud-ai analyze history           # 历史:做了什么
+```
+
+## 切换 AI 后端
+
+- `--provider anthropic`(默认,模型默认 `claude-opus-4-7`,带 prompt cache)
+- `--provider openai`(默认 `gpt-4o`)
+- `--provider ollama`(默认 `llama3.1:8b`,本地)
+
+`--model X` 可显式覆盖。
+
+## 隐私
+
+`extract` 完全在本机跑,JSONL 只落到 `~/.icloud_ai/`(已在 `.gitignore`)。`ask` / `analyze` 会把这些结构化记录作为 system prompt **发到你选的 LLM** —— 不会发原始照片字节,只发元数据(时间、地点、人脸名、相册、关键字、联系人字段、日历摘要)。如果你不希望任何数据出本机,用 `--provider ollama`。
+
+## 当前限制
+
+- Watch 端 UI 没接入(目前是纯命令行)。手表当语音入口是后续工作。
+- `--limit` 之外没有相关性检索:整个 corpus 都塞进 system prompt,大照片库可能爆 token。短期可以用 `--limit` 控制,长期需要加按时间/人物/地点的预过滤。
