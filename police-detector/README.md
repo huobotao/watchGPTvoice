@@ -1,9 +1,37 @@
 # police-detector
 
-Detect approaching police cars (and parking enforcement vehicles) on a dashcam
-feed and surface an on-screen + audio alert. Designed to run on a laptop, a
-Raspberry Pi car appliance, or an iPhone — and to batch-analyze TeslaCam SD
-card recordings offline.
+Detect parking enforcement officers (and, secondarily, marked police vehicles)
+from a dashcam / phone camera feed and surface an alert. Designed to run on a
+laptop, a Raspberry Pi car appliance, or an iPhone — and to batch-analyze
+TeslaCam SD card recordings offline.
+
+> **MVP first**: the smallest thing that runs is `apps/desktop/peo_demo.py`
+> with `--self-test`. It's a pure-OpenCV hi-vis vest detector — no YOLO, no
+> torch, no dataset. Boots in seconds. See "Quick MVP" below.
+
+## Quick MVP
+
+```bash
+cd police-detector
+pip install opencv-python-headless numpy scipy pydantic   # ~30s
+python apps/desktop/peo_demo.py --self-test --save /tmp/peo.mp4 \
+    --save-frame /tmp/peo.png --headless --max-frames 90
+# → /tmp/peo.png shows a green bbox around a hi-vis-vested figure
+#   with a red "Parking enforcement nearby" banner.
+```
+
+Then point it at real footage:
+
+```bash
+python apps/desktop/peo_demo.py --source path/to/street.mp4
+python apps/desktop/peo_demo.py --source 0   # webcam
+```
+
+The MVP is intentionally a hi-vis-vest detector (HSV mask + geometric
+filters). It will fire on construction workers and crossing guards too —
+that's fine for proving the loop. Phase 2 swaps in a YOLO person+vest
+detector for precision. Phase 3 adds GPS context to suppress non-PEO
+hi-vis (you're not in a parking zone, ignore).
 
 > **Tesla note:** Tesla Fleet API does **not** expose live camera frames to
 > third parties, so we cannot run real-time inference on the Tesla's own

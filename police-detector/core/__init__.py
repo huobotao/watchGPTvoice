@@ -4,6 +4,7 @@ from .detector import PoliceDetector
 from .tracker import Tracker
 from .approach import ApproachEstimator
 from .lights import FlashDetector
+from .peo_vest import HiVisDetector, HiVisConfig
 from .alerter import AudioAlertSink, CV2WindowSink, CSVLogSink, AlertSink
 from .pipeline import Pipeline
 
@@ -17,6 +18,8 @@ __all__ = [
     "Config",
     "default_config",
     "PoliceDetector",
+    "HiVisDetector",
+    "HiVisConfig",
     "Tracker",
     "ApproachEstimator",
     "FlashDetector",
