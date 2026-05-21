@@ -475,10 +475,16 @@
     const cx = toX(0);
     parts.push(`<line x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${(padT + ch).toFixed(1)}" stroke="#6cb6ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>`);
     if (mode === 'illum' || mode === 'both') {
-      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${toYLux(curLux).toFixed(1)}" r="4" fill="#ffe27a" stroke="#fff" stroke-width="1"/>`);
+      const luxY = toYLux(curLux);
+      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${luxY.toFixed(1)}" r="4" fill="#ffe27a" stroke="#fff" stroke-width="1"/>`);
+      // 当前点旁的数值标签（向右上偏）
+      parts.push(`<text x="${(cx + 6).toFixed(1)}" y="${(luxY - 6).toFixed(1)}" fill="#ffe27a" font-size="10" font-weight="700" style="paint-order:stroke;stroke:#0b1220;stroke-width:3px;stroke-linejoin:round;stroke-linecap:round">${fmtLuxShort(curLux)}</text>`);
     }
     if ((mode === 'temp' || mode === 'both') && hasTemp && curTemp != null) {
-      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${toYTemp(curTemp).toFixed(1)}" r="4" fill="#ff5a78" stroke="#fff" stroke-width="1"/>`);
+      const tempY = toYTemp(curTemp);
+      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${tempY.toFixed(1)}" r="4" fill="#ff5a78" stroke="#fff" stroke-width="1"/>`);
+      // 标签放右下，避免和光照标签撞
+      parts.push(`<text x="${(cx + 6).toFixed(1)}" y="${(tempY + 12).toFixed(1)}" fill="#ff7a8e" font-size="10" font-weight="700" style="paint-order:stroke;stroke:#0b1220;stroke-width:3px;stroke-linejoin:round;stroke-linecap:round">${curTemp.toFixed(1)}°C</text>`);
     }
 
     return {
@@ -540,6 +546,16 @@
     if (v >= 1)     return v.toFixed(1) + ' lux';
     if (v >= 0.01)  return v.toFixed(2) + ' lux';
     return v.toExponential(1).replace('e', 'e') + ' lux';
+  }
+
+  // 图上当前点旁的紧凑标签
+  function fmtLuxShort(v) {
+    if (v >= 10000) return (v / 1000).toFixed(0) + 'k lx';
+    if (v >= 1000)  return (v / 1000).toFixed(1) + 'k lx';
+    if (v >= 100)   return v.toFixed(0) + ' lx';
+    if (v >= 1)     return v.toFixed(1) + ' lx';
+    if (v >= 0.01)  return v.toFixed(2) + ' lx';
+    return v.toExponential(1) + ' lx';
   }
 
   function fmtPct(p) {
