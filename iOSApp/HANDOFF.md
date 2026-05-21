@@ -65,6 +65,15 @@ Build settings worth knowing:
   (no separate Info.plist file)
 - Deployment target: iOS 17.0
 
+## A Note About the Repo Name
+
+The repo is `watchGPTvoice` because it started as a "Watch GPT voice chat" app
+(see `/WatchApp/` at repo root — those Swift files are an **unrelated**
+watchOS Whisper/Chat UI from the original project, do not get confused). The
+project pivoted to sunrise/sunset. Treat `/WatchApp/` as dead code; the new
+watchOS target for sunrise/sunset belongs under `/iOSApp/` alongside the
+iPhone target (or in its own folder if cleaner).
+
 ## Next Milestones the User Wants
 
 ### 1. Dynamic Island Live Activity
@@ -106,7 +115,64 @@ Implementation hints:
 - For the small mini-chart, draw with SwiftUI `Canvas` — same math as the JS
   but rendered natively.
 
-### 3. Optional: Replace WebView with Native SwiftUI
+### 3. Apple Watch Companion App (synced with iPhone)
+
+A standalone watchOS app that mirrors the iPhone app's main info on the wrist,
+synced with the paired iPhone.
+
+Suggested screens:
+
+- **Main glance**: countdown to next sunrise/sunset + current twilight phase
+  + current sun altitude
+- **Page 2 (swipe)**: today's 4 sunrise times + 4 sunset times in a list
+- **Page 3 (swipe)**: 24h illuminance curve (small Canvas chart) + current
+  temp from cache
+- **Complications**: at minimum a circular and corner complication showing
+  "next event in 13m" so the user sees it on the watch face
+
+Implementation hints:
+
+- Add a **watchOS App target** (not "Watch App for iOS App" — that's the
+  deprecated dual-target style; use the modern single-target watchOS App that
+  can be paired or standalone)
+- Share Swift sun-math code via a Swift Package or a shared folder added to
+  both iOS and watchOS targets
+- Use **WatchConnectivity** (`WCSession`) for syncing user preferences,
+  cached location, or last-known reverse-geocoded address from iPhone
+- The watch can also use its own `CLLocationManager` (Series 6+ has GPS); for
+  older models or when iPhone-paired, pull cached location from iPhone via WC
+- watchOS supports **WidgetKit** for complications — the same logic written
+  for the iPhone widget can be reused on the watch face
+- Open-Meteo HTTP call works fine from watchOS too — no special handling
+- Three.js 3D scene is impractical on the watch; skip 3D, or replace with a
+  2D polar-projection sky map drawn in SwiftUI `Canvas`
+
+Suggested target layout if you go this route:
+
+```
+iOSApp/
+├── SunriseSunset.xcodeproj         ← already exists, contains iPhone target
+├── SunriseSunset/                  ← iPhone source (already exists)
+├── SunriseSunsetWatch/             ← new: watchOS App target source
+│   ├── SunriseSunsetWatchApp.swift
+│   ├── ContentView.swift
+│   ├── ComplicationProvider.swift
+│   └── ...
+├── SunriseSunsetWidget/            ← new: Widget Extension (iOS + watchOS)
+│   ├── SunriseSunsetWidget.swift
+│   ├── LiveActivity.swift
+│   └── ...
+└── Shared/                         ← new: Swift Package or group
+    ├── SunMath.swift               ← port of SunCalc-style functions
+    ├── Illuminance.swift           ← port of the JS illuminance() formula
+    ├── Geocode.swift
+    └── Weather.swift
+```
+
+The `Shared/` group should be added to all targets (iPhone, Watch, Widget) so
+the math is computed once.
+
+### 4. Optional: Replace WebView with Native SwiftUI
 
 The current WebView shell is fine for the main screen, but if you go full
 native:
