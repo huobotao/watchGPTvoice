@@ -48,11 +48,19 @@
   .now-phase .ph-name { font-size: 15px; font-weight: 600; }
   .now-phase .ph-pct { font-variant-numeric: tabular-nums; color: var(--phase); font-weight: 600; }
   .now-phase .ph-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
-  .now-phase .ph-bar { margin-top: 10px; height: 6px; background: rgba(255,255,255,0.08);
-    border-radius: 3px; overflow: hidden; }
+  .now-phase .ph-bar-wrap { position: relative; margin-top: 16px; height: 22px; }
+  .now-phase .ph-bar { position: absolute; left: 0; right: 0; top: 14px;
+    height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
   .now-phase .ph-fill { height: 100%; border-radius: 3px;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
     transition: width 0.6s ease-out; }
+  .now-phase .ph-tick { position: absolute; top: 12px; bottom: -4px;
+    transform: translateX(-50%); width: 1px;
+    background: rgba(255,255,255,0.35); pointer-events: none; }
+  .now-phase .ph-tick > span { position: absolute; top: -14px; left: 50%;
+    transform: translateX(-50%); font-size: 9px; font-weight: 700;
+    color: var(--phase); white-space: nowrap; opacity: 0.9; }
+  .now-phase .ph-tick.passed > span { color: var(--past); opacity: 0.7; }
 
   .illum-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     padding: 14px 16px; margin-bottom: 16px; }
@@ -155,7 +163,10 @@
       <span class="ph-pct" id="ph-pct">—</span>
     </div>
     <div class="ph-sub" id="ph-sub"></div>
-    <div class="ph-bar"><div class="ph-fill" id="ph-fill"></div></div>
+    <div class="ph-bar-wrap">
+      <div class="ph-bar"><div class="ph-fill" id="ph-fill"></div></div>
+      <div id="ph-ticks"></div>
+    </div>
   </div>
 
   <div class="illum-card" id="illum-card" hidden>
@@ -822,6 +833,30 @@
     // 当前相位卡片
     const np = $('now-phase');
     np.hidden = false;
+    // 进度条刻度：仅在 dawn/dusk 显示，标出 4 个角度阈值
+    const phTicks = $('ph-ticks');
+    if (phase.kind === 'dawn' || phase.kind === 'dusk') {
+      const totalDeg = (-0.833) - (-18); // 17.167
+      const isDawn = phase.kind === 'dawn';
+      const boundaries = [
+        { alt: -0.833, ch: '日' },
+        { alt: -6,    ch: '民' },
+        { alt: -12,   ch: '航' },
+        { alt: -18,   ch: '天' },
+      ];
+      const overallPct100 = Math.round(phase.overallPct * 100);
+      const ticksHTML = boundaries.map(b => {
+        const pos = isDawn
+          ? (b.alt - (-18)) / totalDeg
+          : ((-0.833) - b.alt) / totalDeg;
+        const pct = Math.max(0, Math.min(100, pos * 100));
+        const passed = pct < overallPct100;
+        return `<div class="ph-tick${passed ? ' passed' : ''}" style="left:${pct.toFixed(2)}%"><span>${b.ch}</span></div>`;
+      }).join('');
+      phTicks.innerHTML = ticksHTML;
+    } else {
+      phTicks.innerHTML = '';
+    }
     if (phase.kind === 'day') {
       const dn = dayNightProgress(now, state.lat, state.lng, 'day');
       $('ph-name').innerHTML = '☀️ 白天';
