@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>收费 vs 免费 · 时间单价计算器</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="toll.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <h1>每分钟值多少钱？</h1>
+      <p class="sub">对比收费 / 免费路线，自动算出"省一分钟花多少钱"</p>
+    </header>
+
+    <section class="controls">
+      <div class="row">
+        <label class="field">
+          <span>起点</span>
+          <input id="origin" type="text" placeholder="Calga NSW" value="Calga NSW" />
+        </label>
+        <label class="field">
+          <span>终点</span>
+          <input id="destination" type="text" placeholder="Sydney NSW" value="Sydney NSW" />
+        </label>
+      </div>
+      <div class="row">
+        <label class="field grow">
+          <span>Google Routes API Key <em>(可选 · 留空使用 Sydney 示例数据)</em></span>
+          <input id="apiKey" type="password" placeholder="留空 = Demo 模式" />
+        </label>
+        <button id="goBtn" class="primary">对比路线</button>
+      </div>
+      <div class="row threshold-row">
+        <label class="field grow">
+          <span>我能接受的时间单价：<b id="thresholdLabel">A$1.00 / 分钟</b></span>
+          <input id="threshold" type="range" min="0" max="500" step="5" value="100" />
+        </label>
+      </div>
+    </section>
+
+    <section class="result" id="result" hidden>
+      <div class="verdict" id="verdict"></div>
+
+      <div class="cards">
+        <article class="card free">
+          <header>免费路线</header>
+          <div class="big" id="freeTime">—</div>
+          <div class="meta" id="freeMeta">—</div>
+          <div class="tag">A$0.00</div>
+        </article>
+
+        <article class="card toll">
+          <header>收费路线</header>
+          <div class="big" id="tollTime">—</div>
+          <div class="meta" id="tollMeta">—</div>
+          <div class="tag" id="tollCost">—</div>
+        </article>
+
+        <article class="card delta">
+          <header>差异 · 单价</header>
+          <div class="big">
+            <span id="savedMin">—</span><small>分钟</small>
+          </div>
+          <div class="meta" id="pricePerMin">—</div>
+          <div class="tag" id="extraInfo">—</div>
+        </article>
+      </div>
+
+      <div id="map"></div>
+
+      <details class="segments" id="segments">
+        <summary>收费路段明细</summary>
+        <ul id="segmentList"></ul>
+      </details>
+    </section>
+
+    <p class="caption">Demo 模式数据基于 Sydney M1 → CBD 路线示意。接 Google Routes API 后，所有数字使用实时返回值。</p>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="toll.js"></script>
+</body>
+</html>
