@@ -1,12 +1,15 @@
 import Foundation
 import UIKit
+import IOKit.ps
 
 protocol PowerSampler {
     func snapshot() -> Sample
 }
 
-/// 公开 API 实现:能拿到 batteryLevel(5% 精度) + 充电状态。
-/// 功率靠对电量做差分 + 假定电池容量估算,温度/电压/电流恒为 nil。
+// MARK: - 公开 API:差分估算
+
+/// 只用 UIDevice.batteryLevel(5% 精度) + 充电状态,功率靠对电量做差分。
+/// 温度/电压/电流恒为 nil。App Store 能上。
 final class PublicAPISampler: PowerSampler {
     /// 默认按 iPhone 15 Pro 的 3274 mAh @ 3.87 V ≈ 12.67 Wh,
     /// 不同机型可自行覆盖。
@@ -22,7 +25,7 @@ final class PublicAPISampler: PowerSampler {
     func snapshot() -> Sample {
         let device = UIDevice.current
         let now = Date()
-        let level = Double(max(device.batteryLevel, 0))   // -1 → 0(未知时)
+        let level = Double(max(device.batteryLevel, 0))
         let charging = device.batteryState == .charging || device.batteryState == .full
 
         var estW: Double = 0
@@ -31,7 +34,7 @@ final class PublicAPISampler: PowerSampler {
             let dt = now.timeIntervalSince(lastTime)
             if dt > 0 {
                 let dWh = dLevel * batteryCapacityWh
-                estW = max(0, dWh * 3600.0 / dt)   // 只画正功率(充入)
+                estW = max(0, dWh * 3600.0 / dt)
             }
         }
         self.lastLevel = level
@@ -44,17 +47,65 @@ final class PublicAPISampler: PowerSampler {
     }
 }
 
-/// 私有 IOKit 实现的占位。要真功率/温度/电压/电流,在自签包里:
-///   1. Bridging header 引入 <IOKit/ps/IOPowerSources.h> 与 <IOKit/ps/IOPSKeys.h>
-///   2. IOPSCopyPowerSourcesInfo / IOPSCopyPowerSourcesList
-///   3. 读 "InstantAmperage"(mA, 充电为正) / "Voltage"(mV) / "Temperature"(0.01°C)
-///      / "AdapterDetails" 里的 "Watts"
-/// 注意:用了私有 key 之后这个 target 不能上架 App Store。
+// MARK: - 私有 IOKit:真功率/温度/电压/电流
+
+/// 通过 IOPSCopyPowerSourcesInfo 读 iOS 私有键:
+///   InstantAmperage (mA, 充电为正)
+///   Voltage (mV)
+///   Temperature (0.01 °C)
+///   AdapterDetails (Watts / Description / FamilyCode ...)
+/// 注意:用了私有键,App Store 不允许;7 天自签或 Dev 账号自用没问题。
 final class IOKitSampler: PowerSampler {
     private let fallback = PublicAPISampler()
 
     func snapshot() -> Sample {
-        // TODO: 自签时把这里替换成真正的 IOKit 读取
-        return fallback.snapshot()
+        guard let blob = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(blob)?.takeRetainedValue() as? [CFTypeRef],
+              let source = sources.first,
+              let desc = IOPSGetPowerSourceDescription(blob, source)?.takeUnretainedValue() as? [String: Any]
+        else {
+            return fallback.snapshot()
+        }
+
+        let now = Date()
+
+        // 电量:capacity / max(capacity)
+        let level: Double = {
+            let cap = desc[kIOPSCurrentCapacityKey as String] as? Int ?? 0
+            let mx  = desc[kIOPSMaxCapacityKey as String]     as? Int ?? 100
+            return mx > 0 ? Double(cap) / Double(mx) : 0
+        }()
+        let charging = (desc[kIOPSIsChargingKey as String] as? Bool) ?? false
+
+        // 私有键(无 SDK 常量,直接用字符串)
+        let amperageMA   = desc["InstantAmperage"] as? Int
+        let voltageMV    = desc["Voltage"]         as? Int
+        let tempRaw      = desc["Temperature"]     as? Int
+        let adapter      = desc["AdapterDetails"]  as? [String: Any]
+        let adapterWatts = adapter?["Watts"]       as? Int
+
+        let voltageV     = voltageMV.map { Double($0) / 1000.0 }
+        let currentA     = amperageMA.map { Double($0) / 1000.0 }
+        let temperatureC = tempRaw.map   { Double($0) / 100.0  }
+
+        // 实测功率:V × I。电流为负 = 放电,这里取 max(0, ·) 只看充入。
+        let measuredW: Double? = {
+            guard let v = voltageV, let a = currentA else { return nil }
+            return max(0, v * a)
+        }()
+
+        // 主曲线优先用实测;实测拿不到就退化到适配器额定瓦数,再不行 0。
+        let displayW = measuredW ?? adapterWatts.map { Double($0) } ?? 0
+
+        return Sample(
+            time: now,
+            batteryLevel: level,
+            isCharging: charging,
+            estimatedPowerW: displayW,
+            measuredPowerW: measuredW,
+            temperatureC: temperatureC,
+            voltageV: voltageV,
+            currentA: currentA
+        )
     }
 }
