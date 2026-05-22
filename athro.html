@@ -13,10 +13,22 @@
 <meta name="theme-color" content="#0a0e1a" />
 <meta name="format-detection" content="telephone=no" />
 
-<link rel="apple-touch-icon" href="athro-icon.svg" />
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png" />
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png" />
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png" />
+<link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png" />
+<link rel="icon" type="image/png" sizes="180x180" href="icons/icon-180.png" />
 <link rel="icon" type="image/svg+xml" href="athro-icon.svg" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="stylesheet" href="athro.css" />
+<script>
+  // Service Worker — 离线缓存,真正的 PWA 体验
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
 </head>
 <body>
   <main class="stage">
