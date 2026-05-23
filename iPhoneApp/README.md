@@ -3,19 +3,40 @@
 一张 Swift Charts 图同时画:**电量 %**、**充电功率 W**、**电池温度 °C**、**电压 V**、**电流 A**。
 默认走 IOKit 路径读真值,7 天自签 / Apple Dev 账号自用。
 
-## 装到 iPhone 上(Mac 端 4 步)
+## 装到 iPhone 上
 
-1. 在 Mac 上 `git pull`,然后**双击** `iPhoneApp/ChargePower.xcodeproj` 用 Xcode 打开(需要 Xcode 15+)
-2. 左侧点工程根 `ChargePower` → **Signing & Capabilities** 标签
-   - **Team**:下拉 → Add an Account → 登录你的 Apple ID(免费即可)
-   - **Bundle Identifier**:把 `com.example.ChargePower` 改成你自己的,例如 `com.botao.chargepower`
-   - 等 "Provisioning profile" 那行变绿
-3. iPhone 第一次用要开发者模式:**设置 → 隐私与安全性 → 开发者模式 → 打开**(会重启)。然后数据线插 Mac,iPhone 弹"信任此电脑" → 信任
-4. Xcode 顶部目标栏选你的 iPhone(不要选 Simulator,模拟器读不到电源) → **⌘R**
+### 路线 A:命令行一键(推荐,日常用)
 
-首次跑会报 "Untrusted Developer":iPhone → **设置 → 通用 → VPN与设备管理 → 你的 Apple ID → 信任**,再 ⌘R 一次即可。
+```bash
+cd iPhoneApp
+./install.sh
+```
 
-7 天后图标变灰:Xcode 里再按一次 ⌘R 重签就行。
+脚本会:自动找 keychain 里的 Team ID → 找连着的 iPhone → `xcodebuild` 编译 → `devicectl` 推到手机。
+
+**前提**(只做一次):必须先在 Xcode 里打开过一次工程把 Apple ID 加进去:
+1. `open ChargePower.xcodeproj`
+2. Xcode → Settings → Accounts → 「+」 → Apple ID 登录(免费就行)
+3. 关掉 Xcode
+
+之后每次更新就只跑 `./install.sh`。7 天到期重签也是这一条命令。
+
+可选环境变量:
+```bash
+TEAM_ID=XXXXXXXXXX BUNDLE_ID=com.you.chargepower ./install.sh
+```
+
+### 路线 B:Xcode GUI(完全可视化)
+
+1. 在 Mac 上 `git pull`,双击 `iPhoneApp/ChargePower.xcodeproj`
+2. 左侧工程根 → **Signing & Capabilities**:Team 选你的 Apple ID,Bundle Identifier 改成独一无二的
+3. iPhone:**设置 → 隐私与安全性 → 开发者模式 → 打开**(iOS 16+,会重启),数据线连 Mac,弹窗信任电脑
+4. Xcode 顶部目标栏选你的 iPhone → **⌘R**
+
+### 首次安装后
+
+iPhone 上首次打开会报"未受信任的开发者":
+**设置 → 通用 → VPN与设备管理 → 你的 Apple ID → 信任**,再打开 App 就行。
 
 ## 测试用例
 
