@@ -7,6 +7,7 @@
 ```
 .
 ├── index.html / styles.css / app.js     # 浏览器预览版(模拟器,不上表)
+├── map.html / map.css / map.js          # 澳洲穿越地图(自定义图层,独立网页)
 └── WatchApp/                            # 真正的 watchOS 源码
     ├── WatchGPTVoiceApp.swift           # @main 入口
     ├── ContentView.swift                # 导航容器
@@ -78,3 +79,30 @@
 ## 浏览器预览
 
 如果你只是想先看 UI 长什么样,用浏览器打开 `index.html` 即可,不需要 Xcode。
+
+## 澳洲穿越地图（自定义图层）
+
+用浏览器打开 `map.html` 即可，**无需任何 API Key、无需付费**。底图用 OpenStreetMap，
+图层数据通过免费的 Overpass API 按当前地图视野实时查询。默认聚焦澳大利亚，适合内陆长途自驾 / 穿越行程规划。
+
+可勾选的图层：
+
+| 图层 | 说明 / 数据来源 |
+| --- | --- |
+| Kmart 门店 | `brand=Kmart` / 名称含 Kmart |
+| 麦当劳 | `amenity=fast_food` + 品牌/名称含 McDonald's |
+| 城镇 / 定居点 | `place = city / town / village` |
+| 可补给食物的地点 | 超市、便利店、杂货店、快餐、餐厅、咖啡馆 |
+| 加油站（含柴油） | `amenity=fuel`，弹窗标注是否有柴油(`fuel:diesel`) |
+| 柏油 / 铺装路面 | `highway` 且 `surface = asphalt/paved/concrete/chipseal` |
+| 所有道路 | 各等级 `highway`（motorway…residential） |
+| 可能的路 / 越野道 | `track`/`path`、`4wd_only=yes`、非铺装路面 |
+
+使用要点：
+
+- **勾选图层** → 平移/缩放地图，会在停止后自动按当前视野加载（防抖 700ms）。
+- 道路类图层数据量大，设了**最低缩放级别**（未达到时图层名下会提示“放大到 N 级加载”）。
+- 单图层最多渲染 5000 个要素，超出会提示放大；这是为了防止浏览器卡顿。
+- Overpass 公共服务偶尔会限流，失败时右下角会提示，稍等再移动地图即可重试（已内置多端点自动切换）。
+
+数据 © OpenStreetMap 贡献者，查询经 Overpass API。

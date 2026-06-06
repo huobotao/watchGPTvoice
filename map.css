@@ -1,0 +1,220 @@
+:root {
+  --bg: #0b0d12;
+  --panel-bg: rgba(18, 22, 30, 0.92);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #f2f4f8;
+  --muted: #9aa3b2;
+  --accent: #10a37f;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#map {
+  position: fixed;
+  inset: 0;
+  background: #0b0d12;
+}
+
+/* ---------- 控制面板 ---------- */
+.panel {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  width: 280px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+}
+
+.panel-head h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.panel-toggle {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.panel-toggle:hover { background: rgba(255, 255, 255, 0.16); }
+
+.panel-sub {
+  margin: 0 16px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.layers {
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.panel.collapsed .panel-sub,
+.panel.collapsed .layers,
+.panel.collapsed .panel-foot { display: none; }
+
+/* ---------- 单个图层行 ---------- */
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.layer-row:hover { background: rgba(255, 255, 255, 0.05); }
+
+.layer-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex: none;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.swatch.line {
+  height: 0;
+  border-radius: 0;
+  border: none;
+  border-top-width: 4px;
+  border-top-style: solid;
+  margin: 5px 0;
+}
+
+.layer-meta { flex: 1; min-width: 0; }
+
+.layer-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.layer-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+.layer-hint.warn { color: #ffb340; }
+
+.layer-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  flex: none;
+}
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- 底部 ---------- */
+.panel-foot {
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.status {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.credit {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.credit a { color: var(--accent); text-decoration: none; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 1100;
+  max-width: 80vw;
+  padding: 10px 16px;
+  background: rgba(20, 24, 32, 0.95);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.error { border-color: rgba(255, 80, 80, 0.5); }
+
+/* ---------- Leaflet 弹窗微调 ---------- */
+.leaflet-popup-content { font-size: 13px; line-height: 1.5; }
+.leaflet-popup-content b { font-size: 13.5px; }
+.poi-tag {
+  display: inline-block;
+  margin: 2px 4px 0 0;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #eef1f5;
+  font-size: 11px;
+  color: #333;
+}
+.poi-tag.yes { background: #d8f5e0; color: #1b7a3d; }
+.poi-tag.no { background: #f7dcdc; color: #a02525; }
+
+/* 手机端：面板更紧凑 */
+@media (max-width: 560px) {
+  .panel { width: calc(100vw - 24px); }
+}
