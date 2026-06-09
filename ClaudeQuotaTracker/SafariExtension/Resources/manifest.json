@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Claude Quota Tracker",
+  "version": "1.0",
+  "description": "Detects Claude quota reset time on claude.ai and notifies the companion app.",
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
