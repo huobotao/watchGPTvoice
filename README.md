@@ -67,3 +67,89 @@
 ## 浏览器预览
 
 如果你只是想先看 UI 长什么样,用浏览器打开 `index.html` 即可,不需要 Xcode。
+
+---
+
+# 日出日落 Widget
+
+显示当前位置最近一次日出和日落的 8 个时间节点（含天文/航海/民用暮光），按时间排序，每条显示实际时间和距现在的时差。
+
+## 目录结构
+
+```
+SunriseSunsetWidget/
+├── SolarCalculator.swift           # NOAA 天文算法（纯 Swift，无网络）
+├── SolarEvent.swift                # 数据模型
+├── SunriseSunsetEntry.swift        # WidgetKit TimelineEntry
+├── SunriseSunsetProvider.swift     # TimelineProvider + 位置读取
+├── SunriseSunsetWidgetViews.swift  # 各尺寸 SwiftUI 视图
+├── SunriseSunsetWidget.swift       # iOS Widget @main
+└── SunriseSunsetWatchWidget.swift  # watchOS Complication @main
+
+WatchApp/
+└── LocationManager.swift           # 主 App 写坐标到 App Group（新增）
+```
+
+## 支持的 Widget 尺寸
+
+| 平台 | 尺寸 | 内容 |
+|------|------|------|
+| iPhone | Small | 下一个事件大字倒计时 |
+| iPhone | Medium | 最近 4 个事件 |
+| iPhone | Large | 全部 8 个事件 |
+| Apple Watch | accessoryRectangular | 最近 3 个事件（表盘复杂功能）|
+| Apple Watch | accessoryCircular | 下一个事件图标 + 时间 |
+| Apple Watch | accessoryInline | 单行文本 |
+
+## Xcode 配置步骤
+
+### 1. 添加 App Group（三个 target 都需要）
+
+在 **主 App target**、**iOS Widget Extension target** 和 **watchOS Widget Extension target** 的
+`Signing & Capabilities` 里各添加 **App Groups** → 使用同一个 Group ID：
+
+```
+group.com.yourapp.sunrisewidget
+```
+
+然后把 `SunriseSunsetProvider.swift` 和 `WatchApp/LocationManager.swift` 里的
+`group.com.yourapp.sunrisewidget` 改为你实际的 Group ID。
+
+### 2. 添加 iOS Widget Extension target
+
+1. Xcode → **File → New → Target → Widget Extension**
+2. Product Name: `SunriseSunsetWidget`
+3. 不勾选 "Include Configuration App Intent"
+4. 将以下文件添加到该 target（勾选右侧 Target Membership）：
+   - `SolarCalculator.swift`
+   - `SolarEvent.swift`
+   - `SunriseSunsetEntry.swift`
+   - `SunriseSunsetProvider.swift`
+   - `SunriseSunsetWidgetViews.swift`
+   - `SunriseSunsetWidget.swift`（仅 iOS target）
+
+### 3. 添加 watchOS Widget Extension target
+
+1. Xcode → **File → New → Target → Widget Extension**（选 watchOS platform）
+2. Product Name: `SunriseSunsetWatchWidget`
+3. 将以下文件添加到该 target：
+   - `SolarCalculator.swift`
+   - `SolarEvent.swift`
+   - `SunriseSunsetEntry.swift`
+   - `SunriseSunsetProvider.swift`
+   - `SunriseSunsetWidgetViews.swift`
+   - `SunriseSunsetWatchWidget.swift`（仅 watchOS target）
+
+### 4. 位置权限（可选）
+
+在主 App 的 `Info.plist` 中添加：
+- Key: `Privacy - Location When In Use Usage Description`
+- Value: `用于计算当前位置的日出日落时间`
+
+> 若不配置位置权限，Widget 将默认使用北京坐标（39.9°N, 116.4°E）。
+
+### 5. 在手表表盘添加复杂功能
+
+1. 长按 Watch 表盘 → 编辑
+2. 选择支持复杂功能的表盘（如 Modular、Infograph 等）
+3. 点击某个复杂功能区域 → 滚动找到"日出日落" → 选择对应尺寸
