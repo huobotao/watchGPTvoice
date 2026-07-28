@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>日出日落时刻</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b1220;
+    --card: #131c2e;
+    --card-2: #1a2540;
+    --text: #e8eefc;
+    --muted: #8a98b8;
+    --accent: #ffb86b;
+    --accent-2: #6cb6ff;
+    --past: #f4a47d;
+    --future: #6cb6ff;
+    --phase: #ffb86b;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 20px 0 40px; }
+  h1 { font-size: 22px; margin: 0 0 16px; font-weight: 600; letter-spacing: 0.5px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .refresh { background: transparent; color: var(--accent-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+
+  .meta { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .meta .row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 14px; gap: 12px; }
+  .meta .row .label { color: var(--muted); flex-shrink: 0; }
+  .meta .row .val { font-variant-numeric: tabular-nums; text-align: right; }
+  .meta .row .val small { color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .meta .row .val .pctchip { color: var(--phase); margin-left: 6px; font-weight: 600; }
+  .meta .row.addr .val { text-align: right; color: var(--text); font-variant-numeric: normal; }
+  .status { font-size: 13px; color: var(--muted); padding: 4px 0; }
+  .status.err { color: #ff8a8a; }
+
+  .now-phase { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .now-phase .nowtitle { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .now-phase .ph-name { font-size: 15px; font-weight: 600; }
+  .now-phase .ph-pct { font-variant-numeric: tabular-nums; color: var(--phase); font-weight: 600; }
+  .now-phase .ph-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .now-phase .ph-bar-wrap { position: relative; margin-top: 16px; height: 22px; }
+  .now-phase .ph-bar { position: absolute; left: 0; right: 0; top: 14px;
+    height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .now-phase .ph-fill { height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.6s ease-out; }
+  .now-phase .ph-tick { position: absolute; top: 12px; bottom: -4px;
+    transform: translateX(-50%); width: 1px;
+    background: rgba(255,255,255,0.35); pointer-events: none; }
+  .now-phase .ph-tick > span { position: absolute; top: -14px; left: 50%;
+    transform: translateX(-50%); font-size: 9px; font-weight: 700;
+    color: var(--phase); white-space: nowrap; opacity: 0.9; }
+  .now-phase .ph-tick.passed > span { color: var(--past); opacity: 0.7; }
+
+  .illum-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .illum-card .illum-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .illum-card .illum-title { font-size: 14px; font-weight: 600; }
+  .illum-card .illum-pct { color: var(--phase); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .illum-card .illum-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .illum-card .illum-sub .luxv { color: #ffd87b; }
+  .illum-card .illum-sub .tempv { color: #ff5a78; }
+  .illum-card .illum-toggle { display: flex; gap: 6px; margin-top: 10px; }
+  .illum-card .illum-toggle button { flex: 1; background: transparent; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 0; font-size: 12px;
+    cursor: pointer; -webkit-appearance: none; appearance: none; font-family: inherit; }
+  .illum-card .illum-toggle button.active { background: rgba(255,184,107,0.15); color: var(--accent);
+    border-color: var(--accent); font-weight: 600; }
+  .illum-card .illum-chart { width: 100%; height: 100px; margin-top: 10px; display: block;
+    touch-action: pan-y; }
+  .illum-card .illum-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .group { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    margin-bottom: 16px; overflow: hidden; }
+  .group h2 { margin: 0; padding: 14px 16px; font-size: 15px; font-weight: 600;
+    background: var(--card-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .group h2 .emoji { font-size: 18px; }
+  .group h2 .tag { font-size: 11px; color: var(--accent-2); background: rgba(108,182,255,0.12);
+    padding: 2px 8px; border-radius: 99px; margin-left: auto; font-weight: 500; }
+  .item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: baseline;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .item:last-child { border-bottom: none; }
+  .item.passed .time, .item.passed .name { opacity: 0.55; }
+  .name { font-size: 15px; }
+  .name small { color: var(--muted); font-size: 12px; margin-left: 6px; font-weight: normal; }
+  .time { font-size: 17px; font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: 0.5px; }
+  .delta { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+  .delta.past { color: var(--past); }
+  .delta.future { color: var(--future); }
+  .na { color: var(--muted); font-size: 13px; }
+
+  .inrow-bar { padding: 6px 16px 10px; background: linear-gradient(90deg, rgba(255,184,107,0.06), rgba(108,182,255,0.06));
+    border-bottom: 1px solid var(--border); position: relative; }
+  .inrow-bar .lbl { font-size: 11px; color: var(--phase); display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .inrow-bar .track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  .inrow-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s ease-out; }
+
+  .sky-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    margin-bottom: 16px; padding: 12px 14px 14px; }
+  .sky-card .sky-head { display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px; }
+  .sky-card .sky-title { font-size: 14px; color: var(--text); font-weight: 600; }
+  .sky-card .sky-hint  { font-size: 11px; color: var(--muted); }
+  .sky3d-canvas { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 360px;
+    margin: 0 auto; background: radial-gradient(circle at 50% 40%, #0b1830, #050a14 70%);
+    border-radius: 12px; overflow: hidden; touch-action: none; }
+  .sky3d-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+  .sky3d-loading { position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; color: var(--muted); font-size: 12px; pointer-events: none; }
+  .sky-card .sky-legend { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 8px;
+    font-size: 11px; color: var(--muted); gap: 6px 14px; }
+  .sky-card .sky-legend .lg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    vertical-align: middle; margin-right: 4px; }
+
+  .manual { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; }
+  .manual p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+  .manual .inputs { display: flex; gap: 8px; }
+  .manual input { flex: 1; min-width: 0; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px;
+    font-variant-numeric: tabular-nums; }
+  .manual button { background: var(--accent); color: #1a1200; border: none; border-radius: 8px;
+    padding: 10px 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .footer { margin-top: 20px; text-align: center; font-size: 12px; color: var(--muted); }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>日出日落时刻</h1>
+    <button class="refresh" id="btn-refresh">刷新位置</button>
+  </div>
+  <div id="status" class="status">正在获取位置…</div>
+
+  <div class="meta" id="meta" hidden>
+    <div class="row"><span class="label">当前时间</span><span class="val" id="now-time">—</span></div>
+    <div class="row"><span class="label">当前位置</span><span class="val" id="pos">—</span></div>
+    <div class="row addr"><span class="label">地址</span><span class="val" id="addr">查询中…</span></div>
+    <div class="row"><span class="label">太阳高度</span><span class="val" id="sun-alt">—</span></div>
+  </div>
+
+  <div class="now-phase" id="now-phase" hidden>
+    <div class="nowtitle">
+      <span class="ph-name" id="ph-name">—</span>
+      <span class="ph-pct" id="ph-pct">—</span>
+    </div>
+    <div class="ph-sub" id="ph-sub"></div>
+    <div class="ph-bar-wrap">
+      <div class="ph-bar"><div class="ph-fill" id="ph-fill"></div></div>
+      <div id="ph-ticks"></div>
+    </div>
+  </div>
+
+  <div class="illum-card" id="illum-card" hidden>
+    <div class="illum-head">
+      <div class="illum-title" id="illum-title">🌞 地面光照 + 气温</div>
+      <div class="illum-pct" id="illum-pct">—</div>
+    </div>
+    <div class="illum-sub" id="illum-info">—</div>
+    <div class="illum-toggle" id="illum-toggle">
+      <button data-mode="illum">光照</button>
+      <button data-mode="temp">气温</button>
+      <button data-mode="both" class="active">两者</button>
+    </div>
+    <svg id="illum-chart" class="illum-chart" viewBox="0 0 320 100" preserveAspectRatio="none"></svg>
+    <div class="illum-axis" id="illum-axis">
+      <span>−12h</span><span>−6h</span><span>现在</span><span>+6h</span><span>+12h</span>
+    </div>
+  </div>
+
+  <div class="manual" id="manual" hidden>
+    <p>无法自动获取位置，可手动输入经纬度（十进制度）：</p>
+    <div class="inputs">
+      <input id="in-lat" type="number" step="0.0001" placeholder="纬度  例 31.2304">
+      <input id="in-lng" type="number" step="0.0001" placeholder="经度  例 121.4737">
+      <button id="btn-go">计算</button>
+    </div>
+  </div>
+
+  <div id="group-before"></div>
+
+  <div id="sky3d-card" class="sky-card">
+    <div class="sky-head">
+      <div class="sky-title">太阳 3D 轨迹 · 前后 12 小时</div>
+      <div class="sky-hint">手指拖动可旋转</div>
+    </div>
+    <div id="sky3d-canvas" class="sky3d-canvas">
+      <div class="sky3d-loading">3D 场景加载中…</div>
+    </div>
+    <div class="sky-legend">
+      <span><span class="lg-dot" style="background:#ffd87b"></span>白天轨迹</span>
+      <span><span class="lg-dot" style="background:#5a6a90"></span>地平线下</span>
+      <span><span class="lg-dot" style="background:#ff8e5a"></span>当前太阳</span>
+      <span><span class="lg-dot" style="background:#7a96c8"></span>地平线 N/E/S/W</span>
+    </div>
+  </div>
+
+  <div id="group-after"></div>
+
+  <div class="footer">每秒刷新时间 · 每 3 分钟刷新位置 · 位置不会上传</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- 日出日落算法（参考 SunCalc, BSD-2-Clause, by Vladimir Agafonkin） ----------
+  const PI = Math.PI, rad = PI / 180;
+  const dayMs = 86400000, J1970 = 2440588, J2000 = 2451545;
+  const e = rad * 23.4397;
+
+  const toJulian = d => d.valueOf() / dayMs - 0.5 + J1970;
+  const fromJulian = j => new Date((j + 0.5 - J1970) * dayMs);
+  const toDays = d => toJulian(d) - J2000;
+
+  const rightAscension = (l, b) =>
+    Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l));
+  const declination = (l, b) =>
+    Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+  const siderealTime = (d, lw) => rad * (280.16 + 360.9856235 * d) - lw;
+
+  const solarMeanAnomaly = d => rad * (357.5291 + 0.98560028 * d);
+  const eclipticLongitude = M => {
+    const C = rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
+    const P = rad * 102.9372;
+    return M + C + P + PI;
+  };
+
+  const J0 = 0.0009;
+  const julianCycle = (d, lw) => Math.round(d - J0 - lw / (2 * PI));
+  const approxTransit = (Ht, lw, n) => J0 + (Ht + lw) / (2 * PI) + n;
+  const solarTransitJ = (ds, M, L) =>
+    J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+
+  function getSunTimes(date, lat, lng, altDeg) {
+    const lw = rad * -lng;
+    const phi = rad * lat;
+    const d = toDays(date);
+    const n = julianCycle(d, lw);
+    const ds = approxTransit(0, lw, n);
+    const M = solarMeanAnomaly(ds);
+    const L = eclipticLongitude(M);
+    const dec = declination(L, 0);
+    const Jnoon = solarTransitJ(ds, M, L);
+    const h = altDeg * rad;
+    const cosW = (Math.sin(h) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec));
+    if (cosW < -1 || cosW > 1) return { rise: null, set: null };
+    const w = Math.acos(cosW);
+    const Jset = solarTransitJ(approxTransit(w, lw, n), M, L);
+    const Jrise = Jnoon - (Jset - Jnoon);
+    return { rise: fromJulian(Jrise), set: fromJulian(Jset) };
+  }
+
+  function getSunPos(date, lat, lng) {
+    const lw = rad * -lng;
+    const phi = rad * lat;
+    const d = toDays(date);
+    const M = solarMeanAnomaly(d);
+    const L = eclipticLongitude(M);
+    const dec = declination(L, 0);
+    const ra = rightAscension(L, 0);
+    const H = siderealTime(d, lw) - ra;
+    return {
+      alt: Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)),
+      az:  Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)),
+    };
+  }
+
+  // 给 3D 模块用
+  window.__sun = { getSunPos, PI };
+
+  function getSunAltitudeRad(date, lat, lng) {
+    return getSunPos(date, lat, lng).alt;
+  }
+
+  // ---------- 配置 ----------
+  const ANGLES = [
+    { key: 'astro', riseName: '天文晨光', setName: '天文暮光', alt: -18,     hint: '−18°' },
+    { key: 'naut',  riseName: '航海晨光', setName: '航海暮光', alt: -12,     hint: '−12°' },
+    { key: 'civil', riseName: '民用晨光', setName: '民用暮光', alt: -6,      hint: '−6°'  },
+    { key: 'horiz', riseName: '日出',     setName: '日落',     alt: -0.833,  hint: '0°（含折射）' },
+  ];
+
+  const PHASES = [
+    { name: '天文', low: -18,     high: -12     },
+    { name: '航海', low: -12,     high: -6      },
+    { name: '民用', low: -6,      high: -0.833  },
+  ];
+
+  function findNextEvent(now, lat, lng, which) {
+    const anchorAlt = which === 'rise' ? -0.833 : -18;
+    for (const off of [0, 1, 2, 3]) {
+      const d = new Date(now.getTime() + off * dayMs);
+      const anchorT = getSunTimes(d, lat, lng, anchorAlt)[which];
+      if (anchorT && anchorT >= now) {
+        return ANGLES.map(angle => {
+          const t = getSunTimes(d, lat, lng, angle.alt)[which];
+          return { angle, time: t, passed: t && t < now };
+        });
+      }
+    }
+    return ANGLES.map(angle => ({ angle, time: null, passed: false }));
+  }
+
+  function currentPhase(date, lat, lng) {
+    const altRad = getSunAltitudeRad(date, lat, lng);
+    const altDeg = altRad / rad;
+    const altSoon = getSunAltitudeRad(new Date(date.getTime() + 60000), lat, lng) / rad;
+    const rateDegPerMin = altSoon - altDeg;
+    const rising = rateDegPerMin > 0;
+
+    if (altDeg > -0.833) return { kind: 'day', altDeg, rising, rateDegPerMin };
+    if (altDeg < -18)    return { kind: 'night', altDeg, rising, rateDegPerMin };
+
+    const seg = PHASES.find(p => altDeg > p.low && altDeg <= p.high) || PHASES[0];
+    const range = seg.high - seg.low;
+    const segPct = rising
+      ? (altDeg - seg.low) / range
+      : (seg.high - altDeg) / range;
+    const overallPct = rising
+      ? (altDeg - (-18)) / (-0.833 - (-18))
+      : (-0.833 - altDeg) / (-0.833 - (-18));
+    return {
+      kind: rising ? 'dawn' : 'dusk',
+      altDeg, rising, rateDegPerMin,
+      segName: seg.name, segLow: seg.low, segHigh: seg.high,
+      pct: Math.max(0, Math.min(1, segPct)),
+      overallPct: Math.max(0, Math.min(1, overallPct)),
+    };
+  }
+
+  // 当日太阳高度角变化的最大速率（绝对值，度/分），按 lat/lng/日期缓存
+  let cachedMaxRate = { key: null, val: 0 };
+  function getMaxAltRate(now, lat, lng) {
+    const dayKey = Math.floor(now.getTime() / dayMs);
+    const key = `${lat.toFixed(2)}|${lng.toFixed(2)}|${dayKey}`;
+    if (cachedMaxRate.key === key) return cachedMaxRate.val;
+    let maxR = 0;
+    for (let m = -12 * 60; m < 12 * 60; m += 5) {
+      const t1 = new Date(now.getTime() + m * 60000);
+      const a1 = getSunPos(t1, lat, lng).alt / rad;
+      const a2 = getSunPos(new Date(t1.getTime() + 60000), lat, lng).alt / rad;
+      const r = Math.abs(a2 - a1);
+      if (r > maxR) maxR = r;
+    }
+    cachedMaxRate = { key, val: maxR };
+    return maxR;
+  }
+
+  // 理想晴空地面水平照度（lux），范围 ~0.0006 到 ~110000
+  // 物理：日地大气外 ~128000 lx 法向 × Kasten-Young 大气质量 × Bouguer 透过率 × sin(alt)（投影到水平）
+  //       + 天空漫射；地平线下 0~−18° 用经验对数过渡，−18° 以下取夜空底（星光 ~0.0006 lx）
+  // 关键数据点：alt=90° ~108k, 60° ~91k, 30° ~47k, 10° ~11k, 0° ~480,
+  //              −6° ~3.4, −12° ~0.008, −18° ~0.0006 lx（与现实接近）
+  function illuminance(altDeg) {
+    // ---- 漫射天空背景，从星光到白天平滑过渡 ----
+    let diffuse;
+    if (altDeg > 6) {
+      diffuse = 0.15 * 128000 * Math.sin(altDeg * PI / 180);
+    } else if (altDeg > -0.833) {
+      // 0 ~ 6°：400 → ~2007 lx 的对数插值
+      const hi = 0.15 * 128000 * Math.sin(6 * PI / 180);
+      const u = (altDeg + 0.833) / 6.833;
+      diffuse = 400 * Math.pow(hi / 400, u);
+    } else if (altDeg > -6) {
+      const u = (altDeg + 6) / 5.167;
+      diffuse = 3.4 * Math.pow(400 / 3.4, u);
+    } else if (altDeg > -12) {
+      const u = (altDeg + 12) / 6;
+      diffuse = 0.008 * Math.pow(3.4 / 0.008, u);
+    } else if (altDeg > -18) {
+      const u = (altDeg + 18) / 6;
+      diffuse = 0.0006 * Math.pow(0.008 / 0.0006, u);
+    } else {
+      diffuse = 0.0006;
+    }
+    // ---- 直射分量：仅日出（alt > 0）时有 ----
+    let direct = 0;
+    if (altDeg > 0) {
+      const sinAlt = Math.sin(altDeg * PI / 180);
+      const am = 1 / (sinAlt + 0.50572 * Math.pow(altDeg + 6.07995, -1.6364));
+      direct = 128000 * Math.pow(0.7, Math.pow(am, 0.678)) * sinAlt;
+    }
+    return direct + diffuse;
+  }
+
+  // 构建曲线图（mode = 'illum' / 'temp' / 'both'，窗口 ± chartHalfMin 分钟）
+  function buildChart(now, lat, lng, mode) {
+    const W = 320, H = 100;
+    const padL = 4, padR = 4, padT = 14, padB = 4;
+    const cw = W - padL - padR, ch = H - padT - padB;
+    const halfMin = chartHalfMin;
+
+    // 自适应采样步长：保证约 240~300 个点
+    const stepMin = Math.max(0.25, (2 * halfMin) / 280);
+    const samples = [];
+    let maxLux = 0;
+    let tempMin = Infinity, tempMax = -Infinity;
+    for (let m = -halfMin; m <= halfMin + 0.001; m += stepMin) {
+      const t = new Date(now.getTime() + m * 60000);
+      const alt = getSunPos(t, lat, lng).alt / rad;
+      const lux = illuminance(alt);
+      const temp = tempAt(t.getTime());
+      samples.push({ m, lux, temp });
+      if (lux > maxLux) maxLux = lux;
+      if (temp != null) {
+        if (temp < tempMin) tempMin = temp;
+        if (temp > tempMax) tempMax = temp;
+      }
+    }
+    const curLux  = illuminance(getSunPos(now, lat, lng).alt / rad);
+    const curTemp = tempAt(now.getTime());
+    const hasTemp = tempMin !== Infinity;
+    if (hasTemp) {
+      const range = Math.max(2, tempMax - tempMin);
+      tempMin -= range * 0.1;
+      tempMax += range * 0.1;
+    }
+
+    const toX = m => padL + ((m + halfMin) / (2 * halfMin)) * cw;
+
+    const yMinLux = -3.2;
+    const yMaxLux = Math.max(1.5, Math.log10(maxLux + 1) + 0.05);
+    const toYLux  = lux => padT + ch - ((Math.log10(Math.max(lux, 1e-4)) - yMinLux) / (yMaxLux - yMinLux)) * ch;
+    const toYTemp = hasTemp ? (t => padT + ch - ((t - tempMin) / (tempMax - tempMin)) * ch) : null;
+
+    // 收集当前可视窗口内所有日出/日落事件
+    const halfMs = halfMin * 60 * 1000;
+    const events = [];
+    for (let off = -1; off <= 1; off++) {
+      const d = new Date(now.getTime() + off * dayMs);
+      for (const angle of ANGLES) {
+        const t = getSunTimes(d, lat, lng, angle.alt);
+        if (t.rise && Math.abs(t.rise - now) <= halfMs) events.push({ time: t.rise, angle, which: 'rise' });
+        if (t.set  && Math.abs(t.set  - now) <= halfMs) events.push({ time: t.set,  angle, which: 'set'  });
+      }
+    }
+    // 按时间排序，并对位置极近的避让 Y（让标签分上下两层）
+    events.sort((a, b) => a.time - b.time);
+    const ANGLE_CHARS = { astro: '天', naut: '航', civil: '民', horiz: '日' };
+
+    const parts = [];
+    parts.push(`<defs>
+      <linearGradient id="illum-area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffd87b" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#ffd87b" stop-opacity="0"/>
+      </linearGradient>
+    </defs>`);
+
+    // 光照对数参考线
+    if (mode === 'illum' || mode === 'both') {
+      [0, 2, 4].filter(p => p >= yMinLux && p <= yMaxLux).forEach(p => {
+        const y = padT + ch - ((p - yMinLux) / (yMaxLux - yMinLux)) * ch;
+        parts.push(`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 3"/>`);
+        parts.push(`<text x="${padL + 2}" y="${(y - 1).toFixed(1)}" text-anchor="start" fill="#5a6a90" font-size="9">10^${p} lx</text>`);
+      });
+    }
+    // 气温上下限标记
+    if ((mode === 'temp' || mode === 'both') && hasTemp) {
+      parts.push(`<text x="${W - padR}" y="${(padT + 9).toFixed(1)}" text-anchor="end" fill="#ff5a78" font-size="9">${(tempMax).toFixed(1)}°</text>`);
+      parts.push(`<text x="${W - padR}" y="${(padT + ch - 2).toFixed(1)}" text-anchor="end" fill="#ff5a78" font-size="9">${(tempMin).toFixed(1)}°</text>`);
+    }
+
+    // 光照曲线
+    if (mode === 'illum' || mode === 'both') {
+      const pathD = samples.map((s, i) =>
+        `${i === 0 ? 'M' : 'L'}${toX(s.m).toFixed(1)},${toYLux(s.lux).toFixed(1)}`).join(' ');
+      const areaD = pathD +
+        ` L${toX(12 * 60).toFixed(1)},${(padT + ch).toFixed(1)}` +
+        ` L${toX(-12 * 60).toFixed(1)},${(padT + ch).toFixed(1)} Z`;
+      parts.push(`<path d="${areaD}" fill="url(#illum-area)"/>`);
+      parts.push(`<path d="${pathD}" fill="none" stroke="#ffd87b" stroke-width="1.5"/>`);
+    }
+    // 气温曲线
+    if ((mode === 'temp' || mode === 'both') && hasTemp) {
+      const ts = samples.filter(s => s.temp != null);
+      if (ts.length >= 2) {
+        const pathT = ts.map((s, i) =>
+          `${i === 0 ? 'M' : 'L'}${toX(s.m).toFixed(1)},${toYTemp(s.temp).toFixed(1)}`).join(' ');
+        parts.push(`<path d="${pathT}" fill="none" stroke="#ff5a78" stroke-width="1.5"/>`);
+      }
+    }
+
+    // 日出/日落各角度事件标点：竖线 + 顶部单字标签
+    // rise 用金色，set 用橙红；过去的事件用虚线 + 低不透明度
+    {
+      let lastX = -999;
+      let stagger = 0; // 标签太挤时上下错位
+      events.forEach(ev => {
+        const m = (ev.time - now) / 60000;
+        const x = toX(m);
+        const isPast = ev.time < now;
+        const isRise = ev.which === 'rise';
+        const color = isRise ? '#ffb86b' : '#ff7a55';
+        const op = isPast ? 0.45 : 0.85;
+        // 竖线（从顶到底，区分过去/未来用虚实）
+        const dash = isPast ? ' stroke-dasharray="2 3"' : '';
+        parts.push(`<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${(padT + ch).toFixed(1)}" stroke="${color}" stroke-width="1" opacity="${op * 0.55}"${dash}/>`);
+        // 标签位置：太近就错开
+        if (x - lastX < 12) stagger = 1 - stagger; else stagger = 0;
+        const ly = padT - 4 + stagger * 8;
+        parts.push(`<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" fill="${color}" font-size="9" font-weight="700" opacity="${op}" style="paint-order:stroke;stroke:#0b1220;stroke-width:3px;stroke-linejoin:round">${ANGLE_CHARS[ev.angle.key]}</text>`);
+        lastX = x;
+      });
+    }
+
+    // 「现在」虚线 + 当前点
+    const cx = toX(0);
+    parts.push(`<line x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${(padT + ch).toFixed(1)}" stroke="#6cb6ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>`);
+    if (mode === 'illum' || mode === 'both') {
+      const luxY = toYLux(curLux);
+      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${luxY.toFixed(1)}" r="4" fill="#ffe27a" stroke="#fff" stroke-width="1"/>`);
+      // 当前点旁的数值标签（向右上偏）
+      parts.push(`<text x="${(cx + 6).toFixed(1)}" y="${(luxY - 6).toFixed(1)}" fill="#ffe27a" font-size="10" font-weight="700" style="paint-order:stroke;stroke:#0b1220;stroke-width:3px;stroke-linejoin:round;stroke-linecap:round">${fmtLuxShort(curLux)}</text>`);
+    }
+    if ((mode === 'temp' || mode === 'both') && hasTemp && curTemp != null) {
+      const tempY = toYTemp(curTemp);
+      parts.push(`<circle cx="${cx.toFixed(1)}" cy="${tempY.toFixed(1)}" r="4" fill="#ff5a78" stroke="#fff" stroke-width="1"/>`);
+      // 标签放右下，避免和光照标签撞
+      parts.push(`<text x="${(cx + 6).toFixed(1)}" y="${(tempY + 12).toFixed(1)}" fill="#ff7a8e" font-size="10" font-weight="700" style="paint-order:stroke;stroke:#0b1220;stroke-width:3px;stroke-linejoin:round;stroke-linecap:round">${curTemp.toFixed(1)}°C</text>`);
+    }
+
+    return {
+      svgInner: parts.join(''),
+      curLux, maxLux,
+      illumPct: maxLux > 0 ? (curLux / maxLux * 100) : 0,
+      curTemp, tempMin: hasTemp ? tempMin : null, tempMax: hasTemp ? tempMax : null,
+    };
+  }
+
+  // ---------- 气温（Open-Meteo，免 key，CORS 允许） ----------
+  let weatherCache = { lat: null, lng: null, ts: 0, data: null, inFlight: false };
+  async function ensureWeather(lat, lng) {
+    const now = Date.now();
+    if (weatherCache.data && weatherCache.lat != null &&
+        Math.abs(lat - weatherCache.lat) < 0.02 &&
+        Math.abs(lng - weatherCache.lng) < 0.02 &&
+        now - weatherCache.ts < 30 * 60 * 1000) {
+      return weatherCache.data;
+    }
+    if (weatherCache.inFlight) return weatherCache.data;
+    weatherCache.inFlight = true;
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+        `&hourly=temperature_2m&past_days=1&forecast_days=2&timezone=UTC`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      const times = json.hourly.time.map(s => new Date(s + 'Z').getTime());
+      const temps = json.hourly.temperature_2m;
+      weatherCache.data = { times, temps };
+      weatherCache.lat = lat; weatherCache.lng = lng; weatherCache.ts = now;
+      return weatherCache.data;
+    } catch (e) {
+      weatherCache.data = null;
+      return null;
+    } finally {
+      weatherCache.inFlight = false;
+    }
+  }
+  function tempAt(targetMs) {
+    const w = weatherCache.data;
+    if (!w) return null;
+    const { times, temps } = w;
+    if (targetMs <= times[0]) return temps[0];
+    if (targetMs >= times[times.length - 1]) return temps[times.length - 1];
+    let i = 0;
+    while (i < times.length - 1 && times[i + 1] < targetMs) i++;
+    const t0 = times[i], t1 = times[i + 1];
+    if (t1 === t0) return temps[i];
+    const u = (targetMs - t0) / (t1 - t0);
+    return temps[i] + u * (temps[i + 1] - temps[i]);
+  }
+
+  function fmtLux(v) {
+    if (v >= 10000) return Math.round(v / 100) / 10 + ' 万 lux';
+    if (v >= 1000)  return Math.round(v).toLocaleString() + ' lux';
+    if (v >= 10)    return v.toFixed(0) + ' lux';
+    if (v >= 1)     return v.toFixed(1) + ' lux';
+    if (v >= 0.01)  return v.toFixed(2) + ' lux';
+    return v.toExponential(1).replace('e', 'e') + ' lux';
+  }
+
+  // 图上当前点旁的紧凑标签
+  function fmtLuxShort(v) {
+    if (v >= 10000) return (v / 1000).toFixed(0) + 'k lx';
+    if (v >= 1000)  return (v / 1000).toFixed(1) + 'k lx';
+    if (v >= 100)   return v.toFixed(0) + ' lx';
+    if (v >= 1)     return v.toFixed(1) + ' lx';
+    if (v >= 0.01)  return v.toFixed(2) + ' lx';
+    return v.toExponential(1) + ' lx';
+  }
+
+  function fmtPct(p) {
+    if (p >= 10) return p.toFixed(1) + '%';
+    if (p >= 1)  return p.toFixed(2) + '%';
+    if (p >= 0.01) return p.toFixed(2) + '%';
+    if (p > 0)   return p.toExponential(1) + '%';
+    return '0%';
+  }
+
+  // 白天/夜晚进度：白天 = horizon-rise → horizon-set；夜晚 = astro-set → astro-rise（真天文夜）
+  function dayNightProgress(now, lat, lng, kind) {
+    const targetAlt = kind === 'day' ? -0.833 : -18;
+    let start = null, end = null;
+    for (const off of [-2, -1, 0, 1, 2]) {
+      const d = new Date(now.getTime() + off * dayMs);
+      const t = getSunTimes(d, lat, lng, targetAlt);
+      if (kind === 'day') {
+        if (t.rise && t.rise <= now && (!start || t.rise > start)) start = t.rise;
+        if (t.set  && t.set  >  now && (!end   || t.set  < end))   end   = t.set;
+      } else {
+        if (t.set  && t.set  <= now && (!start || t.set  > start)) start = t.set;
+        if (t.rise && t.rise >  now && (!end   || t.rise < end))   end   = t.rise;
+      }
+    }
+    if (!start || !end || end <= start) return null;
+    return { start, end, pct: Math.max(0, Math.min(1, (now - start) / (end - start))) };
+  }
+
+  // ---------- UI helpers ----------
+  const $ = id => document.getElementById(id);
+  const pad2 = n => String(n).padStart(2, '0');
+  const fmtClock = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  const fmtHM    = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  function fmtAgo(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return s + ' 秒前';
+    if (s < 3600) return Math.round(s / 60) + ' 分前';
+    return Math.round(s / 3600) + ' 小时前';
+  }
+
+  function fmtDelta(target, now) {
+    const diffS = Math.round((target - now) / 1000);
+    const abs = Math.abs(diffS);
+    const suffix = diffS >= 0 ? '后' : '前';
+    const cls = diffS >= 0 ? 'future' : 'past';
+    let text;
+    if (abs < 60) text = abs + ' 秒';
+    else if (abs < 3600) {
+      const m = Math.floor(abs / 60), s = abs % 60;
+      text = m + ' 分 ' + pad2(s) + ' 秒';
+    } else if (abs < dayMs / 1000) {
+      const h = Math.floor(abs / 3600), m = Math.floor((abs % 3600) / 60);
+      text = h + ' 小时 ' + m + ' 分';
+    } else {
+      const d = Math.floor(abs / 86400), h = Math.floor((abs % 86400) / 3600);
+      text = d + ' 天 ' + h + ' 小时';
+    }
+    return { text: text + suffix, cls };
+  }
+
+  function fmtRate(rateAbs) {
+    return rateAbs.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + '°/分';
+  }
+
+  // ---------- 反向地理编码（Nominatim，英文 + 门牌号精度，缩写州名，去国家） ----------
+  const STATE_ABBR = {
+    // US
+    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS',
+    'Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV',
+    'New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY',
+    'North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK',
+    'Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+    'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+    'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
+    'District of Columbia':'DC',
+    // Australia
+    'New South Wales':'NSW','Victoria':'VIC','Queensland':'QLD',
+    'Western Australia':'WA','South Australia':'SA','Tasmania':'TAS',
+    'Australian Capital Territory':'ACT','Northern Territory':'NT',
+    // Canada
+    'British Columbia':'BC','Alberta':'AB','Saskatchewan':'SK','Manitoba':'MB',
+    'Ontario':'ON','Quebec':'QC','New Brunswick':'NB','Nova Scotia':'NS',
+    'Prince Edward Island':'PE','Newfoundland and Labrador':'NL',
+    'Yukon':'YT','Northwest Territories':'NT','Nunavut':'NU',
+  };
+
+  function shortAddress(d) {
+    const a = d.address || {};
+    const street = [a.house_number, a.road].filter(Boolean).join(' ');
+    const neigh  = a.suburb || a.neighbourhood || a.quarter || a.hamlet || '';
+    const city   = a.city || a.town || a.village || a.municipality || a.county || '';
+    const stRaw  = a.state || a.province || a.region || '';
+    const state  = STATE_ABBR[stRaw] || stRaw;
+    const parts = [street, neigh, city, state].filter(Boolean);
+    const out = [];
+    for (const p of parts) {
+      const last = out[out.length - 1];
+      if (last && (last === p || last.includes(p) || p.includes(last))) continue;
+      out.push(p);
+    }
+    return out.join(', ');
+  }
+
+  let cachedAddr = { lat: null, lng: null, text: null };
+  let addrInFlight = false;
+  async function lookupAddress(lat, lng) {
+    if (cachedAddr.lat != null) {
+      if (Math.abs(lat - cachedAddr.lat) < 0.0003 && Math.abs(lng - cachedAddr.lng) < 0.0003) {
+        return cachedAddr.text;
+      }
+    }
+    if (addrInFlight) return null;
+    addrInFlight = true;
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse` +
+        `?lat=${lat}&lon=${lng}&format=jsonv2&zoom=18&addressdetails=1&accept-language=en`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      let text = shortAddress(d) || d.name || '(unknown)';
+      cachedAddr = { lat, lng, text };
+      $('addr').textContent = text;
+      return text;
+    } catch (err) {
+      $('addr').textContent = '(lookup failed)';
+      return null;
+    } finally {
+      addrInFlight = false;
+    }
+  }
+
+  // ---------- state ----------
+  let state = {
+    lat: null, lng: null,
+    posUpdatedAt: null,
+    posSource: '',
+    posRefreshTimer: null,
+  };
+  const POS_REFRESH_MS = 3 * 60 * 1000;
+  let chartMode = 'both';  // 'illum' | 'temp' | 'both'
+  const CHART_DEFAULT_HALF = 720;     // ±12h
+  const CHART_MIN_HALF = 15;          // ±15 分钟
+  const CHART_MAX_HALF = 720;         // ±12h
+  let chartHalfMin = CHART_DEFAULT_HALF;
+
+  function setStatus(msg, isErr) {
+    const el = $('status');
+    el.textContent = msg || '';
+    el.className = 'status' + (isErr ? ' err' : '');
+    el.style.display = msg ? '' : 'none';
+  }
+
+  function buildGroupHTML(which, items, phase) {
+    const emoji = which === 'rise' ? '🌅' : '🌇';
+    const title = which === 'rise' ? '最近的日出' : '最近的日落';
+    const showInRow = phase &&
+      ((phase.kind === 'dawn' && which === 'rise') ||
+       (phase.kind === 'dusk' && which === 'set'));
+    let insertAfterKey = null;
+    if (showInRow) {
+      if (which === 'rise') {
+        const lowKeyMap = { '天文': 'astro', '航海': 'naut', '民用': 'civil' };
+        insertAfterKey = lowKeyMap[phase.segName];
+      } else {
+        const highKeyMap = { '民用': 'horiz', '航海': 'civil', '天文': 'naut' };
+        insertAfterKey = highKeyMap[phase.segName];
+      }
+    }
+
+    const now = new Date();
+    let rows = '';
+    items.forEach(({ angle, time, passed }) => {
+      const nameLbl = which === 'rise' ? angle.riseName : angle.setName;
+      if (!time) {
+        rows += `<div class="item"><div class="name">${nameLbl}<small>${angle.hint}</small></div>
+          <div class="na" style="grid-column: 2 / span 2;">当日无此现象（极昼/极夜）</div></div>`;
+      } else {
+        const d = fmtDelta(time, now);
+        rows += `<div class="item ${passed ? 'passed' : ''}">
+          <div class="name">${nameLbl}<small>${angle.hint}</small></div>
+          <div class="time">${fmtHM(time)}</div>
+          <div class="delta ${d.cls}">${d.text}</div>
+        </div>`;
+      }
+      if (showInRow && insertAfterKey === angle.key) {
+        const pct = Math.round(phase.pct * 100);
+        const segLbl = phase.kind === 'dawn'
+          ? phase.segName + '晨光中'
+          : phase.segName + '暮光中';
+        rows += `<div class="inrow-bar">
+          <div class="lbl"><span>${segLbl}</span><span>${pct}%</span></div>
+          <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }
+    });
+
+    const horiz = items.find(it => it.angle.key === 'horiz');
+    const tag = horiz && horiz.time ? fmtDelta(horiz.time, now).text : '';
+
+    return `<div class="group">
+      <h2><span class="emoji">${emoji}</span> ${title}<span class="tag">${tag}</span></h2>
+      ${rows}
+    </div>`;
+  }
+
+  function render() {
+    const now = new Date();
+    $('now-time').textContent =
+      `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())} ${fmtClock(now)}`;
+    if (state.lat == null) return;
+
+    const posStr = `${state.lat.toFixed(4)}°, ${state.lng.toFixed(4)}°`;
+    const ago = state.posUpdatedAt ? ` <small>${fmtAgo(now - state.posUpdatedAt)}</small>` : '';
+    $('pos').innerHTML = posStr + ago;
+
+    const phase = currentPhase(now, state.lat, state.lng);
+    const rateAbs = Math.abs(phase.rateDegPerMin);
+    const maxRate = getMaxAltRate(now, state.lat, state.lng);
+    const ratePct = maxRate > 0 ? Math.round(rateAbs / maxRate * 100) : 0;
+    $('sun-alt').innerHTML =
+      `${phase.altDeg.toFixed(2)}°  ${phase.rising ? '↑' : '↓'} ${fmtRate(rateAbs)}` +
+      `<span class="pctchip">${ratePct}%</span>`;
+
+    // 当前相位卡片
+    const np = $('now-phase');
+    np.hidden = false;
+    // 进度条刻度：仅在 dawn/dusk 显示，标出 4 个角度阈值
+    const phTicks = $('ph-ticks');
+    if (phase.kind === 'dawn' || phase.kind === 'dusk') {
+      const totalDeg = (-0.833) - (-18); // 17.167
+      const isDawn = phase.kind === 'dawn';
+      const boundaries = [
+        { alt: -0.833, ch: '日' },
+        { alt: -6,    ch: '民' },
+        { alt: -12,   ch: '航' },
+        { alt: -18,   ch: '天' },
+      ];
+      const overallPct100 = Math.round(phase.overallPct * 100);
+      const ticksHTML = boundaries.map(b => {
+        const pos = isDawn
+          ? (b.alt - (-18)) / totalDeg
+          : ((-0.833) - b.alt) / totalDeg;
+        const pct = Math.max(0, Math.min(100, pos * 100));
+        const passed = pct < overallPct100;
+        return `<div class="ph-tick${passed ? ' passed' : ''}" style="left:${pct.toFixed(2)}%"><span>${b.ch}</span></div>`;
+      }).join('');
+      phTicks.innerHTML = ticksHTML;
+    } else {
+      phTicks.innerHTML = '';
+    }
+    if (phase.kind === 'day') {
+      const dn = dayNightProgress(now, state.lat, state.lng, 'day');
+      $('ph-name').innerHTML = '☀️ 白天';
+      $('ph-sub').textContent = '';
+      if (dn) {
+        const pct = Math.round(dn.pct * 100);
+        $('ph-pct').textContent = pct + '%';
+        $('ph-fill').style.width = pct + '%';
+      } else {
+        $('ph-pct').textContent = '';
+        $('ph-fill').style.width = '100%';
+      }
+    } else if (phase.kind === 'night') {
+      const dn = dayNightProgress(now, state.lat, state.lng, 'night');
+      $('ph-name').innerHTML = '🌑 夜晚';
+      $('ph-sub').textContent = '';
+      if (dn) {
+        const pct = Math.round(dn.pct * 100);
+        $('ph-pct').textContent = pct + '%';
+        $('ph-fill').style.width = pct + '%';
+      } else {
+        $('ph-pct').textContent = '';
+        $('ph-fill').style.width = '0%';
+      }
+    } else {
+      const isDawn = phase.kind === 'dawn';
+      $('ph-name').innerHTML = (isDawn ? '🌄 日出中' : '🌆 日落中') +
+        ' · ' + phase.segName + (isDawn ? '晨光' : '暮光');
+      const overallPct = Math.round(phase.overallPct * 100);
+      const segPct = Math.round(phase.pct * 100);
+      $('ph-pct').textContent = overallPct + '%';
+      $('ph-sub').textContent = `${isDawn ? '日出' : '日落'}整体进度 · 太阳高度 ${phase.altDeg.toFixed(2)}°（当前段 ${phase.segLow}° ~ ${phase.segHigh}°，段内 ${segPct}%）`;
+      $('ph-fill').style.width = overallPct + '%';
+    }
+
+    // 光照 / 气温 曲线
+    const chart = buildChart(now, state.lat, state.lng, chartMode);
+    $('illum-card').hidden = false;
+    $('illum-chart').innerHTML = chart.svgInner;
+    // X 轴刻度文本随缩放变化
+    const half = chartHalfMin;
+    const halfHalf = half / 2;
+    const fmtAxisOff = m => {
+      const a = Math.abs(m);
+      if (a < 1) return '0';
+      if (a < 60) return Math.round(a) + '分';
+      if (a % 60 === 0) return (a / 60) + 'h';
+      return (Math.round(a / 6) / 10) + 'h';
+    };
+    $('illum-axis').innerHTML =
+      `<span>−${fmtAxisOff(half)}</span>` +
+      `<span>−${fmtAxisOff(halfHalf)}</span>` +
+      `<span>现在</span>` +
+      `<span>+${fmtAxisOff(halfHalf)}</span>` +
+      `<span>+${fmtAxisOff(half)}</span>`;
+
+    const hasTemp = chart.curTemp != null;
+    if (chartMode === 'illum') {
+      $('illum-title').textContent = '🌞 地面光照 · 理想晴空';
+      $('illum-pct').textContent = fmtPct(chart.illumPct);
+      $('illum-info').innerHTML =
+        `<span class="luxv">${fmtLux(chart.curLux)}</span> · 24h 最大 ${fmtLux(chart.maxLux)}`;
+    } else if (chartMode === 'temp') {
+      $('illum-title').textContent = '🌡 气温 · 24 小时';
+      if (hasTemp) {
+        $('illum-pct').innerHTML = `<span class="tempv">${chart.curTemp.toFixed(1)}°C</span>`;
+        $('illum-info').innerHTML =
+          `24h 范围 <span class="tempv">${chart.tempMin.toFixed(1)}°C ~ ${chart.tempMax.toFixed(1)}°C</span>`;
+      } else {
+        $('illum-pct').textContent = '—';
+        $('illum-info').textContent = '气温数据加载中…';
+      }
+    } else {
+      $('illum-title').textContent = '🌞 光照 + 🌡 气温';
+      $('illum-pct').textContent = fmtPct(chart.illumPct);
+      $('illum-info').innerHTML =
+        `光 <span class="luxv">${fmtLux(chart.curLux)}</span>` +
+        (hasTemp ? ` · 温 <span class="tempv">${chart.curTemp.toFixed(1)}°C</span>` : ' · 气温加载中…');
+    }
+
+    // 两组
+    const riseRaw = findNextEvent(now, state.lat, state.lng, 'rise');
+    const setRaw  = findNextEvent(now, state.lat, state.lng, 'set');
+    const riseItems = riseRaw.slice().sort((a, b) => a.angle.alt - b.angle.alt);
+    const setItems  = setRaw.slice().sort((a, b) => b.angle.alt - a.angle.alt);
+
+    let riseFirst;
+    if (phase.kind === 'dawn')      riseFirst = true;
+    else if (phase.kind === 'dusk') riseFirst = false;
+    else {
+      const riseHoriz = riseItems.find(i => i.angle.key === 'horiz').time;
+      const setHoriz  = setItems.find(i => i.angle.key === 'horiz').time;
+      const riseTtl = riseHoriz ? (riseHoriz - now) : Infinity;
+      const setTtl  = setHoriz  ? (setHoriz  - now) : Infinity;
+      riseFirst = riseTtl <= setTtl;
+    }
+
+    $('group-before').innerHTML = riseFirst ? buildGroupHTML('rise', riseItems, phase) : buildGroupHTML('set', setItems, phase);
+    $('group-after').innerHTML  = riseFirst ? buildGroupHTML('set', setItems, phase)  : buildGroupHTML('rise', riseItems, phase);
+
+    // 3D 场景更新
+    if (window.SunScene && window.SunScene.update) {
+      window.SunScene.update(now, state.lat, state.lng);
+    }
+
+    $('meta').hidden = false;
+  }
+
+  function onLocation(lat, lng, source) {
+    state.lat = lat; state.lng = lng;
+    state.posUpdatedAt = new Date();
+    state.posSource = source || '';
+    try { localStorage.setItem('sunPos', JSON.stringify({ lat, lng })); } catch (_) {}
+    setStatus('');
+    render();
+    lookupAddress(lat, lng);
+    ensureWeather(lat, lng).then(d => { if (d) render(); });
+  }
+
+  function requestGeoOnce(silent) {
+    if (!('geolocation' in navigator)) {
+      setStatus('当前浏览器不支持定位 API。', true);
+      $('manual').hidden = false;
+      return;
+    }
+    if (!silent) setStatus('正在获取位置… 请在弹窗中允许');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        onLocation(pos.coords.latitude, pos.coords.longitude, '浏览器定位');
+        $('manual').hidden = true;
+      },
+      err => {
+        if (state.lat != null) return;
+        let msg = '获取位置失败：' + (err && err.message ? err.message : '未知错误');
+        if (location.protocol === 'file:') {
+          msg += '（file:// 下定位被禁用，请用 HTTPS 打开或手动输入）';
+        }
+        setStatus(msg, true);
+        $('manual').hidden = false;
+        try {
+          const saved = JSON.parse(localStorage.getItem('sunPos') || 'null');
+          if (saved && typeof saved.lat === 'number' && typeof saved.lng === 'number') {
+            $('in-lat').value = saved.lat;
+            $('in-lng').value = saved.lng;
+            onLocation(saved.lat, saved.lng, '上次手动输入');
+          }
+        } catch (_) {}
+      },
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 60 * 1000 }
+    );
+  }
+
+  function startPosAutoRefresh() {
+    if (state.posRefreshTimer) clearInterval(state.posRefreshTimer);
+    state.posRefreshTimer = setInterval(() => requestGeoOnce(true), POS_REFRESH_MS);
+  }
+
+  $('btn-go').addEventListener('click', () => {
+    const lat = parseFloat($('in-lat').value);
+    const lng = parseFloat($('in-lng').value);
+    if (!isFinite(lat) || !isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setStatus('请输入有效的纬度 (-90~90) 和经度 (-180~180)。', true);
+      return;
+    }
+    onLocation(lat, lng, '手动输入');
+  });
+
+  $('btn-refresh').addEventListener('click', () => requestGeoOnce(false));
+
+  $('illum-toggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if (!btn) return;
+    chartMode = btn.dataset.mode;
+    $('illum-toggle').querySelectorAll('button').forEach(b =>
+      b.classList.toggle('active', b.dataset.mode === chartMode));
+    if (state.lat != null) render();
+  });
+
+  // 曲线图缩放：双指捏合 / 鼠标滚轮 / 双击重置
+  (function setupChartZoom() {
+    const chartEl = $('illum-chart');
+    let pinch = null;
+    let lastTap = 0;
+
+    chartEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const a = e.touches[0], b = e.touches[1];
+        pinch = {
+          dist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+          half: chartHalfMin,
+        };
+      } else if (e.touches.length === 1) {
+        const t = Date.now();
+        if (t - lastTap < 350) {
+          chartHalfMin = CHART_DEFAULT_HALF;
+          if (state.lat != null) render();
+          lastTap = 0;
+        } else {
+          lastTap = t;
+        }
+      }
+    }, { passive: false });
+
+    chartEl.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && pinch) {
+        e.preventDefault();
+        const a = e.touches[0], b = e.touches[1];
+        const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        let newHalf = pinch.half * (pinch.dist / Math.max(d, 1));
+        newHalf = Math.max(CHART_MIN_HALF, Math.min(CHART_MAX_HALF, newHalf));
+        if (Math.abs(newHalf - chartHalfMin) > 0.5) {
+          chartHalfMin = newHalf;
+          if (state.lat != null) render();
+        }
+      }
+    }, { passive: false });
+
+    chartEl.addEventListener('touchend', () => { pinch = null; });
+
+    chartEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = Math.exp(e.deltaY * 0.0015);
+      let newHalf = chartHalfMin * factor;
+      newHalf = Math.max(CHART_MIN_HALF, Math.min(CHART_MAX_HALF, newHalf));
+      if (Math.abs(newHalf - chartHalfMin) > 0.1) {
+        chartHalfMin = newHalf;
+        if (state.lat != null) render();
+      }
+    }, { passive: false });
+
+    chartEl.addEventListener('dblclick', () => {
+      chartHalfMin = CHART_DEFAULT_HALF;
+      if (state.lat != null) render();
+    });
+  })();
+
+  setInterval(() => { if (state.lat != null) render(); }, 1000);
+
+  requestGeoOnce(false);
+  startPosAutoRefresh();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.lat != null) {
+      requestGeoOnce(true);
+    }
+  });
+})();
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const SunScene = {
+  ready: false,
+  scene: null, camera: null, renderer: null, controls: null,
+  trajGroup: null, sunMesh: null, sunGlow: null,
+  lastLat: null, lastLng: null,
+  cameraOriented: false,
+
+  init(container) {
+    if (this.ready) return;
+    const w = container.clientWidth || 320;
+    const h = w;
+
+    this.scene = new THREE.Scene();
+
+    this.camera = new THREE.PerspectiveCamera(45, w / h, 0.01, 100);
+    this.camera.position.set(0, 1.2, 2.6);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(w, h);
+    this.renderer.setClearColor(0x000000, 0);
+    container.innerHTML = '';
+    container.appendChild(this.renderer.domElement);
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.target.set(0, 0, 0);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.12;
+    this.controls.minDistance = 1.4;
+    this.controls.maxDistance = 6;
+    this.controls.enablePan = false;
+    this.controls.enableZoom = true;
+    this.controls.rotateSpeed = 0.8;
+    this.controls.autoRotate = true;
+    this.controls.autoRotateSpeed = 0.6;
+    this.controls.addEventListener('start', () => { this.controls.autoRotate = false; });
+
+    // 地平面（半透明圆盘）
+    const groundGeom = new THREE.CircleGeometry(1.0, 96);
+    groundGeom.rotateX(-Math.PI / 2);
+    this.scene.add(new THREE.Mesh(groundGeom,
+      new THREE.MeshBasicMaterial({ color: 0x1a2a4f, transparent: true, opacity: 0.35, side: THREE.DoubleSide })));
+
+    // 地平线圆环
+    const ringGeom = new THREE.RingGeometry(0.995, 1.012, 96);
+    ringGeom.rotateX(-Math.PI / 2);
+    this.scene.add(new THREE.Mesh(ringGeom,
+      new THREE.MeshBasicMaterial({ color: 0x7a96c8, side: THREE.DoubleSide })));
+
+    // 子午线/方位环（很淡）
+    const meridGeom = new THREE.RingGeometry(0.998, 1.002, 96);
+    const merid1 = new THREE.Mesh(meridGeom, new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
+    merid1.rotation.set(0, 0, Math.PI / 2);  // E-W vertical great circle
+    this.scene.add(merid1);
+    const merid2 = new THREE.Mesh(meridGeom, new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
+    merid2.rotation.set(Math.PI / 2, 0, 0);  // N-S vertical great circle
+    this.scene.add(merid2);
+
+    // 方位标签
+    this.scene.add(this._makeLabel('N', 0, 0.04, -1.13, '#ffd87b'));
+    this.scene.add(this._makeLabel('S', 0, 0.04,  1.13, '#9aa8c8'));
+    this.scene.add(this._makeLabel('E', 1.13, 0.04, 0,  '#9aa8c8'));
+    this.scene.add(this._makeLabel('W', -1.13, 0.04, 0, '#9aa8c8'));
+    // 头顶/天底标
+    this.scene.add(this._makeLabel('天顶', 0, 1.1, 0, '#6cb6ff'));
+
+    // 轨迹容器
+    this.trajGroup = new THREE.Group();
+    this.scene.add(this.trajGroup);
+
+    // 太阳
+    const sunGeom = new THREE.SphereGeometry(0.05, 32, 24);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe27a });
+    this.sunMesh = new THREE.Mesh(sunGeom, sunMat);
+    this.scene.add(this.sunMesh);
+
+    // 光晕
+    const glowGeom = new THREE.SphereGeometry(0.12, 24, 16);
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xff8e5a, transparent: true, opacity: 0.25 });
+    this.sunGlow = new THREE.Mesh(glowGeom, glowMat);
+    this.scene.add(this.sunGlow);
+
+    // 运动方向箭头（尾在太阳，头指向未来 15 分钟方向；红色 = 未来）
+    this.sunArrow = new THREE.ArrowHelper(
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(0, 0, 0),
+      0.28,
+      0xff5a5a,
+      0.09,
+      0.05
+    );
+    this.scene.add(this.sunArrow);
+
+    // 天顶杆
+    const zenithGeom = new THREE.CylinderGeometry(0.002, 0.002, 1.0, 8);
+    const zenithMat = new THREE.MeshBasicMaterial({ color: 0x3a4a70, transparent: true, opacity: 0.4 });
+    const zenithRod = new THREE.Mesh(zenithGeom, zenithMat);
+    zenithRod.position.set(0, 0.5, 0);
+    this.scene.add(zenithRod);
+
+    // resize
+    const onResize = () => {
+      const w = container.clientWidth || 320;
+      const h = w;
+      this.renderer.setSize(w, h);
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+    };
+    window.addEventListener('resize', onResize);
+    const ro = new ResizeObserver(onResize);
+    ro.observe(container);
+
+    // 动画
+    const animate = () => {
+      requestAnimationFrame(animate);
+      this.controls.update();
+      this.renderer.render(this.scene, this.camera);
+    };
+    animate();
+
+    this.ready = true;
+  },
+
+  _makeLabel(text, x, y, z, color) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = color || '#9aa8c8';
+    const fontSize = text.length > 1 ? 48 : 80;
+    ctx.font = `bold ${fontSize}px -apple-system, "PingFang SC", sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 64, 64);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.set(x, y, z);
+    sprite.scale.set(0.2, 0.2, 1);
+    return sprite;
+  },
+
+  _altAzToXYZ(alt, az) {
+    // az: SunCalc 弧度（从南起，西正） → compass = π + az（从北起顺时针）
+    const compassAz = Math.PI + az;
+    return new THREE.Vector3(
+      Math.cos(alt) * Math.sin(compassAz),
+      Math.sin(alt),
+      -Math.cos(alt) * Math.cos(compassAz)
+    );
+  },
+
+  _disposeTraj() {
+    while (this.trajGroup.children.length > 0) {
+      const m = this.trajGroup.children.pop();
+      if (m.geometry) m.geometry.dispose();
+      if (m.material) m.material.dispose();
+    }
+  },
+
+  update(now, lat, lng) {
+    if (!this.ready || !window.__sun) return;
+    const getSunPos = window.__sun.getSunPos;
+
+    // 摄像机初始朝向：根据纬度让太阳一侧在前方
+    if (!this.cameraOriented) {
+      // 南半球太阳在北方（-Z），相机站南；北半球太阳在南方（+Z），相机站北
+      const z = lat < 0 ? 2.6 : -2.6;
+      this.camera.position.set(0, 1.2, z);
+      this.controls.update();
+      this.cameraOriented = true;
+    }
+
+    // 仅在位置变化时重建轨迹
+    if (lat !== this.lastLat || lng !== this.lastLng) {
+      this.lastLat = lat; this.lastLng = lng;
+      this._disposeTraj();
+
+      // 采样 24h
+      const samples = [];
+      for (let m = -12 * 60; m <= 12 * 60; m += 5) {
+        const t = new Date(now.getTime() + m * 60000);
+        const p = getSunPos(t, lat, lng);
+        const v = this._altAzToXYZ(p.alt, p.az);
+        samples.push({ alt: p.alt, m, v });
+      }
+
+      // 4 桶：past-above(0) / past-below(1) / future-above(2) / future-below(3)
+      const segs = [];
+      let cur = null;
+      for (const s of samples) {
+        const isFuture = s.m > 0;
+        const isUp = s.alt >= 0;
+        const bucket = (isFuture ? 2 : 0) + (isUp ? 0 : 1);
+        if (!cur || cur.bucket !== bucket) {
+          if (cur && cur.pts.length >= 1) {
+            cur.pts.push(s.v);  // 桥接：把切换点也加到上一段，保持视觉连续
+            if (cur.pts.length >= 2) segs.push(cur);
+          }
+          cur = { bucket, pts: [] };
+        }
+        cur.pts.push(s.v);
+      }
+      if (cur && cur.pts.length >= 2) segs.push(cur);
+
+      const SEG_STYLES = [
+        { color: 0xffd87b, opacity: 1.0, r: 0.009 },   // 0 past above   金
+        { color: 0x5a6a90, opacity: 0.7, r: 0.006 },   // 1 past below   暗灰
+        { color: 0xff5a5a, opacity: 1.0, r: 0.011 },   // 2 future above 红（稍粗）
+        { color: 0xb04040, opacity: 0.7, r: 0.007 },   // 3 future below 暗红
+      ];
+      segs.forEach(seg => {
+        if (seg.pts.length < 2) return;
+        const st = SEG_STYLES[seg.bucket];
+        const curve = new THREE.CatmullRomCurve3(seg.pts, false);
+        const tubeGeom = new THREE.TubeGeometry(curve, seg.pts.length * 2, st.r, 8, false);
+        const tubeMat = new THREE.MeshBasicMaterial({
+          color: st.color, transparent: st.opacity < 1, opacity: st.opacity,
+        });
+        this.trajGroup.add(new THREE.Mesh(tubeGeom, tubeMat));
+      });
+
+      // 每 3 小时小球（颜色匹配段：过去金/暗灰，未来红/暗红）
+      for (let m = -12 * 60; m <= 12 * 60; m += 180) {
+        const t = new Date(now.getTime() + m * 60000);
+        const p = getSunPos(t, lat, lng);
+        const v = this._altAzToXYZ(p.alt, p.az);
+        const isFuture = m > 0;
+        const isUp = p.alt >= 0;
+        const color = isFuture ? (isUp ? 0xff5a5a : 0xb04040) : (isUp ? 0xffb86b : 0x5a6a90);
+        const tickGeom = new THREE.SphereGeometry(0.012, 12, 8);
+        const tickMat = new THREE.MeshBasicMaterial({
+          color, transparent: !isUp, opacity: isUp ? 1 : 0.75,
+        });
+        const tick = new THREE.Mesh(tickGeom, tickMat);
+        tick.position.copy(v);
+        this.trajGroup.add(tick);
+      }
+    }
+
+    // 更新当前太阳位置
+    const sunPos = getSunPos(now, lat, lng);
+    const v = this._altAzToXYZ(sunPos.alt, sunPos.az);
+    this.sunMesh.position.copy(v);
+    this.sunGlow.position.copy(v);
+    this.sunGlow.material.opacity = sunPos.alt >= 0 ? 0.35 : 0.15;
+    this.sunMesh.material.color.setHex(sunPos.alt >= 0 ? 0xffe27a : 0xff8e5a);
+
+    // 运动方向箭头：取当前 → 未来 15 分钟的方向
+    const futureT = new Date(now.getTime() + 15 * 60 * 1000);
+    const futurePos = getSunPos(futureT, lat, lng);
+    const futureV = this._altAzToXYZ(futurePos.alt, futurePos.az);
+    const dir = futureV.clone().sub(v);
+    const dirLen = dir.length();
+    if (dirLen > 1e-6) {
+      dir.divideScalar(dirLen);
+      this.sunArrow.position.copy(v);
+      this.sunArrow.setDirection(dir);
+      this.sunArrow.setLength(0.22, 0.07, 0.04);
+      this.sunArrow.visible = true;
+    } else {
+      this.sunArrow.visible = false;
+    }
+  },
+};
+
+window.SunScene = SunScene;
+
+const container = document.getElementById('sky3d-canvas');
+if (container) {
+  try {
+    SunScene.init(container);
+  } catch (e) {
+    container.innerHTML = '<div class="sky3d-loading">3D 加载失败：' + (e.message || e) + '</div>';
+  }
+}
+</script>
+</body>
+</html>
